@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 # Example usage in main.py
 
 import get_g_code
+import modify_g_code
 
 # Directory and file name
 directory = r'C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code'
@@ -23,7 +24,12 @@ file_name = 'Cura_23_10_CFFFP_FlowCalibrationCube.gcode'
 
 # Read the G-code lines
 gcode_lines = get_g_code.get_gcode_lines(directory, file_name)
-
-# Process the lines
 for line in gcode_lines:
     print(line.strip())
+
+# Modify the G-code lines
+
+#defines a list of replacements for the G-Code in accordance to KRL
+    # replacements = {
+    #     'G1': 'LIN',
+    #     'G92':
