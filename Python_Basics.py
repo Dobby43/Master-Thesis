@@ -7,6 +7,13 @@ __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
 __version__ = "1.0"
 
+"""
+Modul: Ist ein Python skript
+Package: bindet mehrere Module zusammen (benötigt __init__.py file)
+
+"""
+
+
 ## Imports
 # Import from standard library
 import os
