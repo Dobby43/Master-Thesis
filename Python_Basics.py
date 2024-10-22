@@ -9,20 +9,33 @@ __version__ = "1.0"
 
 """
 Modul: Ist ein Python skript
+from modul import function
+
 Package: bindet mehrere Module zusammen (benötigt __init__.py file)
+from package import modul 
+#ruft nur das package auf. Die darin enthaltenen Module 
+werden nicht ausgeführt
 
 """
 
 
 ## Imports
 # Import from standard library
+
+# zuständig für den Zugriff auf das Betriebssystem (ermöglicht Pfad operationen,
+# Verzeichnisse erstellen und Dateien lesen, schreiben und löschen
 import os
+
+# ermöglicht zugriff auf CMD und kann programme beenden/starten
 import sys
+
+# ermöglicht den Zugriff auf mathematische Funktionen
 import math
 
 # Import 3rd party functions
 import numpy as np
 import matplotlib.pyplot as plt
+
 # Import own funktions
 
 
