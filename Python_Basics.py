@@ -1,3 +1,24 @@
+# First things are the Docstrings
+"""
+Diese File enthält alle wichtigen Befehle zu den Python Basics
+"""
+
+__author__ = "<DAVID SCHEIDT>"
+__email__ = "<<david.scheidt@tum.de>>"
+__version__ = "1.0"
+
+## Imports
+# Import from standard library
+import os
+import sys
+import math
+
+# Import 3rd party functions
+import numpy as np
+import matplotlib.pyplot as plt
+# Import own funktions
+
+
 ## Eingabe
 # float = Kommazahl (z.b. 2.3)
 # int = Ganzzahl (z.b. 2 oder 3)
@@ -58,7 +79,7 @@
 # print(price > 10 or price > 30)
 # print(not price == 25)
 
-## if clause
+## if claus
 # temperature = 30
 # if temperature > 30:
 #     print("It's a hot day") #shift + tab -> removes indentation
@@ -120,15 +141,33 @@
 # for item in list
 #     print(item)
 
-numbers = range(5)
-number = range(5,10,2)
-print(numbers)
-print(number)
+# numbers = range(5)
+# number = range(5, 10, 2)
+# print(numbers)
+# print(number)
+#
+#
+# for number in number:
+#     print(number)
+
+## type hinting
+# ohne type hinting
+def calculation (x,y) :
+    return (x + y)**2
+print(calculation(3,2))
+
+#mit type hinting
+def calculation2 (x :int,y :int)  -> int :
+    return (x + y)**2
+print(calculation2(3.2,2.3))
 
 
-for number in number:
-    print(number)
+#mit type hinting und union (mehrere Eingaben gemeinsam möglich)
+from typing import Union
+def calculation3 (x : Union[int, float],y :Union[int, float]) -> Union[int, float] :
+    return (x+y)**2
+print(calculation3(3.2,2.2))
 
-## tupels
-
-
+def calculation3 (x : int | float, y :int | float) -> Union[int, float] :
+    return (x +y)**2
+print(calculation3(3.2,2.2))
