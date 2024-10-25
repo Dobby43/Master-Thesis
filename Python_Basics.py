@@ -170,24 +170,46 @@ import matplotlib.pyplot as plt
 # for number in number:
 #     print(number)
 
+
 ## type hinting
 # ohne type hinting
-def calculation (x,y) :
-    return (x + y)**2
-print(calculation(3,2))
-
-#mit type hinting
-def calculation2 (x :int,y :int)  -> int :
-    return (x + y)**2
-print(calculation2(3.2,2.3))
+def calculation(x, y):
+    return (x + y) ** 2
 
 
-#mit type hinting und union (mehrere Eingaben gemeinsam möglich)
+print(calculation(3, 2))
+
+
+# mit type hinting
+def calculation2(x: int, y: int) -> int:
+    return (x + y) ** 2
+
+
+print(calculation2(3.2, 2.3))
+
+
+# mit type hinting und union (mehrere Eingaben gemeinsam möglich)
 from typing import Union
-def calculation3 (x : Union[int, float],y :Union[int, float]) -> Union[int, float] :
-    return (x+y)**2
-print(calculation3(3.2,2.2))
 
-def calculation3 (x : int | float, y :int | float) -> Union[int, float] :
-    return (x +y)**2
-print(calculation3(3.2,2.2))
+
+def calculation3(x: Union[int, float], y: Union[int, float]) -> Union[int, float]:
+    return (x + y) ** 2
+
+
+print(calculation3(3.2, 2.2))
+
+
+def calculation3(x: int | float, y: int | float) -> Union[int, float]:
+    return (x + y) ** 2
+
+
+print(calculation3(3.2, 2.2))
+
+
+## Colour code
+aswf: int = 5 # grün unterringelt == Hinweis auf Rechtschreibung / Benennung
+f: float = 4.3 # rot unterringelt == nicht verwendet
+line: str = "fuck" # ausgegraut == ungenutzt
+
+
+

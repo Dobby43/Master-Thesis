@@ -6,30 +6,34 @@ __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
 __version__ = "1.0"
 
-import os
-import math
-import sys
-
-import numpy as np
-import matplotlib.pyplot as plt
-
 # Example usage in main.py
-
-import get_g_code
-import modify_g_code
+from gcode import get_gcode
+from gcode.simplify_gcode import necessary_gcode, delete_feed, delete_extrusion
 
 # Directory and file name
-directory = r'C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code'
-file_name = 'Cura_23_10_CFFFP_FlowCalibrationCube.gcode'
+directory = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
+file_name = r"Cura_25_10_CFFFP_xyzCalibration_cube.gcode"
 
 # Read the G-code lines
-gcode_lines = get_g_code.get_gcode_lines(directory, file_name)
+gcode_lines = get_gcode.get_gcode_lines(directory, file_name)
 for line in gcode_lines:
     print(line.strip())
 
-# Modify the G-code lines
 
-#defines a list of replacements for the G-Code in accordance to KRL
-    # replacements = {
-    #     'G1': 'LIN',
-    #     'G92':
+# Simplifies G-Code list
+simplify_gcode = necessary_gcode(gcode_lines)
+for line in simplify_gcode:
+    print(line.strip())
+
+# Deletes feed
+simplify_gcode = delete_feed(simplify_gcode)
+for line in simplify_gcode:
+    print(line.strip())
+
+# Deletes extrusion
+simplify_gcode = delete_extrusion(simplify_gcode)
+for line in simplify_gcode:
+    print(line.strip())
+# Modifies the G-Code lines
+
+# Append z-height

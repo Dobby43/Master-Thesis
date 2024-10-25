@@ -1,6 +1,7 @@
 from pathlib import Path
 
-def get_gcode_lines(directory, file_name):
+
+def get_gcode_lines(directory: str, file_name: str) -> list:
     """
     Reads a G-code file from the specified directory and returns the lines as a list.
 
@@ -9,15 +10,16 @@ def get_gcode_lines(directory, file_name):
         file_name (str): The name of the G-code file.
 
     Returns:
-        list: A list of lines from the G-code file.
+        list: A list of lines from the G-code file where each line is a string containing one line of G-Code.
     """
     # Combine the directory and file name using Path
     file_path = Path(directory) / file_name
 
+    # Try statement for redundancy as it saves an empty list
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             gcode_lines = file.readlines()
-        return gcode_lines
+            return gcode_lines
     except FileNotFoundError:
         print(f"File '{file_path}' not found.")
         return []
