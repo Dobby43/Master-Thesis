@@ -1,39 +1,44 @@
 import re
-
 from main import gcode_lines
-from dictionary import dictionary
 
 
-def modify_gcode_lines(gcode_lines: list, dictionary: str) -> list:
+def append_z_height(gcode_lines):
     """
-    Modifies a list of G-code strings based on the specified replacement rules.
+    Modifies a list of G-code lines by adding the last seen Z value to LIN commands
+    if they don't already have one, and appending Z after the Y value.
 
     Args:
         gcode_lines (list of str): List of G-code lines as strings.
-        dictionary (dict): Dictionary where keys are the substrings to replace, and values are the replacement.
 
     Returns:
-        list of str: Modified G-code lines.
+        list of str: Modified G-code lines with Z values added to LIN commands.
     """
     modified_lines = []
-    for line in gcode_lines:
-        for old, new in dictionary.items():
-            # Use word boundaries (\b) for  exact matches only
-            line = re.sub(rf"\b{old}\b", new, line)
+    last_z_value = None  # Stores the most recent Z value
 
-        # Add the modified line to the results list
+    for line in gcode_lines:
+        # Check if there is a Z value in the current line and update last_z_value
+        z_match = re.search(r"\bZ\s*([\d\.-]+)", line)
+        if z_match:
+            last_z_value = z_match.group(0)  # Store the full Z part (e.g., "Z10.5")
+
+        # If the line starts with LIN and does not have a Z value, add the last Z value
+        if line.startswith("G1") and last_z_value and " Z" not in line:
+            # Find the position to insert the Z value directly after the Y value
+            y_match = re.search(r"Y\s*([\d\.-]+)", line)
+            if y_match:
+                # Insert Z value right after the Y value
+                insert_pos = y_match.end()  # End position of the Y match
+                line = line[:insert_pos] + " " + last_z_value + line[insert_pos:]
+
+        # Add the modified or original line to the list
         modified_lines.append(line)
 
     return modified_lines
 
 
-# Apply the function
-modified_gcode = modify_gcode_lines(gcode_lines, dictionary)
+modified_gcode = append_z_height(gcode_lines)
 
 # Output the modified G-code lines
 for line in modified_gcode:
     print(line)
-
-# def get_z_height (modified_gcode: str) -> list:
-#     for line in modified_gcode:
-#         re.search()

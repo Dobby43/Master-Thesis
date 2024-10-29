@@ -8,32 +8,32 @@ __version__ = "1.0"
 
 # Example usage in main.py
 from gcode import get_gcode
-from gcode.simplify_gcode import necessary_gcode, delete_feed, delete_extrusion
+from gcode import simplify_gcode as splf
 
 # Directory and file name
-directory = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
-file_name = r"Cura_25_10_CFFFP_xyzCalibration_cube.gcode"
+DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
+FILE_NAME = r"Cura_25_10_CFFFP_xyzCalibration_cube.gcode"
 
-# Read the G-code lines
-gcode_lines = get_gcode.get_gcode_lines(directory, file_name)
-for line in gcode_lines:
-    print(line.strip())
+# Read the G-Code lines
+gcode_lines = get_gcode.get_gcode_lines(DIRECTORY, FILE_NAME)
+
+# Simplify_gcode
+# Gets necessary G-Code lines
+gcode_necessary = splf.necessary_gcode(gcode_lines)
+# Deletes feed information from G-Code lines
+gcode_no_feed = splf.delete_feed(gcode_necessary)
+# Deletes extrusion information from G-Code lines
+gcode_no_extrusion = splf.delete_extrusion(gcode_no_feed)
+# Cleans G-Code from blank lines
+gcode_cleaned = splf.clean_gcode(gcode_no_extrusion)
+# Formates G-Code according to KRL
+gcode_formatted = splf.format_gcode_lines(gcode_cleaned, 2)
+# Appends Z-Value t
+
+for line in gcode_formatted:
+    print(line)
 
 
-# Simplifies G-Code list
-simplify_gcode = necessary_gcode(gcode_lines)
-for line in simplify_gcode:
-    print(line.strip())
-
-# Deletes feed
-simplify_gcode = delete_feed(simplify_gcode)
-for line in simplify_gcode:
-    print(line.strip())
-
-# Deletes extrusion
-simplify_gcode = delete_extrusion(simplify_gcode)
-for line in simplify_gcode:
-    print(line.strip())
 # Modifies the G-Code lines
 
 # Append z-height
