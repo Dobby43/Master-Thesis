@@ -24,12 +24,12 @@ def necessary_gcode(gcode: List[str]) -> List[str]:
     """
     Filters the G-code lines to keep only necessary commands.
 
-    Args:
-        gcode (List[str]): Original list of G-code lines.
-
-    Returns:
-        List[str]: Filtered G-code lines with necessary commands only.
+    :param gcode: Original list of G-code lines.
+    :type gcode: List[str]
+    :returns: Filtered G-code lines with necessary commands only.
+    :rtype: List[str]
     """
+
     gcode_necessary = []
     for line in gcode:
         # Entferne führende und nachfolgende Leerzeichen und wandle in Kleinbuchstaben um
@@ -46,12 +46,12 @@ def delete_feed(gcode: List[str]) -> List[str]:
     """
     Removes feed rate (F) values from each G-code line.
 
-    Args:
-        gcode (List[str]): List of G-code lines.
-
-    Returns:
-        List[str]: G-code lines without feed rate values.
+    :param gcode: List of G-code lines.
+    :type gcode: List[str]
+    :returns: G-code lines without feed rate values.
+    :rtype: List[str]
     """
+
     feed_deleted = []
     for line in gcode:
         # Remove F values (e.g., F1234.56) without extra spaces
@@ -65,12 +65,12 @@ def delete_extrusion(gcode: List[str]) -> List[str]:
     """
     Removes extrusion (E) values from each G-code line.
 
-    Args:
-        gcode (List[str]): List of G-code lines.
-
-    Returns:
-        List[str]: G-code lines without extrusion values.
+    :param gcode: List of G-code lines.
+    :type gcode: List[str]
+    :returns: G-code lines without extrusion values.
+    :rtype: List[str]
     """
+
     extrusion_deleted = []
     for line in gcode:
         # Remove E values (e.g., E1234.56) without extra spaces
@@ -82,13 +82,12 @@ def delete_extrusion(gcode: List[str]) -> List[str]:
 
 def clean_gcode(gcode: List[str]) -> List[str]:
     """
-    Cleans G-Code from unnecessary (empty lines) after modification
+    Cleans G-code from unnecessary (empty lines) after modification.
 
-    Args:
-        gcode (List[str]): List of G-code lines.
-
-    Returns:
-        List[str]: G-code lines without extrusion values.
+    :param gcode: List of G-code lines.
+    :type gcode: List[str]
+    :returns: G-code lines without extrusion values.
+    :rtype: List[str]
     """
 
     gcode_cleaned = []
@@ -107,12 +106,10 @@ def append_z_height(gcode: List[str]) -> List[str]:
     """
     Updates and appends the current Z Value for every line in the G-Code.
 
-    Args:
-        gcode (List[str]): Original list of G-code lines.
-
-    Returns:
-        List[str]: Updated and appended G-code lines.
+    :param gcode (List[str]): Original list of G-code lines.
+    :returns List[str]: Updated and appended G-code lines.
     """
+
     current_z_height = None
     z_height_appended = []
     for line in gcode:
@@ -132,6 +129,17 @@ def append_z_height(gcode: List[str]) -> List[str]:
 
 
 def format_gcode(gcode: List[str], decimals: int) -> List[str]:
+    """
+    Takes simplified G-Code and rounds it to specified decimal places.
+    Formats rounded G-code lines so that after every defined space for the X, Y, and Z value a comma is placed.
+
+    :param gcode: Original list of G-code lines.
+    :type gcode: List[str]
+    :param decimals: Defines decimal places.
+    :type decimals: int
+    :returns: Rounded G-code lines.
+    :rtype: List[str]
+    """
 
     formatted_lines = []
     max_lengths = {"X": 4, "Y": 4, "Z": 4}
