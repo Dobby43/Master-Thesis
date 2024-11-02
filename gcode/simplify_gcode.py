@@ -1,9 +1,5 @@
 import re
-from typing import List, Set
-
-from unicodedata import decimal
-
-import gcode
+from typing import List, Dict, Any
 
 # Define necessary G-code commands to keep
 DICTIONARY = [
@@ -11,13 +7,69 @@ DICTIONARY = [
     "G1",
     ";LAYER",
     ";TYPE",
-    ";MINX",
-    ";MINY",
-    ";MINZ",
-    ";MAXX",
-    ";MAXY",
-    ";MAXZ",
 ]
+
+
+def get_max_values(gcode: List[str]) -> dict[str, float | None | Any]:
+    """
+    searches G-Code for maximum value of X, Y and Z
+    :param gcode: Original list of G-code lines.
+    :type gcode: List[str]
+    :returns: Dictionary containing the minimum values for X, Y, and Z coordinates.
+    :rtype: dict[str, float | None]
+    """
+
+    x_max, y_max, z_max = None, None, None
+    pattern = r"(G\d)\s*X([-?\d\.]+)?\s*Y([-?\d\.]+)?\s*Z([-?\d\.]+)?.*"
+
+    for line in gcode:
+        match = re.search(pattern, line)
+
+        if match:
+            x_val = float(match.group(2)) if match.group(2) else None
+            y_val = float(match.group(3)) if match.group(3) else None
+            z_val = float(match.group(4)) if match.group(4) else None
+
+            # Aktualisiere Max-Werte
+            if x_val is not None:
+                x_max = x_val if x_max is None else max(x_max, x_val)
+            if y_val is not None:
+                y_max = y_val if y_max is None else max(y_max, y_val)
+            if z_val is not None:
+                z_max = z_val if z_max is None else max(z_max, z_val)
+
+    return {"x_max": x_max, "y_max": y_max, "z_max": z_max}
+
+
+def get_min_values(gcode: List[str]) -> dict[str, float | None | Any]:
+    """
+    searches G-Code for minimum value of X, Y and Z
+    :param gcode: Original list of G-code lines.
+    :type gcode: List[str]
+    :returns: Dictionary containing the minimum values for X, Y, and Z coordinates.
+    :rtype: dict[str, float | None]
+    """
+
+    x_min, y_min, z_min = None, None, None
+    pattern = r"(G\d)\s*X([-?\d\.]+)?\s*Y([-?\d\.]+)?\s*Z([-?\d\.]+)?.*"
+
+    for line in gcode:
+        match = re.search(pattern, line)
+
+        if match:
+            x_val = float(match.group(2)) if match.group(2) else None
+            y_val = float(match.group(3)) if match.group(3) else None
+            z_val = float(match.group(4)) if match.group(4) else None
+
+            # Aktualisiere Min-Werte
+            if x_val is not None:
+                x_min = x_val if x_min is None else min(x_min, x_val)
+            if y_val is not None:
+                y_min = y_val if y_min is None else min(y_min, y_val)
+            if z_val is not None:
+                z_min = z_val if z_min is None else min(z_min, z_val)
+
+    return {"x_min": x_min, "y_min": y_min, "z_min": z_min}
 
 
 def necessary_gcode(gcode: List[str]) -> List[str]:
@@ -32,12 +84,12 @@ def necessary_gcode(gcode: List[str]) -> List[str]:
 
     gcode_necessary = []
     for line in gcode:
-        # Entferne führende und nachfolgende Leerzeichen und wandle in Kleinbuchstaben um
+        # deletes whitespaces and converts line to lower case
         line_lower = line.strip().lower()
 
-        # Prüfe auf Übereinstimmungen mit den Einträgen in DICTIONARY in Kleinbuchstaben
+        # Checks for matching entries in DICTIONARY (also converted to lower case)
         if any(line_lower.startswith(item.lower()) for item in DICTIONARY):
-            gcode_necessary.append(line)  # Originalzeile hinzufügen, wenn sie passt
+            gcode_necessary.append(line)  # Adds original line for matching lines
 
     return gcode_necessary
 
@@ -106,10 +158,11 @@ def append_z_height(gcode: List[str]) -> List[str]:
     """
     Updates and appends the current Z Value for every line in the G-Code.
 
-    :param gcode (List[str]): Original list of G-code lines.
-    :returns List[str]: Updated and appended G-code lines.
+    :param gcode: List of G-code lines.
+    :type gcode: List[str]
+    :returns: G-code lines with current Z height in every line
+    :rtype: List[str]
     """
-
     current_z_height = None
     z_height_appended = []
     for line in gcode:
@@ -143,30 +196,11 @@ def format_gcode(gcode: List[str], decimals: int) -> List[str]:
 
     formatted_lines = []
     max_lengths = {"X": 4, "Y": 4, "Z": 4}
-    # x_max, y_max, z_max = None, None, None
-    # # Searches first few lines of code for maximum values of x,y and z
-    # # TODO: account for negative values as well!
-    # for line in gcode:
-    #     if not x_max:
-    #         x_max = re.search(r";MAXX:\s*([-?\d\.]+)", line)
-    #     if not y_max:
-    #         y_max = re.search(r";MAXY:\s*([-?\d\.]+)", line)
-    #     if not z_max:
-    #         z_max = re.search(r";MAXZ:\s*([-?\d\.]+)", line)
-    #     if x_max and y_max and z_max:
-    #         break  # Ends search if all values are located
-    #
-    # # Determines length of string for maximum x,y and z
-    # max_lengths = {
-    #     "X": len(x_max.group(1).split(".")[0]) if x_max else 0,
-    #     "Y": len(y_max.group(1).split(".")[0]) if y_max else 0,
-    #     "Z": len(z_max.group(1).split(".")[0]) if z_max else 0,
-    # }
 
     for line in gcode:
         # Extracts all x,y and z information in Lines starting with "G"
         match = re.search(
-            r"(G\d)\s*X(-?\d+\.?\d+?)\s*Y(-?\d+\.?\d+?)\s*Z(-?\d+\.?\d+?)",
+            r"(G\d)\s*X(-?\d+\.?\d+?)\s*Y(-?\d+\.?\d+?)\s*Z(-?\d+\.?\d+?)?.*",
             line,
         )
 
@@ -183,7 +217,7 @@ def format_gcode(gcode: List[str], decimals: int) -> List[str]:
 
             # Formats lines to maximum length of value for x, y and z
             formatted_line = (
-                f"{g_command:<3} "  # G-Befehl (G0 oder G1), linksbündig
+                f"{g_command:<3} "  # G-command (G0 or G1)
                 f"X {x_val:<{max_lengths['X'] + decimals + 1}.{decimals}f}, "  # X-Wert mit fester Breite und Dezimalstellen
                 f"Y {y_val:<{max_lengths['Y'] + decimals + 1}.{decimals}f}, "  # Y-Wert mit fester Breite und Dezimalstellen
                 f"Z {z_val:<{max_lengths['Z'] + decimals + 1}.{decimals}f},"  # Z-Wert mit fester Breite und Dezimalstellen
