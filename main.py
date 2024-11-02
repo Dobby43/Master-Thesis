@@ -65,13 +65,13 @@ plotter = plt.plot_bed(
 )
 
 # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="1")
+plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="2")
 
 # Modifies the G-Code lines
 # appends toolhead orientation
-krl_toolhead = mdf.toolhead_orientation(
-    gcode_formatted, a=ORIENTATION_A, b=ORIENTATION_B, c=ORIENTATION_C
-)
-
-for line in krl_toolhead:
-    print(line)
+# krl_toolhead = mdf.toolhead_orientation(
+#     gcode_formatted, a=ORIENTATION_A, b=ORIENTATION_B, c=ORIENTATION_C
+# )
+#
+# for line in krl_toolhead:
+#     print(line)

@@ -145,7 +145,12 @@ def plot_gcode_path(plotter: pv.Plotter, gcode_lines: List[str], layers: str = "
     # Separate the line segments for G0 and G1 commands
     lines_g0, lines_g1 = [], []
     for i in range(len(points) - 1):
-        if gcode_commands[i] == "G0" and gcode_commands[i + 1] == "G0":
+        if (
+            gcode_commands[i] == "G0"
+            and gcode_commands[i + 1] == "G0"
+            or gcode_commands[i] == "G1"
+            and gcode_commands[i + 1] == "G0"
+        ):
             lines_g0.extend([2, i, i + 1])  # G0 move
         else:
             lines_g1.extend([2, i, i + 1])  # G1 move
