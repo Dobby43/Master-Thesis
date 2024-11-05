@@ -10,7 +10,7 @@ DICTIONARY = [
 ]
 
 
-def get_max_values(gcode: List[str]) -> dict[str, float | None | Any]:
+def get_max_values(gcode: List[str]) -> Dict[str, float | None | Any]:
     """
     searches G-Code for maximum value of X, Y and Z
     :param gcode: Original list of G-code lines.
@@ -217,7 +217,7 @@ def format_gcode(gcode: List[str], decimals: int) -> List[str]:
 
             # Formats lines to maximum length of value for x, y and z
             formatted_line = (
-                f"{g_command:<3} "  # G-command (G0 or G1)
+                f"\n{g_command:<3} "  # G-command (G0 or G1)
                 f"X {x_val:<{max_lengths['X'] + decimals + 1}.{decimals}f}, "  # X-Wert mit fester Breite und Dezimalstellen
                 f"Y {y_val:<{max_lengths['Y'] + decimals + 1}.{decimals}f}, "  # Y-Wert mit fester Breite und Dezimalstellen
                 f"Z {z_val:<{max_lengths['Z'] + decimals + 1}.{decimals}f},"  # Z-Wert mit fester Breite und Dezimalstellen
@@ -225,6 +225,6 @@ def format_gcode(gcode: List[str], decimals: int) -> List[str]:
             formatted_lines.append(formatted_line)
         else:
             # appends non-matching lines without change
-            formatted_lines.append(line)
+            formatted_lines.append("\n" + line)
 
     return formatted_lines

@@ -10,12 +10,18 @@ __version__ = "1.0"
 from gcode import get_gcode
 from gcode import simplify_gcode as smplf
 from gcode import plot_gcode as plt
-from krl import modify_gcode as mdf
+from krl import modify_to_krl as mdf
+from robot import robot_start_code as rsc
+from robot import robot_end_code as rec
+from export import export as exp
 
+# IMPORT_DIRECTORY and IMPORT_FILE
+IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
+IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
 
-# Directory and file name
-DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
-FILE_NAME = r"Cura_02_11_CFFFP_3DBenchy.gcode"
+# EXPORT_DIRECTORY and EXPORT FILE
+EXPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON"
+EXPORT_FILE = IMPORT_FILE
 
 # Print-bed Size
 BED_SIZE_X = 1200
@@ -27,8 +33,26 @@ ORIENTATION_A = 0
 ORIENTATION_B = 0
 ORIENTATION_C = 180
 
+# Coordinate frames
+BASE = "{X 1460.9, Y -2237.66, Z 268.5, A 0.0, B 0.0, C 0.0}"
+TOOL = "{X -10.99, Y -0.86, Z 917.61, A 0.0, B 0.0, C 0.0}"
+# Start configuration
+ZERO_POSITION = "{A1 75.0,A2 -90.0,A3 90.0,A4 0.0,A5 90.0,A6 0.0}"
+
+# Jerk mode parameters
+T_1 = "{VEL 20,ACC 100,APO_DIST 10}"
+T_2 = "{VEL 20,ACC 100,APO_DIST 10}"
+AUT = "{VEL 20,ACC 100,APO_DIST 10}"
+DEFAULT = "{VEL 20,ACC 100,APO_DIST 10}"
+
+# Motion parameters
+VEL_CP = 0.25  # Continues path velocity in [m/s]
+VEL_ORI1 = 100  # [deg/sec]
+VEL_ORI2 = 100  # [deg/sec]
+ADVANCE = 3  # Number of code lines calculated in advance
+
 # Read the G-Code lines
-gcode_lines = get_gcode.get_gcode_lines(DIRECTORY, FILE_NAME)
+gcode_lines = get_gcode.get_gcode_lines(IMPORT_DIRECTORY, IMPORT_FILE)
 
 # Simplify_gcode
 # Gets min X, Y and Z values
@@ -65,13 +89,45 @@ plotter = plt.plot_bed(
 )
 
 # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="2")
+plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="all")
 
 # Modifies the G-Code lines
-# appends toolhead orientation
-# krl_toolhead = mdf.toolhead_orientation(
-#     gcode_formatted, a=ORIENTATION_A, b=ORIENTATION_B, c=ORIENTATION_C
-# )
-#
-# for line in krl_toolhead:
-#     print(line)
+# formats G-Code to KRL and appends tool-head orientation
+krl_lines = mdf.krl_format(
+    gcode_formatted, a=ORIENTATION_A, b=ORIENTATION_B, c=ORIENTATION_C
+)
+for line in krl_lines:
+    print(line)
+
+
+# Robot configuration
+# Robot start code
+setup = rsc.project_setup(IMPORT_FILE)
+init = rsc.initialisation()
+sta_conc_print = rsc.start_concrete_printing()
+bco = rsc.block_coordinates(
+    base=BASE,
+    tool=TOOL,
+    t_1=T_1,
+    t_2=T_2,
+    aut=AUT,
+    default=DEFAULT,
+    start_pos=ZERO_POSITION,
+)
+move = rsc.motion(vel_cp=VEL_CP, vel_ori1=VEL_ORI1, vel_ori2=VEL_ORI2, adv=ADVANCE)
+
+# Robot end code
+end_conc_print = rec.end_concrete_printing()
+
+# Export of KRL-File
+exp.export_to_src(
+    setup=setup,
+    init=init,
+    sta_conc_print=sta_conc_print,
+    end_conc_print=end_conc_print,
+    bco=bco,
+    move=move,
+    code=krl_lines,  # Dies ist deine Liste mit KRL-Code
+    file_directory=EXPORT_DIRECTORY,
+    file_name=EXPORT_FILE,
+)
