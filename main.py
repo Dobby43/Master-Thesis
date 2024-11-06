@@ -19,7 +19,7 @@ from export import export as exp
 IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
 IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
 
-# EXPORT_DIRECTORY and EXPORT FILE
+# EXPORT_DIRECTORY and EXPORT_FILE
 EXPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON"
 EXPORT_FILE = IMPORT_FILE
 
@@ -37,7 +37,7 @@ ORIENTATION_C = 180
 BASE = "{X 1460.9, Y -2237.66, Z 268.5, A 0.0, B 0.0, C 0.0}"
 TOOL = "{X -10.99, Y -0.86, Z 917.61, A 0.0, B 0.0, C 0.0}"
 # Start configuration
-ZERO_POSITION = "{A1 75.0,A2 -90.0,A3 90.0,A4 0.0,A5 90.0,A6 0.0}"
+ZERO_POSITION = "{A1 75.0, A2 -90.0, A3 90.0, A4 0.0, A5 90.0, A6 0.0}"
 
 # Jerk mode parameters
 T_1 = "{VEL 20,ACC 100,APO_DIST 10}"
@@ -46,7 +46,8 @@ AUT = "{VEL 20,ACC 100,APO_DIST 10}"
 DEFAULT = "{VEL 20,ACC 100,APO_DIST 10}"
 
 # Motion parameters
-VEL_CP = 0.25  # Continues path velocity in [m/s]
+VEL_CP = 0.25  # Continues path velocity at start in [m/s]
+VEL_PRT = 0.35  # Velocity during print
 VEL_ORI1 = 100  # [deg/sec]
 VEL_ORI2 = 100  # [deg/sec]
 ADVANCE = 3  # Number of code lines calculated in advance
@@ -94,7 +95,12 @@ plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="all")
 # Modifies the G-Code lines
 # formats G-Code to KRL and appends tool-head orientation
 krl_lines = mdf.krl_format(
-    gcode_formatted, a=ORIENTATION_A, b=ORIENTATION_B, c=ORIENTATION_C
+    gcode_formatted,
+    a=ORIENTATION_A,
+    b=ORIENTATION_B,
+    c=ORIENTATION_C,
+    end_pos=ZERO_POSITION,
+    vel=VEL_PRT,
 )
 for line in krl_lines:
     print(line)
@@ -127,7 +133,7 @@ exp.export_to_src(
     end_conc_print=end_conc_print,
     bco=bco,
     move=move,
-    code=krl_lines,  # Dies ist deine Liste mit KRL-Code
+    code=krl_lines,
     file_directory=EXPORT_DIRECTORY,
     file_name=EXPORT_FILE,
 )

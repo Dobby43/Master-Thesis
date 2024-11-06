@@ -1,8 +1,7 @@
 def project_setup(file: [str]) -> str:
     filename = file.upper()
-    filename_new = "DEF " + filename[:-6] + " ( )"
     setup = (
-        f"{filename_new}, "
+        f"DEF {filename[:-6]} ( )"
         f"\n"
         f"\n;Declarations for RSI "
         f"\nDECL INT RET "
@@ -16,11 +15,11 @@ def initialisation() -> str:
     initialisation = (
         f"\n;FOLD       INI"
         f"\n  ;FOLD     BASISTECH INI"
-        f"\n    GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS == TRUE DO IR_STOPM ()"
+        f"\n    GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )"
         f"\n    INTERRUPT ON 3"
-        f"\n    BAS(  # INITMOV,0)"
+        f"\n    BAS (#INITMOV,0)"
         f"\n   ;ENDFOLD BASISTECH INI"
-        f"\n;ENDFOLD INI"
+        f"\n;ENDFOLD    INI"
         f"\n"
     )
     return initialisation
@@ -29,24 +28,24 @@ def initialisation() -> str:
 def start_concrete_printing():
     start_conc_printing = (
         f"\n;FOLD    3DCP"
-        f'\n  RET = RSI_CREATE("rsi3dcp", CONTID, TRUE)'
-        f"\n  IF(RET <> RSIOK) THEN"
+        f'\n  RET = RSI_CREATE("rsi3dcp",CONTID,TRUE)'
+        f"\n  IF (RET <> RSIOK) THEN"
         f"\n    HALT"
         f"\n  ENDIF"
         f"\n"
-        f"\n  RET = RSI_ON(# ABSOLUTE)"
-        f"\n  IF(RET <> RSIOK) THEN"
+        f"\n  RET = RSI_ON(#ABSOLUTE)"
+        f"\n  IF (RET <> RSIOK) THEN"
         f"\n    HALT"
         f"\n  ENDIF"
         f"\n"
-        f"\n ; IF $USER_LEVEL > 19 THEN; EXPERT Mode required"
-        f'\n ;   MyHmiOpen("dn",# Half)'
+        f"\n ; IF $USER_LEVEL > 19 THEN  ;EXPERT Mode required"
+        f'\n ;   MyHmiOpen("dn",#Half)'
         f"\n ; ENDIF"
         f"\n"
         f"\n  PRINT_PROGRESS = 0"
         f"\n  LAYER = 1"
         f"\n"
-        f"\n  $TIMER[1] = 0;Reset"
+        f"\n  $TIMER[1] = 0 ;Reset"
         f"\n  $TIMER_STOP[1] = FALSE ;Start"
         f"\n"
         f"\n  $TIMER[4] = 0 ;Reset"
@@ -75,35 +74,38 @@ def block_coordinates(
         f"\n  $BWDSTART = FALSE"
         f"\n"
         f"\n  SWITCH $MODE_OP"
-        f"\n    CASE  # T1"
+        f"\n    CASE #T1"
         f"\n      PDAT_ACT =  {t_1}"
-        f"\n      BAS (  # PTP_PARAMS,100)"
-        f"\n    CASE  # T2"
+        f"\n      BAS (#PTP_PARAMS,100)"
+        f"\n    CASE #T2"
         f"\n      PDAT_ACT = {t_2}"
-        f"\n      BAS (  # PTP_PARAMS,20)"
-        f"\n    CASE  # AUT"
+        f"\n      BAS (#PTP_PARAMS,20)"
+        f"\n    CASE #AUT"
         f"\n      PDAT_ACT = {aut}"
-        f"\n      BAS (  # PTP_PARAMS,20)"
+        f"\n      BAS (#PTP_PARAMS,20)"
         f"\n    DEFAULT"
         f"\n      PDAT_ACT = {default}"
-        f"\n      BAS (  # PTP_PARAMS,20)"
-        f"\n  ENDSWITCH"
+        f"\n      BAS (#PTP_PARAMS,20)"
+        f"\n   ENDSWITCH"
         f"\n"
-        f"\n  FDAT_ACT = {{TOOL_NO 1, BASE_NO 1, IPO_FRAME  '# BASE'}}"
-        f"\n  PTP  {start_pos}"
+        f"\n   FDAT_ACT = {{TOOL_NO 1,BASE_NO 1,IPO_FRAME #BASE}}"
+        f"\n"
+        f"\n   PTP  {start_pos}"
         f"\n;ENDFOLD BCO"
         f"\n"
     )
     return block_coordinates
 
 
-def motion(vel_cp: str, vel_ori1: str, vel_ori2: str, adv: str) -> [str]:
+def motion(vel_cp: float, vel_ori1: float, vel_ori2: float, adv: int) -> [str]:
+
     motion = (
         f"\n;FOLD    MOTION"
-        f"\n   $VEL.CP   = {vel_cp} ;m/sec"
-        f"\n   $VEL.ORI1 = {vel_ori1} ;deg/sec"
-        f"\n   $VEL.ORI2 = {vel_ori2} ;deg/sec"
-        f"\n   $ADVANCE = {adv}"
+        f"\n   $VEL.CP   = {vel_cp:.0f} ;m/sec"
+        f"\n   $VEL.ORI1 = {vel_ori1:.0f} ;deg/sec"
+        f"\n   $VEL.ORI2 = {vel_ori2:.0f} ;deg/sec"
+        f"\n   $ADVANCE = {adv:.0f}"
         f"\n;ENDFOLD MOTION"
         f"\n"
     )
+    return motion

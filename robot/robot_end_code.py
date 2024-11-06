@@ -6,6 +6,7 @@ def end_concrete_printing() -> str:
         f"\n  IF (RET <> RSIOK) THEN "
         f"\n    HALT "
         f"\n  ENDIF "
+        f"\n"
         f"\n  $ENERGY_MEASURING.ACTIVE = FALSE"
         f"\n"
         f"\n  $TIMER_STOP[1] = TRUE"
