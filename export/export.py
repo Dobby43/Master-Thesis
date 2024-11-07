@@ -37,8 +37,7 @@ def export_to_src(
         "".join(text_blocks_start) + "".join(code) + "".join(text_blocks_end)
     )
 
-    file_name_new = file_name[:-6]
-    full_path = os.path.join(file_directory, f"{file_name_new}.src")
+    full_path = os.path.join(file_directory, f"{file_name}.src")
 
     # Schreiben des vollständigen KRL-Codes in die Datei
     with open(full_path, "w") as file:

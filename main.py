@@ -4,7 +4,7 @@ This file contains the basis for all adjacent functions
 
 __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
-__version__ = "1.0"
+__version__ = "1.1"
 
 # Example usage in main.py
 from gcode import get_gcode
@@ -21,7 +21,7 @@ IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
 
 # EXPORT_DIRECTORY and EXPORT_FILE
 EXPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON"
-EXPORT_FILE = IMPORT_FILE
+EXPORT_FILE = "Cura_02_11_CP_3DBenchy"
 
 # Print-bed Size
 BED_SIZE_X = 1200
@@ -108,7 +108,7 @@ for line in krl_lines:
 
 # Robot configuration
 # Robot start code
-setup = rsc.project_setup(IMPORT_FILE)
+setup = rsc.project_setup(EXPORT_FILE)
 init = rsc.initialisation()
 sta_conc_print = rsc.start_concrete_printing()
 bco = rsc.block_coordinates(

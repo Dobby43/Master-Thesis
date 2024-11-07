@@ -81,7 +81,7 @@ def plot_bed(
     return plotter  # Return plotter object
 
 
-def plot_gcode_path(plotter: pv.Plotter, gcode_lines: List[str], layers: str = "all"):
+def plot_gcode_path(plotter: pv.Plotter, gcode_lines: List[str], layers: str):
     """
     Adds a G-code path to an existing PyVista plotter instance, with options for filtering by layer.
     G0 moves are displayed in green, and G1 moves in blue.

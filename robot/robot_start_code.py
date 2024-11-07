@@ -1,7 +1,7 @@
 def project_setup(file: [str]) -> str:
     filename = file.upper()
     setup = (
-        f"DEF {filename[:-6]} ( )"
+        f"DEF {filename} ( )"
         f"\n"
         f"\n;Declarations for RSI "
         f"\nDECL INT RET "
@@ -94,6 +94,12 @@ def block_coordinates(
         f"\n;ENDFOLD BCO"
         f"\n"
     )
+
+    a = f"""
+    dsfsdf{start_pos}
+    sdfsdf
+    sdfsdf
+    """
     return block_coordinates
 
 
