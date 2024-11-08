@@ -67,74 +67,65 @@ X_MAX = max_values["x_max"]
 Y_MAX = max_values["y_max"]
 Z_MAX = max_values["z_max"]
 # Gets necessary G-Code lines
-gcode_necessary = smplf.necessary_gcode(gcode_lines)
-# Deletes feed information from G-Code lines
-gcode_no_feed = smplf.delete_feed(gcode_necessary)
-# Deletes extrusion information from G-Code lines
-gcode_no_extrusion = smplf.delete_extrusion(gcode_no_feed)
-# Cleans G-Code from blank lines
-gcode_cleaned = smplf.clean_gcode(gcode_no_extrusion)
-# Append and update Z-Value for every line
-gcode_updated = smplf.append_z_height(gcode_cleaned)
-# Formates G-Code according to KRL
-gcode_formatted = smplf.format_gcode(gcode_updated, 2)
+gcode_necessary = smplf.process_gcode(gcode_lines)
 
-for line in gcode_formatted:
+
+for line in gcode_necessary:
     print(line)
 
 
-# Erstelle das Druckbett und speichere das Plotter-Objekt
-plotter = plt.plot_bed(
-    bed_size_x=BED_SIZE_X,
-    bed_size_y=BED_SIZE_Y,
-    bed_size_z=BED_SIZE_Z,
-)
+# # Erstelle das Druckbett und speichere das Plotter-Objekt
+# plotter = plt.plot_bed(
+#     bed_size_x=BED_SIZE_X,
+#     bed_size_y=BED_SIZE_Y,
+#     bed_size_z=BED_SIZE_Z,
+# )
 
-# Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="all")
-
-# Modifies the G-Code lines
-# formats G-Code to KRL and appends tool-head orientation
-krl_lines = mdf.krl_format(
-    gcode_formatted,
-    a=ORIENTATION_A,
-    b=ORIENTATION_B,
-    c=ORIENTATION_C,
-    end_pos=ZERO_POSITION,
-    vel=VEL_PRT,
-)
-for line in krl_lines:
-    print(line)
-
-
-# Robot configuration
-# Robot start code
-setup = rsc.project_setup(EXPORT_FILE)
-init = rsc.initialisation()
-sta_conc_print = rsc.start_concrete_printing()
-bco = rsc.block_coordinates(
-    base=BASE,
-    tool=TOOL,
-    t_1=T_1,
-    t_2=T_2,
-    aut=AUT,
-    default=DEFAULT,
-    start_pos=ZERO_POSITION,
-)
-move = rsc.motion(vel_cp=VEL_CP, vel_ori1=VEL_ORI1, vel_ori2=VEL_ORI2, adv=ADVANCE)
-
-# Robot end code
-end_conc_print = rec.end_concrete_printing()
-
-# Export of KRL-File
-exp.export_to_src(
-    setup=setup,
-    init=init,
-    sta_conc_print=sta_conc_print,
-    end_conc_print=end_conc_print,
-    bco=bco,
-    move=move,
-    code=krl_lines,
-    file_directory=EXPORT_DIRECTORY,
-    file_name=EXPORT_FILE,
-)
+# # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
+# plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="all")
+#
+# # Modifies the G-Code lines
+# # formats G-Code to KRL and appends tool-head orientation
+# krl_lines = mdf.krl_format(
+#     gcode_formatted,
+#     a=ORIENTATION_A,
+#     b=ORIENTATION_B,
+#     c=ORIENTATION_C,
+#     end_pos=ZERO_POSITION,
+#     vel=VEL_PRT,
+# )
+# for line in krl_lines:
+#     print(line)
+#
+#
+# # Robot configuration
+# # Robot start code
+# setup = rsc.project_setup(EXPORT_FILE)
+# init = rsc.initialisation()
+# sta_conc_print = rsc.start_concrete_printing()
+# bco = rsc.block_coordinates(
+#     base=BASE,
+#     tool=TOOL,
+#     t_1=T_1,
+#     t_2=T_2,
+#     aut=AUT,
+#     default=DEFAULT,
+#     start_pos=ZERO_POSITION,
+# )
+# move = rsc.motion(vel_cp=VEL_CP, vel_ori1=VEL_ORI1, vel_ori2=VEL_ORI2, adv=ADVANCE)
+#
+# # Robot end code
+# end_conc_print = rec.end_concrete_printing()
+#
+# # Export of KRL-File
+# exp.export_to_src(
+#     setup=setup,
+#     init=init,
+#     sta_conc_print=sta_conc_print,
+#     end_conc_print=end_conc_print,
+#     bco=bco,
+#     move=move,
+#     code=krl_lines,
+#     file_directory=EXPORT_DIRECTORY,
+#     file_name=EXPORT_FILE,
+# )
