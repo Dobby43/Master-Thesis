@@ -8,6 +8,7 @@ __version__ = "1.1"
 
 # Example usage in main.py
 from gcode import get_gcode
+from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
 from gcode import plot_gcode as plt
 from krl import modify_to_krl as mdf
@@ -57,11 +58,11 @@ gcode_lines = get_gcode.get_gcode_lines(IMPORT_DIRECTORY, IMPORT_FILE)
 
 # Simplify_gcode
 # Gets min X, Y and Z values
-min_values = smplf.get_min_values(gcode_lines)
+min_values = mima.get_min_values(gcode_lines)
 X_MIN = min_values["x_min"]
 Y_MIN = min_values["y_min"]
 # Gets max X, Y and Z values
-max_values = smplf.get_max_values(gcode_lines)
+max_values = mima.get_max_values(gcode_lines)
 X_MAX = max_values["x_max"]
 Y_MAX = max_values["y_max"]
 Z_MAX = max_values["z_max"]
@@ -105,8 +106,6 @@ krl_lines = mdf.krl_format(
 for line in krl_lines:
     print(line)
 
-print("Hello World")
-print("Bye World")
 
 # Robot configuration
 # Robot start code
