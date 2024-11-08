@@ -105,6 +105,7 @@ krl_lines = mdf.krl_format(
 for line in krl_lines:
     print(line)
 
+print("Bye World")
 
 # Robot configuration
 # Robot start code
