@@ -18,11 +18,14 @@ from export import export as exp
 
 # IMPORT_DIRECTORY and IMPORT_FILE
 IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
-IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
+IMPORT_FILE = r"Cura_02_11_CFFFP_FlowCalibrationCube.gcode"
+
+# Slicer used
+SLICER = "CURA"  # Sets dictionary used for essential G-Code lines in simplify_gcode
 
 # EXPORT_DIRECTORY and EXPORT_FILE
-EXPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON"
-EXPORT_FILE = "Cura_02_11_CP_3DBenchy"
+EXPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON\V1.0"
+EXPORT_FILE = "Cura_02_11_CFFFP_FlowCalibrationCube"
 
 # Print-bed Size
 BED_SIZE_X = 1200
