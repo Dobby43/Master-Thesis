@@ -106,6 +106,7 @@ for line in krl_lines:
     print(line)
 
 print("Hello World")
+print("Bye World")
 
 # Robot configuration
 # Robot start code
