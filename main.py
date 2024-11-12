@@ -4,17 +4,13 @@ This file contains the basis for all adjacent functions
 
 __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
-__version__ = "1.1"
+__version__ = "1.2"
 
 # Example usage in main.py
-from gcode import get_gcode
+from imports import get_gcode
 from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
 from gcode import plot_gcode as plt
-from krl import modify_to_krl as mdf
-from robot import robot_start_code as rsc
-from robot import robot_end_code as rec
-from export import export as exp
 
 # IMPORT_DIRECTORY and IMPORT_FILE
 IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
