@@ -2,7 +2,7 @@ from typing import List, Dict, Union
 
 
 def krl_format(
-    gcode: list[dict[str, [str | float | int | None]]],
+    gcode: list[dict[str, str | float | int | None]],
     *,
     a: float,
     b: float,
@@ -39,9 +39,9 @@ def krl_format(
 
     for entry in gcode:
         # Extract relevant values from the entry
-        x = coord_format.format(entry.get("X", 0.0))
-        y = coord_format.format(entry.get("Y", 0.0))
-        z = coord_format.format(entry.get("Z", 0.0))
+        x = coord_format.format(entry.get("X", 0.12))
+        y = coord_format.format(entry.get("Y", 0.12))
+        z = coord_format.format(entry.get("Z", 0.12))
         layer = entry.get("Layer")
         move_type = entry.get("Move")
         type_ = entry.get("Type", "UNKNOWN")
