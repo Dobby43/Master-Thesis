@@ -1,52 +1,27 @@
 import re
 from typing import List, Dict, Union
+from gcode import gcode_dictionaries
 
 # Define dictionaries for different slicers
-SLICER_PATTERNS = {
-    "CURA": {
-        "Layer": r";LAYER:(\d+)",
-        "Type": r";TYPE:(.+)",
-    },
-    "ORCA": {
-        "Layer": r";LAYER:(\d+)",
-        "Type": r";TYPE:(.+)",
-    },
-}
+SLICER_PATTERNS = gcode_dictionaries.get_slicer_pattern()
+TYPE_VALUES = gcode_dictionaries.get_type_values()
 
-TRANSLATION_PATTERNS = {
-    "CURA": {
-        "SUPPORT": "SUPPORT",
-        "SUPPORT-INTERFACE": "SUPPORT",
-        "WALL-OUTER": "WALL_OUTER",
-        "WALL-INNER": "WALL_INNER",
-        "SKIN": "SURFACE",
-        "FILL": "INFILL",
-        "SKIRT": "CURB",
-        "BRIM": "CURB",
-        "RAFT": "CURB",
-    },
-    "ORCA": {
-        "Support": "SUPPORT",
-        "Support interface": "SUPPORT",
-        "Outer wall": "WALL_OUTER",
-        "Overhang wall": "WALL_OUTER",
-        "Bridge": "WALL_OUTER",
-        "Inner wall": "WALL_INNER",
-        "Bottom surface": "SURFACE",
-        "Top surface": "SURFACE",
-        "Internal solid infill": "INFILL",
-        "Spars infill": "INFILL",
-        "Skirt": "CURB",
-        "Brim": "CURB",
-        "Raft": "CURB",
-    },
-}
+
+def translate_type(type_name: str, slicer: str) -> str:
+    """
+    Translates a raw type name from the slicer into a unified category.
+    """
+    slicer = slicer.upper()
+    for category, slicers in TYPE_VALUES.items():
+        if type_name in slicers.get(slicer, []):
+            return category
+    return "UNKNOWN"
 
 
 def process_gcode(
     gcode: List[str],
     slicer: str,
-) -> List[Dict[str, Union[str, float, int, None]]]:
+) -> List[Dict[str, str | float | int | None]]:
     """
     Processes G-code lines to extract attributes and keep only lines with meaningful G0 or G1 moves.
     Updates missing Z values and Type with the last known value and maintains Layer information.
@@ -58,14 +33,11 @@ def process_gcode(
     :returns: Processed G-code lines containing only meaningful G0 or G1 moves with attributes.
     :rtype: List[Dict[str, Union[str, float, int, None]]]
     """
-    # Select patterns and translations for the given slicer
+    # Select patterns for the given slicer
     slicer = slicer.upper()
     if slicer not in SLICER_PATTERNS:
         raise ValueError(f"Unsupported slicer: {slicer}")
     slicer_patterns = SLICER_PATTERNS[slicer]
-    translation_patterns = TRANSLATION_PATTERNS.get(slicer, {})
-
-    # Patterns for Layer, Type, and G-code commands
     layer_pattern = slicer_patterns.get("Layer", r";LAYER:(\d+)")
     type_pattern = slicer_patterns.get("Type", r";TYPE:(.+)")
     gcode_pattern = r"(G[01])?(?:\s*F[\d\.]+)?(?:\s*X\s*([-?\d\.]+))?(?:\s*Y\s*([-?\d\.]+))?(?:\s*Z\s*([-?\d\.]+))?(?:\s*E[-?\d\.]+)?"
@@ -88,50 +60,53 @@ def process_gcode(
             "Type": current_type,
         }
 
-        # Step 1: Match Layer and update
+        # Match Layer and update
         layer_match = re.match(layer_pattern, line)
         if layer_match:
             current_layer = int(layer_match.group(1))
-            continue  # Skip to the next line after updating Layer
+            continue
 
-        # Step 2: Match Type and update current_type
+        # Match Type and translate
         type_match = re.match(type_pattern, line)
         if type_match:
             raw_type = type_match.group(1)
-            current_type = translation_patterns.get(raw_type, "UNKNOWN")
-            continue  # Skip to the next line after updating Type
+            current_type = translate_type(raw_type, slicer)
+            continue
 
-        # Step 3: Match G-code commands (Move and coordinates)
+        # Match G-code coordinates and decide move type
         gcode_match = re.match(gcode_pattern, line)
         if gcode_match:
-            # Update Move (G0 or G1)
             gcode_entry["Move"] = gcode_match.group(1)
 
-            # Skip lines without valid G0/G1 moves
-            if not gcode_entry["Move"]:
+            # Check if the line contains an extrusion value (E)
+            has_extrusion = "E" in line
+
+            # Determine move type
+            gcode_entry["Move"] = "G1" if has_extrusion else "G0"
+
+            # Extract and update coordinates
+            new_x = float(gcode_match.group(2)) if gcode_match.group(2) else current_x
+            new_y = float(gcode_match.group(3)) if gcode_match.group(3) else current_y
+            new_z = float(gcode_match.group(4)) if gcode_match.group(4) else current_z
+
+            # Skip if the coordinates haven't changed
+            if new_x == current_x and new_y == current_y and new_z == current_z:
                 continue
 
-            # Extract coordinates and update current values
-            if gcode_match.group(2):
-                current_x = float(gcode_match.group(2))
-            if gcode_match.group(3):
-                current_y = float(gcode_match.group(3))
-            if gcode_match.group(4):
-                current_z = float(gcode_match.group(4))
+            # Update the current coordinates
+            current_x, current_y, current_z = new_x, new_y, new_z
 
             # Assign current coordinates to the entry
             gcode_entry["X"] = current_x
             gcode_entry["Y"] = current_y
             gcode_entry["Z"] = current_z
 
-            # Assign the current Layer and Type
+            # Update Layer and Type
             gcode_entry["Layer"] = current_layer
-            if gcode_entry["Move"] == "G0":
-                gcode_entry["Type"] = "TRAVEL"
-            else:
-                gcode_entry["Type"] = current_type
+            gcode_entry["Type"] = (
+                "TRAVEL" if gcode_entry["Move"] == "G0" else current_type
+            )
 
-            # Append the processed entry
             processed_gcode.append(gcode_entry)
 
     return processed_gcode

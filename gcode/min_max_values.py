@@ -2,7 +2,7 @@ import re
 from typing import List, Dict, Union, Any
 
 
-def get_max_values(gcode: List[str]) -> Dict[str, Union[float, None, Any]]:
+def get_max_values(gcode: List[str]) -> Dict[str, float | None | Any]:
     """
     Searches G-Code for maximum values of X, Y, and Z.
 

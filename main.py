@@ -6,6 +6,8 @@ __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
 __version__ = "1.2"
 
+from gcode.simplify_gcode import TYPE_VALUES
+
 # Example usage in main.py
 from imports import get_gcode
 from gcode import min_max_values as mima
@@ -81,7 +83,7 @@ plotter = plt.plot_bed(
 )
 
 # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="5-6")
+plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="all")
 
 # # Modifies the G-Code lines
 # # formats G-Code to KRL and appends tool-head orientation

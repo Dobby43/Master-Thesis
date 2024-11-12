@@ -1,6 +1,7 @@
 import pyvista as pv
 import numpy as np
 from typing import List, Dict, Union
+from gcode.gcode_dictionaries import get_type_values
 
 
 def plot_bed(
@@ -93,17 +94,9 @@ def plot_gcode(
     :param layers: Specify layers to plot as "all", a single layer number (e.g., "1"),
                    or a range of layers (e.g., "1-5").
     """
-    # Define color mapping for types
-    color_mapping = {
-        "SUPPORT": "green",
-        "WALL_OUTER": "blue",
-        "WALL_INNER": "cyan",
-        "SURFACE": "yellow",
-        "INFILL": "red",
-        "CURB": "magenta",
-        "UNKNOWN": "grey",
-        "TRAVEL": "grey",
-    }
+    # Import type values and extract color mapping
+    TYPE_VALUES = get_type_values()
+    color_mapping = {key: value["Color"] for key, value in TYPE_VALUES.items()}
 
     # Determine layer filter based on user input
     layer_range = None
@@ -127,10 +120,6 @@ def plot_gcode(
         if entry["X"] is not None and entry["Y"] is not None and entry["Z"] is not None:
             current_point = [entry["X"], entry["Y"], entry["Z"]]
             current_type = entry["Type"] or "UNKNOWN"
-
-            if entry["Move"] == "G0":
-                # If Move is G0, set Type to TRAVEL
-                current_type = "TRAVEL"
 
             if previous_point is not None:
                 grouped_lines[current_type].append([previous_point, current_point])
@@ -157,7 +146,9 @@ def plot_gcode(
         polyline = pv.PolyData()
         polyline.points = points
         polyline.lines = lines
-        plotter.add_mesh(polyline, color=color_mapping[type_name], line_width=2)
+        plotter.add_mesh(
+            polyline, color=color_mapping.get(type_name, "grey"), line_width=2
+        )
 
     # Show the plot
     plotter.show()
