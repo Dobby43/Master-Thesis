@@ -18,7 +18,7 @@ from export import export as exp
 
 # IMPORT_DIRECTORY and IMPORT_FILE
 IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
-IMPORT_FILE = r"Cura_02_11_CFFFP_FlowCalibrationCube.gcode"
+IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
 
 # Slicer used
 SLICER = "CURA"  # Sets dictionary used for essential G-Code lines in simplify_gcode
@@ -70,23 +70,23 @@ X_MAX = max_values["x_max"]
 Y_MAX = max_values["y_max"]
 Z_MAX = max_values["z_max"]
 # Gets necessary G-Code lines
-gcode_necessary = smplf.process_gcode(gcode_lines)
+gcode_necessary = smplf.process_gcode(gcode_lines, SLICER)
 
 
 for line in gcode_necessary:
     print(line)
 
 
-# # Erstelle das Druckbett und speichere das Plotter-Objekt
-# plotter = plt.plot_bed(
-#     bed_size_x=BED_SIZE_X,
-#     bed_size_y=BED_SIZE_Y,
-#     bed_size_z=BED_SIZE_Z,
-# )
+# Erstelle das Druckbett und speichere das Plotter-Objekt
+plotter = plt.plot_bed(
+    bed_size_x=BED_SIZE_X,
+    bed_size_y=BED_SIZE_Y,
+    bed_size_z=BED_SIZE_Z,
+)
 
-# # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-# plt.plot_gcode_path(plotter=plotter, gcode_lines=gcode_formatted, layers="all")
-#
+# Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
+plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="5-6")
+
 # # Modifies the G-Code lines
 # # formats G-Code to KRL and appends tool-head orientation
 # krl_lines = mdf.krl_format(

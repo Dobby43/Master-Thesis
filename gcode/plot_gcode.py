@@ -1,7 +1,6 @@
 import pyvista as pv
 import numpy as np
-import re
-from typing import List
+from typing import List, Dict, Union
 
 
 def plot_bed(
@@ -22,7 +21,7 @@ def plot_bed(
     :return: A PyVista plotter object containing the print bed.
     """
     # Initialize PyVista plotter
-    plotter = pv.Plotter()  # TODO: Ursprung mit RGB hinzufügen
+    plotter = pv.Plotter()
 
     # Create a gray XY-plane grid at Z = 0
     grid_x, grid_y = np.meshgrid(
@@ -81,16 +80,31 @@ def plot_bed(
     return plotter  # Return plotter object
 
 
-def plot_gcode_path(plotter: pv.Plotter, gcode_lines: List[str], layers: str):
+def plot_gcode(
+    plotter: pv.Plotter,
+    processed_gcode: List[Dict[str, Union[str, float, int, None]]],
+    layers: str,
+):
     """
-    Adds a G-code path to an existing PyVista plotter instance, with options for filtering by layer.
-    G0 moves are displayed in green, and G1 moves in blue.
+    Adds a G-code path to an existing PyVista plotter instance, with colors for different line types.
 
     :param plotter: A PyVista plotter object that contains the print bed.
-    :param gcode_lines: List of G-code lines representing the path.
+    :param processed_gcode: List of processed G-code dictionaries.
     :param layers: Specify layers to plot as "all", a single layer number (e.g., "1"),
                    or a range of layers (e.g., "1-5").
     """
+    # Define color mapping for types
+    color_mapping = {
+        "SUPPORT": "green",
+        "WALL_OUTER": "blue",
+        "WALL_INNER": "cyan",
+        "SURFACE": "yellow",
+        "INFILL": "red",
+        "CURB": "magenta",
+        "UNKNOWN": "grey",
+        "TRAVEL": "grey",
+    }
+
     # Determine layer filter based on user input
     layer_range = None
     if layers != "all":
@@ -100,74 +114,50 @@ def plot_gcode_path(plotter: pv.Plotter, gcode_lines: List[str], layers: str):
         else:
             layer_range = {int(layers)}  # Single layer as a set for easy checking
 
-    # Initialize lists for coordinates and command types
-    x_coords, y_coords, z_coords = [], [], []
-    gcode_commands = []  # Track whether each line is a G0 or G1 command
-    current_layer = -1  # Initialize layer counter
-    pattern = r"(G[01])\s+X\s*([-?\d\.]+)\s*,\s*Y\s*([-?\d\.]+)\s*,\s*Z\s*([-?\d\.]+)"
+    # Initialize storage for line data grouped by type
+    grouped_lines = {type_name: [] for type_name in color_mapping.keys()}
+    previous_point = None
+    previous_type = None
 
-    # Extract coordinates and command type (G0 or G1) from G-code lines
-    for line in gcode_lines:
-        # Check for layer comment to update the current layer
-        layer_match = re.match(r";LAYER:(\d+)", line)
-        if layer_match:
-            current_layer = int(layer_match.group(1))
-            continue  # Move to the next line after updating the current layer
+    # Build lines grouped by type
+    for entry in processed_gcode:
+        if layer_range is not None and entry["Layer"] not in layer_range:
+            continue  # Skip entries outside the specified layer range
 
-        # Skip lines if they're outside the specified layer range
-        if layer_range is not None and current_layer not in layer_range:
-            continue
+        if entry["X"] is not None and entry["Y"] is not None and entry["Z"] is not None:
+            current_point = [entry["X"], entry["Y"], entry["Z"]]
+            current_type = entry["Type"] or "UNKNOWN"
 
-        # Match G-code coordinates
-        match = re.search(pattern, line)
-        if match:
-            command = match.group(1)  # G0 or G1 command
-            x_val = float(match.group(2)) if match.group(2) else None
-            y_val = float(match.group(3)) if match.group(3) else None
-            z_val = float(match.group(4)) if match.group(4) else None
+            if entry["Move"] == "G0":
+                # If Move is G0, set Type to TRAVEL
+                current_type = "TRAVEL"
 
-            if x_val is not None and y_val is not None:
-                x_coords.append(x_val)
-                y_coords.append(y_val)
-                z_coords.append(
-                    z_val if z_val is not None else (z_coords[-1] if z_coords else 0)
-                )
-                gcode_commands.append(command)  # Store the command type
+            if previous_point is not None:
+                grouped_lines[current_type].append([previous_point, current_point])
 
-    # Check if points are found
-    if not x_coords or not y_coords:
-        print("No G-code coordinates found.")
-        return
+            previous_point = current_point
+            previous_type = current_type
 
-    # Convert coordinates into an array of points
-    points = np.column_stack((x_coords, y_coords, z_coords))
+    # Plot each type in a single batch
+    for type_name, line_segments in grouped_lines.items():
+        if not line_segments:
+            continue  # Skip if no lines for this type
 
-    # Separate the line segments for G0 and G1 commands
-    lines_g0, lines_g1 = [], []
-    for i in range(len(points) - 1):
-        if (
-            gcode_commands[i] == "G0"
-            and gcode_commands[i + 1] == "G0"
-            or gcode_commands[i] == "G1"
-            and gcode_commands[i + 1] == "G0"
-        ):
-            lines_g0.extend([2, i, i + 1])  # G0 move
-        else:
-            lines_g1.extend([2, i, i + 1])  # G1 move
+        # Combine all line segments into a single PolyData object
+        points = []
+        lines = []
+        for i, (start, end) in enumerate(line_segments):
+            points.extend(start)
+            points.extend(end)
+            lines.extend([2, i * 2, i * 2 + 1])  # Line structure for PolyData
 
-    # Plot G0 moves in green
-    if lines_g0:
-        polyline_g0 = pv.PolyData()
-        polyline_g0.points = points
-        polyline_g0.lines = np.array(lines_g0)
-        plotter.add_mesh(polyline_g0, color="green", line_width=2)
+        points = np.array(points).reshape(-1, 3)
+        lines = np.array(lines, dtype=np.int32)
 
-    # Plot G1 moves in blue
-    if lines_g1:
-        polyline_g1 = pv.PolyData()
-        polyline_g1.points = points
-        polyline_g1.lines = np.array(lines_g1)
-        plotter.add_mesh(polyline_g1, color="blue", line_width=2)
+        polyline = pv.PolyData()
+        polyline.points = points
+        polyline.lines = lines
+        plotter.add_mesh(polyline, color=color_mapping[type_name], line_width=2)
 
     # Show the plot
     plotter.show()
