@@ -83,7 +83,7 @@ def plot_bed(
 
 def plot_gcode(
     plotter: pv.Plotter,
-    processed_gcode: List[Dict[str, Union[str, float, int, None]]],
+    processed_gcode: List[Dict[str, str | float | int | None]],
     layers: str,
 ):
     """

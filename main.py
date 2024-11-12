@@ -12,6 +12,7 @@ from gcode.simplify_gcode import TYPE_VALUES
 from imports import get_gcode
 from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
+from krl import modify_to_krl as mdf
 from gcode import plot_gcode as plt
 
 # IMPORT_DIRECTORY and IMPORT_FILE
@@ -85,18 +86,18 @@ plotter = plt.plot_bed(
 # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
 plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="all")
 
-# # Modifies the G-Code lines
-# # formats G-Code to KRL and appends tool-head orientation
-# krl_lines = mdf.krl_format(
-#     gcode_formatted,
-#     a=ORIENTATION_A,
-#     b=ORIENTATION_B,
-#     c=ORIENTATION_C,
-#     end_pos=ZERO_POSITION,
-#     vel=VEL_PRT,
-# )
-# for line in krl_lines:
-#     print(line)
+# Modifies the G-Code lines
+# formats G-Code to KRL and appends tool-head orientation
+krl_lines = mdf.krl_format(
+    gcode_necessary,
+    a=ORIENTATION_A,
+    b=ORIENTATION_B,
+    c=ORIENTATION_C,
+    end_pos=ZERO_POSITION,
+    vel=VEL_PRT,
+)
+for line in krl_lines:
+    print(line)
 #
 #
 # # Robot configuration

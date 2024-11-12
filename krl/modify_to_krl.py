@@ -1,47 +1,79 @@
-import re
+from typing import List, Dict, Union
 
 
 def krl_format(
-    gcode: list, *, a: float, b: float, c: float, end_pos: str, vel: float
-) -> list:
+    gcode: list[dict[str, [str | float | int | None]]],
+    *,
+    a: float,
+    b: float,
+    c: float,
+    end_pos: str,
+    vel: float,
+) -> list[str]:
     """
-    Updates the G-code with specified orientations for the rotary axes A, B, and C.
+    Converts processed G-code to KRL format, including layer and type annotations.
 
-    :param gcode: Original list of G-code lines.
-    :type gcode: List[str]
+    :param gcode: List of processed G-code entries.
+    :type gcode: List[Dict[str, Union[str, float, int, None]]]
     :param a: Orientation of rotary axis A in degrees.
     :type a: float
     :param b: Orientation of rotary axis B in degrees.
     :type b: float
     :param c: Orientation of rotary axis C in degrees.
     :type c: float
-    :param end_pos: End position of robot.
+    :param end_pos: End position of robot in KRL format.
     :type end_pos: str
     :param vel: Velocity of robot during printing.
     :type vel: float
-    :returns: Updated list of G-code lines with orientations for axes A, B, and C.
+    :returns: Updated list of KRL formatted lines.
     :rtype: List[str]
     """
+    krl_lines = []
+    current_layer = None
+    current_type = None
+    first_position = True  # To handle the first position separately
 
-    krl_axis = []
-    found_first_coord = False  # switch to check if first coordinate is found
+    # Define column widths for alignment
+    field_width = 8
+    coord_format = f"{{:>{field_width}.2f}}"
 
-    for line in gcode:
-        match = re.search(r"(G[01]\s*)(.*)", line)
-        if match and not found_first_coord:
-            coordinates = match.group(2)
-            krl_axis.append(
-                f"\nPTP {{{coordinates} A {a}, B {b}, C {c}, E1 0, E2 0, E3 0, E4 0}} C_PTP"
-            )
-            krl_axis.append(f"\n$VEL.CP={vel:.2f}")
-            found_first_coord = True
-        elif match:
-            coordinates = match.group(2)
-            krl_line = f"\nLIN {{{coordinates} A {a}, B {b}, C {c}, E1 0, E2 0, E3 0, E4 0}} C_DIS"
-            krl_axis.append(krl_line)
-        else:
-            krl_axis.append(line)
+    for entry in gcode:
+        # Extract relevant values from the entry
+        x = coord_format.format(entry.get("X", 0.0))
+        y = coord_format.format(entry.get("Y", 0.0))
+        z = coord_format.format(entry.get("Z", 0.0))
+        layer = entry.get("Layer")
+        move_type = entry.get("Move")
+        type_ = entry.get("Type", "UNKNOWN")
 
-    krl_axis.append("\nPTP {" + end_pos[1:-1] + " E1 0, E2 0, E3 0, E4 0} C_PTP")
+        # Insert a layer comment on layer change
+        if layer != current_layer:
+            krl_lines.append(f"; LAYER: {layer}")
+            current_layer = layer
 
-    return krl_axis
+        # Insert a type comment on type change
+        if type_ != current_type:
+            krl_lines.append(f"; TYPE: {type_}")
+            current_type = type_
+
+        # Format the KRL command
+        if move_type in ["G1", "G0"]:  # Only process G0 (Travel) or G1 (Print)
+            if first_position:
+                # First position is a PTP movement
+                krl_lines.append(
+                    f"PTP {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
+                    f"E1 0, E2 0, E3 0, E4 0}} C_PTP"
+                )
+                krl_lines.append(f"$VEL.CP={vel:.2f}")  # Add velocity only once
+                first_position = False
+            else:
+                # LIN movements for subsequent points
+                krl_lines.append(
+                    f"LIN {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
+                    f"E1 0, E2 0, E3 0, E4 0}} C_DIS"
+                )
+
+    # Append the final position
+    krl_lines.append(f"PTP {{{end_pos[1:-1]}, E1 0, E2 0, E3 0, E4 0 }} C_PTP")
+
+    return krl_lines
