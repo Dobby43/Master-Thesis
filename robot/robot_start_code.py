@@ -1,7 +1,17 @@
 def project_setup(file: [str]) -> str:
     filename = file.upper()
+    # Checks if length of filename is <25
+    if len(filename) >= 25:
+        filename_new = filename[:25]
+        print(
+            f"Filename {filename} exceeds 25 characters.\n"
+            f"Filename inside KRL file is {filename_new} "
+        )
+    else:
+        filename_new = filename
+
     setup = (
-        f"DEF {filename} ( )"
+        f"DEF {filename_new} ( )"
         f"\n"
         f"\n;Declarations for RSI "
         f"\nDECL INT RET "
@@ -95,11 +105,6 @@ def block_coordinates(
         f"\n"
     )
 
-    a = f"""
-    dsfsdf{start_pos}
-    sdfsdf
-    sdfsdf
-    """
     return block_coordinates
 
 
@@ -112,6 +117,7 @@ def motion(vel_cp: float, vel_ori1: float, vel_ori2: float, adv: int) -> [str]:
         f"\n   $VEL.ORI2 = {vel_ori2:.0f} ;deg/sec"
         f"\n   $ADVANCE = {adv:.0f}"
         f"\n;ENDFOLD MOTION"
+        f"\n"
         f"\n"
     )
     return motion

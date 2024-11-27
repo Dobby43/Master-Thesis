@@ -24,7 +24,7 @@ def export_to_src(
     :param file_directory: Directory where the .src file should be saved.
     :param file_name: Name of the .src file (without extension).
     """
-    # Textbausteine in einer Liste in der gewünschten Reihenfolge sammeln
+    # collects all given textblocks
     text_blocks_start = [
         block if block is not None else ""
         for block in [setup, init, sta_conc_print, bco, move]
@@ -39,7 +39,7 @@ def export_to_src(
 
     full_path = os.path.join(file_directory, f"{file_name}.src")
 
-    # Schreiben des vollständigen KRL-Codes in die Datei
+    # writes complete KRL-Code to give path
     with open(full_path, "w") as file:
         file.write(full_krl_code)
 

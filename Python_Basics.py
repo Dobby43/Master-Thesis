@@ -207,9 +207,11 @@ print(calculation3(3.2, 2.2))
 
 
 ## Colour code
-aswf: int = 5 # grün unterringelt == Hinweis auf Rechtschreibung / Benennung
-f: float = 4.3 # rot unterringelt == nicht verwendet
-line: str = "fuck" # ausgegraut == ungenutzt
+aswf: int = 5  # grün unterringelt == Hinweis auf Rechtschreibung / Benennung
+f: float = 4.3  # rot unterringelt == nicht verwendet
+line: str = "fuck"  # ausgegraut == ungenutzt
 
-
-
+## Print
+name = "Luke"
+print("Hello", name, "!" "I am your father.", end="|\n")
+print("My name is", name, sep=" | ")

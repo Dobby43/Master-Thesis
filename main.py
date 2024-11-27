@@ -6,6 +6,8 @@ __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
 __version__ = "1.2"
 
+from fontTools.ttx import process
+
 from gcode.simplify_gcode import TYPE_VALUES
 
 # Example usage in main.py
@@ -14,6 +16,13 @@ from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
 from krl import modify_to_krl as mdf
 from gcode import plot_gcode as plt
+from rhino.process_gcode import process_points
+from robot import robot_start_code as rsc
+from robot import robot_end_code as rec
+from export import export_to_src as exp
+from rhino import process_gcode as prc
+from rhino import create_polyline_test as pol
+
 
 # IMPORT_DIRECTORY and IMPORT_FILE
 IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
@@ -22,9 +31,16 @@ IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
 # Slicer used
 SLICER = "CURA"  # Sets dictionary used for essential G-Code lines in simplify_gcode
 
-# EXPORT_DIRECTORY and EXPORT_FILE
-EXPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON\V1.0"
-EXPORT_FILE = "Cura_02_11_CFFFP_FlowCalibrationCube"
+# EXPORT_DIRECTORY_KRL and EXPORT_FILE_KRL
+EXPORT_DIRECTORY_KRL = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON\V1.2"
+EXPORT_FILE_KRL = "Cura_02_11_CFFFP_3DBenchy"
+
+# EXPORT_DIRECTORY_RHINO and EXPORT_FILE_RHINO
+EXPORT_DIRECTORY_RHINO = (
+    r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Rhino_Files"
+)
+EXPORT_FILE_RHINO = EXPORT_FILE_KRL
+
 
 # Print-bed Size
 BED_SIZE_X = 1200
@@ -76,33 +92,33 @@ for line in gcode_necessary:
     print(line)
 
 
-# Erstelle das Druckbett und speichere das Plotter-Objekt
-plotter = plt.plot_bed(
-    bed_size_x=BED_SIZE_X,
-    bed_size_y=BED_SIZE_Y,
-    bed_size_z=BED_SIZE_Z,
-)
-
-# Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="all")
-
-# Modifies the G-Code lines
-# formats G-Code to KRL and appends tool-head orientation
-krl_lines = mdf.krl_format(
-    gcode_necessary,
-    a=ORIENTATION_A,
-    b=ORIENTATION_B,
-    c=ORIENTATION_C,
-    end_pos=ZERO_POSITION,
-    vel=VEL_PRT,
-)
-for line in krl_lines:
-    print(line)
+# # Erstelle das Druckbett und speichere das Plotter-Objekt
+# plotter = plt.plot_bed(
+#     bed_size_x=BED_SIZE_X,
+#     bed_size_y=BED_SIZE_Y,
+#     bed_size_z=BED_SIZE_Z,
+# )
+#
+# # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
+# plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="0")
+#
+# # Modifies the G-Code lines
+# # formats G-Code to KRL and appends tool-head orientation
+# krl_lines = mdf.krl_format(
+#     gcode_necessary,
+#     a=ORIENTATION_A,
+#     b=ORIENTATION_B,
+#     c=ORIENTATION_C,
+#     end_pos=ZERO_POSITION,
+#     vel=VEL_PRT,
+# )
+# for line in krl_lines:
+#     print(line)
 #
 #
 # # Robot configuration
 # # Robot start code
-# setup = rsc.project_setup(EXPORT_FILE)
+# setup = rsc.project_setup(EXPORT_FILE_KRL)
 # init = rsc.initialisation()
 # sta_conc_print = rsc.start_concrete_printing()
 # bco = rsc.block_coordinates(
@@ -128,6 +144,21 @@ for line in krl_lines:
 #     bco=bco,
 #     move=move,
 #     code=krl_lines,
-#     file_directory=EXPORT_DIRECTORY,
-#     file_name=EXPORT_FILE,
+#     file_directory=EXPORT_DIRECTORY_KRL,
+#     file_name=EXPORT_FILE_KRL,
 # )
+
+# # RHINO POLYLINES
+processed_points = prc.process_points(data=gcode_necessary)
+for line in processed_points:
+    print(line)
+
+# # Erstelle das Druckbett und speichere das Plotter-Objekt
+# plotter = plt.plot_bed(
+#     bed_size_x=BED_SIZE_X,
+#     bed_size_y=BED_SIZE_Y,
+#     bed_size_z=BED_SIZE_Z,
+# )
+#
+# plt.plot_gcode(plotter=plotter, processed_gcode=processed_points, layers="0")
+(pol.export_rhino(processed_points, EXPORT_DIRECTORY_RHINO, EXPORT_FILE_RHINO))

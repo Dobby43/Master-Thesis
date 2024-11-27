@@ -34,26 +34,30 @@ def krl_format(
     first_position = True  # To handle the first position separately
 
     # Define column widths for alignment
-    field_width = 8
-    coord_format = f"{{:>{field_width}.2f}}"
+    field_width_x = 7
+    field_width_y = 7
+    field_width_z = 7
+    coord_format_x = f"{{:>{field_width_x}.2f}}"
+    coord_format_y = f"{{:>{field_width_y}.2f}}"
+    coord_format_z = f"{{:>{field_width_z}.2f}}"
 
     for entry in gcode:
         # Extract relevant values from the entry
-        x = coord_format.format(entry.get("X", 0.12))
-        y = coord_format.format(entry.get("Y", 0.12))
-        z = coord_format.format(entry.get("Z", 0.12))
+        x = coord_format_x.format(entry.get("X", 0.12))
+        y = coord_format_y.format(entry.get("Y", 0.12))
+        z = coord_format_z.format(entry.get("Z", 0.12))
         layer = entry.get("Layer")
         move_type = entry.get("Move")
         type_ = entry.get("Type", "UNKNOWN")
 
         # Insert a layer comment on layer change
         if layer != current_layer:
-            krl_lines.append(f"; LAYER: {layer}")
+            krl_lines.append(f";LAYER: {layer}" "\n")
             current_layer = layer
 
         # Insert a type comment on type change
         if type_ != current_type:
-            krl_lines.append(f"; TYPE: {type_}")
+            krl_lines.append(f";TYPE: {type_}" "\n")
             current_type = type_
 
         # Format the KRL command
@@ -63,14 +67,16 @@ def krl_format(
                 krl_lines.append(
                     f"PTP {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
                     f"E1 0, E2 0, E3 0, E4 0}} C_PTP"
+                    "\n"
                 )
-                krl_lines.append(f"$VEL.CP={vel:.2f}")  # Add velocity only once
+                krl_lines.append(f"$VEL.CP={vel:.2f}" "\n")  # Add velocity only once
                 first_position = False
             else:
                 # LIN movements for subsequent points
                 krl_lines.append(
                     f"LIN {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
                     f"E1 0, E2 0, E3 0, E4 0}} C_DIS"
+                    "\n"
                 )
 
     # Append the final position
