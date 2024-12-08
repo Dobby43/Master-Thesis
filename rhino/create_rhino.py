@@ -47,22 +47,33 @@ def create_layer_structure(rhino_file, layers):
         rhino_file.Layers.Add(parent_layer)
         print(f"Parent layer '{parent_name}' created.")
 
-        # Create sublayers
+        # Find the parent layer in the Rhino file
+        parent_layer_obj = next(
+            (l for l in rhino_file.Layers if l.Name == parent_name), None
+        )
+        if not parent_layer_obj:
+            print(f"Error: Parent layer '{parent_name}' not found after creation.")
+            continue  # Skip creating sublayers
+
+        parent_layer_id = parent_layer_obj.Id
+
+        # Create dynamic sublayers if specified
         if layer_info.get("dynamic_sublayers"):
             max_sublayers = layer_info.get("max_sublayers", 0)
             for i in range(max_sublayers + 1):
                 sublayer_name = f"{i:04d}"
                 sublayer = Layer()
                 sublayer.Name = sublayer_name
-                sublayer.ParentLayerId = parent_layer.Id
+                sublayer.ParentLayerId = parent_layer_id
                 sublayer.Color = Color.FromArgb(*layer_info["sublayer_color"])
                 rhino_file.Layers.Add(sublayer)
                 print(f"  Sublayer '{sublayer_name}' added under '{parent_name}'.")
+        # Create static sublayers if provided
         elif "sublayers" in layer_info:
             for sublayer_name in layer_info["sublayers"]:
                 sublayer = Layer()
                 sublayer.Name = sublayer_name
-                sublayer.ParentLayerId = parent_layer.Id
+                sublayer.ParentLayerId = parent_layer_id
                 sublayer.Color = Color.FromArgb(*layer_info["sublayer_color"])
                 rhino_file.Layers.Add(sublayer)
                 print(f"  Sublayer '{sublayer_name}' added under '{parent_name}'.")
