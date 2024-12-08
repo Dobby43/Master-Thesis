@@ -1,10 +1,10 @@
 import re
 from typing import List, Dict, Union
-from gcode import gcode_dictionaries
+from gcode import slicer_keywordmanager
 
 # Define dictionaries for different slicers
-SLICER_PATTERNS = gcode_dictionaries.get_slicer_pattern()
-TYPE_VALUES = gcode_dictionaries.get_type_values()
+SLICER_PATTERNS = slicer_keywordmanager.get_slicer_pattern()
+TYPE_VALUES = slicer_keywordmanager.get_type_values()
 
 
 def translate_type(type_name: str, slicer: str) -> str:

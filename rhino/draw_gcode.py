@@ -4,7 +4,7 @@ import Rhino.DocObjects as rdo
 import Rhino.FileIO as rfi
 from System.Drawing import Color
 from System.Collections.Generic import List as NetList
-from gcode.gcode_dictionaries import get_type_values
+from gcode.slicer_keywordmanager import get_type_values
 
 type_values = get_type_values()
 

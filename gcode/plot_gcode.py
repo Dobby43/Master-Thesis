@@ -1,7 +1,7 @@
 import pyvista as pv
 import numpy as np
 from typing import List, Dict, Union
-from gcode.gcode_dictionaries import get_type_values
+from gcode.slicer_keywordmanager import get_type_values
 
 
 def plot_bed(

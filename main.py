@@ -14,8 +14,9 @@ from gcode import simplify_gcode as smplf
 # Rhino
 from rhino import create_rhino as crt
 from rhino import process_gcode as prc
-from rhino import draw_polyline as drw
+from rhino import draw_gcode as drw
 
+# #----------------IMPORT AND EXPORT----------------
 # IMPORT_DIRECTORY and IMPORT_FILE
 IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
 IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
@@ -33,7 +34,7 @@ EXPORT_DIRECTORY_RHINO = (
 )
 EXPORT_FILE_RHINO = EXPORT_FILE_KRL
 
-
+# ----------------PRINTER CONFIGURATION----------------
 # Print-bed Size
 BED_SIZE_X = 1200
 BED_SIZE_Y = 4500
@@ -63,6 +64,7 @@ VEL_ORI1 = 100  # [deg/sec]
 VEL_ORI2 = 100  # [deg/sec]
 ADVANCE = 3  # Number of code lines calculated in advance
 
+# ----------------G-CODE IMPORT AND EVALUATION----------------
 # Read the G-Code lines
 gcode_lines = get_gcode.get_gcode_lines(IMPORT_DIRECTORY, IMPORT_FILE)
 
@@ -85,7 +87,7 @@ for line in gcode_necessary:
 LAYER_MAX = gcode_necessary[-1]["Layer"]
 
 
-# # Erstelle das Druckbett und speichere das Plotter-Objekt
+# ----------------PYVISTA PLOT----------------
 # plotter = plt.plot_bed(
 #     bed_size_x=BED_SIZE_X,
 #     bed_size_y=BED_SIZE_Y,
@@ -95,6 +97,8 @@ LAYER_MAX = gcode_necessary[-1]["Layer"]
 # # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
 # plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="0")
 #
+
+# ----------------KRL FORMATING OF G-CODE----------------
 # Modifies the G-Code lines
 # formats G-Code to KRL and appends tool-head orientation
 # krl_lines = mdf.krl_format(
@@ -141,16 +145,7 @@ LAYER_MAX = gcode_necessary[-1]["Layer"]
 #     file_name=EXPORT_FILE_KRL,
 # )
 
-# # RHINO POLYLINES
-# processed_points = prc.process_points(data=gcode_necessary)
-# for line in processed_points:
-#     print(line)
-
-
-# pol.export_rhino_file(
-#     processed_points, EXPORT_DIRECTORY_RHINO, EXPORT_FILE_RHINO, type_values
-# )
-
+# ----------------RHINO FILE----------------
 # Process G-Code for Rhino file
 extended_gcode = prc.process_points(gcode_necessary)
 
@@ -158,8 +153,8 @@ for line in extended_gcode:
     print(line)
 
 # Get filepath of generated Rhino file
-filepath = crt.initialize_and_save_rhino_file(
-    LAYER_MAX, EXPORT_DIRECTORY_RHINO, EXPORT_FILE_RHINO
+filepath = crt.initialize_rhino_file(
+    EXPORT_DIRECTORY_RHINO, EXPORT_FILE_RHINO, LAYER_MAX
 )
 
 # Draw into Rhino file
