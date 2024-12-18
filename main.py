@@ -6,6 +6,7 @@ __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
 __version__ = "1.4"
 
+import json
 from gcode import get_gcode
 
 # Slicer
@@ -25,29 +26,24 @@ from rhino import draw_printbed as drp
 # Slicer used
 SLICER = "CURA"  # Sets dictionary used for essential G-Code lines in simplify_gcode
 
-# ----------------IMPORT----------------
+# ----------------STL DIRECTORIES----------------
+IMPORT_DIRECTORY_STL = (
+    r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\STL"
+)
+IMPORT_FILE_STL = r"Cura_04_12_CFFFP_Quader 200x200x60.stl"
 
-# IMPORT_DIRECTORY_STL and IMPORT_FILE_STL
-# IMPORT_DIRECTORY_STL = (
-#     r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\STL"
-# )
-# IMPORT_FILE_STL = r"Cura_04_12_CFFFP_Quader 200x200x60.stl"
+EXPORT_DIRECTORY_STL = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\G_Code\manual"
+EXPORT_FILE_STL = r"Cura_04_12_CFFFP_xyzCalibration_cube"
 
-# IMPORT_DIRECTORY_GCODE and IMPORT_FILE_GCODE G-Code
-IMPORT_DIRECTORY_GCODE = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\G_Code\manual"
-IMPORT_FILE_GCODE = r"Cura_04_12_CFFFP_Quader 200x200x60.gcode"
+# ----------------G-CODE DIRECTORIES----------------
+IMPORT_DIRECTORY_GCODE = EXPORT_DIRECTORY_STL
+IMPORT_FILE_GCODE = f"{EXPORT_FILE_STL}.gcode"
 
-
-# ----------------EXPORT----------------
-# EXPORT_DIRECTORY_GCODE and EXPORT_FILE_GCODE
-EXPORT_DIRECTORY_GCODE = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\GCODE_Files\manual"
-EXPORT_FILE_GCODE = r"Cura_04_12_CFFFP_Quader 200x200x60.gcode"
-
-# EXPORT_DIRECTORY_KRL and EXPORT_FILE_KRL
+# ----------------KRL DIRECTORIES----------------
 EXPORT_DIRECTORY_KRL = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\KRL_Files"
-EXPORT_FILE_KRL = "Cura_04_12_CFFFP_Quader 200x200x60"
+EXPORT_FILE_KRL = "Cura_04_12_CFFFP_xyzCalibration_cube"
 
-# EXPORT_DIRECTORY_RHINO and EXPORT_FILE_RHINO
+# ----------------RHINO DIRECTORIES----------------
 EXPORT_DIRECTORY_RHINO = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\Rhino_Files\V1.4"
 EXPORT_FILE_RHINO = EXPORT_FILE_KRL
 

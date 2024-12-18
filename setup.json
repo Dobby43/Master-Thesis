@@ -2,136 +2,273 @@
     "name": "Slicing and Printing Configuration",
     "version": 1,
     "type": "configuration",
-    "author": "Unknown",
+    "author": "David Scheidt",
     "settings": {
         "Directory": {
-            "label": "File Paths",
-            "type": "category",
-            "description": "Paths for input and output files",
-            "children": {
-                "input_stl_path": {
-                    "label": "Input STL Path",
-                    "description": "Path to the input STL file",
-                    "value": "C:\\path\\to\\default\\input\\stl",
+            "stl": {
+                "input": {
+                    "file_path": {
+                        "description": "Path to the directory containing the input STL file",
+                        "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\Input\\STL",
+                        "type": "str"
+                    },
+                    "file_name": {
+                        "description": "Name of the input STL file",
+                        "value": "Cura_04_12_CFFFP_Quader 200x200x60.stl",
+                        "type": "str"
+                    }
+                },
+                "output": {
+                    "file_path": {
+                        "description": "Path to the directory containing the output STL file",
+                        "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\Output\\STL",
+                        "type": "str"
+                    },
+                    "file_name": {
+                        "description": "Name of the output STL file",
+                        "value": "Processed_Quader_200x200x60.stl",
+                        "type": "str"
+                    }
+                }
+            },
+            "krl": {
+                "file_path": {
+                    "description": "Path to the directory containing the KRL file",
+                    "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\Output\\KRL_Files",
                     "type": "str"
                 },
-                "input_gcode_path": {
-                    "label": "Input GCode Path",
-                    "description": "Path to the input GCode file",
-                    "value": "C:\\path\\to\\default\\input\\gcode",
+                "file_name": {
+                    "description": "Name of the KRL file",
+                    "value": "Cura_04_12_CFFFP_xyzCalibration_cube.src",
+                    "type": "str"
+                }
+            },
+            "rhino": {
+                "file_path": {
+                    "description": "Path to the directory containing the Rhino file",
+                    "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\Output\\Rhino_Files\\V1.4",
                     "type": "str"
                 },
-                "output_gcode_path": {
-                    "label": "Output GCode Path",
-                    "description": "Path to the output GCode file",
-                    "value": "C:\\path\\to\\default\\output\\gcode",
-                    "type": "str"
-                },
-                "output_rhino_path": {
-                    "label": "Output Rhino Path",
-                    "description": "Path to the output Rhino file",
-                    "value": "C:\\path\\to\\default\\output\\rhino",
+                "file_name": {
+                    "description": "Name of the Rhino file",
+                    "value": "example.3dm",
                     "type": "str"
                 }
             }
         },
-        "Drucker": {
-            "label": "Printer Settings",
-            "type": "category",
-            "description": "Printer-specific settings",
-            "children": {
-                "bed_size_x": {
-                    "label": "Bed Size X",
-                    "description": "Size of the printer bed along the X-axis in mm",
-                    "value": 1200,
-                    "type": "int"
+        "Printer": {
+            "bed_size_x": {
+                "description": "Size of the printer bed along the X-axis in mm",
+                "value": 1200,
+                "type": "int"
+            },
+            "bed_size_y": {
+                "description": "Size of the printer bed along the Y-axis in mm",
+                "value": 4500,
+                "type": "int"
+            },
+            "bed_size_z": {
+                "description": "Size of the printer bed along the Z-axis in mm",
+                "value": 2000,
+                "type": "int"
+            },
+            "tool_orientation": {
+                "description": "Orientation of the tool head in degrees",
+                "value": {
+                    "A": 0,
+                    "B": 0,
+                    "C": 180
                 },
-                "bed_size_y": {
-                    "label": "Bed Size Y",
-                    "description": "Size of the printer bed along the Y-axis in mm",
-                    "value": 4500,
-                    "type": "int"
-                },
-                "bed_size_z": {
-                    "label": "Bed Size Z",
-                    "description": "Size of the printer bed along the Z-axis in mm",
-                    "value": 2000,
-                    "type": "int"
-                },
-                "tool_orientation": {
-                    "label": "Tool Orientation",
-                    "description": "Orientation of the tool head in degrees",
-                    "value": { "A": 0, "B": 0, "C": 180 },
-                    "type": "dict"
-                }
+                "type": "dict"
             }
         },
         "Slicer": {
-            "label": "Slicer Settings",
-            "type": "category",
-            "description": "Settings for the slicing software",
-            "children": {
-                "slicer_type": {
-                    "label": "Slicer Type",
-                    "description": "The type of slicer used (e.g., CURA, Slic3r)",
-                    "value": "CURA",
-                    "type": "str"
-                },
-                "cmd_path": {
-                    "label": "Command Path",
-                    "description": "Path to the slicer's executable file",
-                    "value": "C:\\path\\to\\slicer\\executable",
-                    "type": "str"
-                },
-                "config_file": {
-                    "label": "Config File Path",
-                    "description": "Path to the slicer configuration file",
-                    "value": "C:\\path\\to\\slicer\\config",
-                    "type": "str"
-                },
-                "arguments": {
-                    "label": "Slicer Arguments",
-                    "description": "Additional arguments for slicing",
-                    "value": {
-                        "LayerHeight": 0.2,
-                        "Infill": 20,
-                        "Supports": true,
-                        "WallThickness": 1.2
-                    },
-                    "type": "dict"
-                }
+            "slicer_type": {
+                "description": "The type of slicer used (CURA)",
+                "value": "CURA",
+                "type": "str"
+            },
+            "cmd_path": {
+                "description": "Path to the slicer's executable file",
+                "value": "C:\\path\\to\\slicer\\executable",
+                "type": "str"
+            },
+            "config_file": {
+                "description": "Path to the slicer configuration file",
+                "value": "C:\\path\\to\\slicer\\config",
+                "type": "str"
+            },
+            "arguments": {
+                "description": "Additional arguments for slicing. These overwrite the values in the printer setup data",
+                "value": null,
+                "type": "dict"
             }
         },
         "Rhino": {
-            "label": "Rhino Visualization",
-            "type": "category",
-            "description": "Settings for Rhino file generation and visualization",
-            "children": {
-                "support_color": {
-                    "label": "Support Color",
-                    "description": "Color for support structures in hex format",
-                    "value": "#FF0000",
-                    "type": "str"
-                },
-                "support_line_type": {
-                    "label": "Support Line Type",
-                    "description": "Line type for support structures (Continuous, Dashed, DashDot, Dotted)",
-                    "value": "Dashed",
-                    "type": "str"
-                },
-                "geometry_color": {
-                    "label": "Geometry Color",
-                    "description": "Color for geometry in hex format",
-                    "value": "#0000FF",
-                    "type": "str"
-                },
-                "geometry_line_type": {
-                    "label": "Geometry Line Type",
-                    "description": "Line type for geometry (Continuous, Dashed, DashDot, Dotted)",
-                    "value": "Continuous",
-                    "type": "str"
+            "design": {
+                "toolpath": {
+                    "SUPPORT": {
+                        "color": {
+                            "description": "Color for SUPPORT structures",
+                            "value": "green",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for SUPPORT structures",
+                            "value": "Continuous",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "WALL_OUTER": {
+                        "color": {
+                            "description": "Color for WALL_OUTER structures",
+                            "value": "blue",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for WALL_OUTER structures",
+                            "value": "Continuous",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "WALL_INNER": {
+                        "color": {
+                            "description": "Color for WALL_INNER structures",
+                            "value": "cyan",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for WALL_INNER structures",
+                            "value": "Continuous",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "SURFACE": {
+                        "color": {
+                            "description": "Color for SURFACE structures",
+                            "value": "yellow",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for SURFACE structures",
+                            "value": "Continuous",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "INFILL": {
+                        "color": {
+                            "description": "Color for INFILL structures",
+                            "value": "red",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for INFILL structures",
+                            "value": "Continuous",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "CURB": {
+                        "color": {
+                            "description": "Color for CURB structures",
+                            "value": "magenta",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for CURB structures",
+                            "value": "Continuous",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "BRIDGE": {
+                        "color": {
+                            "description": "Color for BRIDGE structures",
+                            "value": "orange",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for BRIDGE structures",
+                            "value": "Continuous",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "UNKNOWN": {
+                        "color": {
+                            "description": "Color for UNKNOWN structures",
+                            "value": "lime",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for UNKNOWN structures",
+                            "value": "DashDot",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    },
+                    "TRAVEL": {
+                        "color": {
+                            "description": "Color for TRAVEL structures",
+                            "value": "grey",
+                            "type": "str"
+                        },
+                        "linetype": {
+                            "description": "Linetype for TRAVEL structures",
+                            "value": "Dashed",
+                            "type": "enum",
+                            "options": {
+                                "Continuous": "Continuous",
+                                "Dashed": "Dashed",
+                                "DashDot": "DashDot",
+                                "Dotted": "Dotted"
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
-}
