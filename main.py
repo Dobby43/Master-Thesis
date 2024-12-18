@@ -4,35 +4,51 @@ This file contains the basis for all adjacent functions
 
 __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
-__version__ = "1.2"
+__version__ = "1.4"
 
-# Example usage in main.py
-from imports import get_gcode
+from gcode import get_gcode
+
+# Slicer
+# cura
+
+# gcode
 from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
 
-# Rhino
+# rhino
 from rhino import create_rhino as crt
 from rhino import process_gcode as prc
 from rhino import draw_gcode as drg
 from rhino import draw_printbed as drp
 
-# #----------------IMPORT AND EXPORT----------------
-# IMPORT_DIRECTORY and IMPORT_FILE
-IMPORT_DIRECTORY = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\G_Code"
-IMPORT_FILE = r"Cura_02_11_CFFFP_3DBenchy.gcode"
 
 # Slicer used
 SLICER = "CURA"  # Sets dictionary used for essential G-Code lines in simplify_gcode
 
+# ----------------IMPORT----------------
+
+# IMPORT_DIRECTORY_STL and IMPORT_FILE_STL
+# IMPORT_DIRECTORY_STL = (
+#     r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\STL"
+# )
+# IMPORT_FILE_STL = r"Cura_04_12_CFFFP_Quader 200x200x60.stl"
+
+# IMPORT_DIRECTORY_GCODE and IMPORT_FILE_GCODE G-Code
+IMPORT_DIRECTORY_GCODE = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\G_Code\manual"
+IMPORT_FILE_GCODE = r"Cura_04_12_CFFFP_Quader 200x200x60.gcode"
+
+
+# ----------------EXPORT----------------
+# EXPORT_DIRECTORY_GCODE and EXPORT_FILE_GCODE
+EXPORT_DIRECTORY_GCODE = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\GCODE_Files\manual"
+EXPORT_FILE_GCODE = r"Cura_04_12_CFFFP_Quader 200x200x60.gcode"
+
 # EXPORT_DIRECTORY_KRL and EXPORT_FILE_KRL
-EXPORT_DIRECTORY_KRL = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\KRL_Files\KRL_EXPORT_PYTHON\V1.2"
-EXPORT_FILE_KRL = "Cura_02_11_CFFFP_3DBenchy"
+EXPORT_DIRECTORY_KRL = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\KRL_Files"
+EXPORT_FILE_KRL = "Cura_04_12_CFFFP_Quader 200x200x60"
 
 # EXPORT_DIRECTORY_RHINO and EXPORT_FILE_RHINO
-EXPORT_DIRECTORY_RHINO = (
-    r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Rhino_Files\Tests"
-)
+EXPORT_DIRECTORY_RHINO = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\Rhino_Files\V1.4"
 EXPORT_FILE_RHINO = EXPORT_FILE_KRL
 
 # ----------------PRINTER CONFIGURATION----------------
@@ -65,9 +81,20 @@ VEL_ORI1 = 100  # [deg/sec]
 VEL_ORI2 = 100  # [deg/sec]
 ADVANCE = 3  # Number of code lines calculated in advance
 
+# ----------------SLICING OF .STL FILE----------------
+# print("Starting to slice")
+# sucess, message = slicu.slice(
+#     stl_file=IMPORT_FILE_STL,
+#     import_directory_stl=IMPORT_DIRECTORY_STL,
+#     export_directory_gcode=EXPORT_DIRECTORY_GCODE,
+#     export_file_gcode=EXPORT_FILE_GCODE,
+# )
+# print(message)
+# print(f"Finished slicing {IMPORT_FILE_GCODE}")
+
 # ----------------G-CODE IMPORT AND EVALUATION----------------
 # Read the G-Code lines
-gcode_lines = get_gcode.get_gcode_lines(IMPORT_DIRECTORY, IMPORT_FILE)
+gcode_lines = get_gcode.get_gcode_lines(IMPORT_DIRECTORY_GCODE, IMPORT_FILE_GCODE)
 
 # Simplify_gcode
 # Gets min X, Y and Z values
@@ -96,12 +123,12 @@ LAYER_MAX = gcode_necessary[-1]["Layer"]
 # )
 #
 # # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-# plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="0")
-#
+# plt.plot_gcode(plotter=plotter, processed_gcode=gcode_necessary, layers="all")
+
 
 # ----------------KRL FORMATING OF G-CODE----------------
-# Modifies the G-Code lines
-# formats G-Code to KRL and appends tool-head orientation
+# # Modifies the G-Code lines
+# # formats G-Code to KRL and appends tool-head orientation
 # krl_lines = mdf.krl_format(
 #     gcode_necessary,
 #     a=ORIENTATION_A,
@@ -112,8 +139,7 @@ LAYER_MAX = gcode_necessary[-1]["Layer"]
 # )
 # for line in krl_lines:
 #     print(line)
-# #
-# #
+#
 # # Robot configuration
 # # Robot start code
 # setup = rsc.project_setup(EXPORT_FILE_KRL)

@@ -43,9 +43,9 @@ def krl_format(
 
     for entry in gcode:
         # Extract relevant values from the entry
-        x = coord_format_x.format(entry.get("X", 0.12))
-        y = coord_format_y.format(entry.get("Y", 0.12))
-        z = coord_format_z.format(entry.get("Z", 0.12))
+        x = coord_format_x.format(entry.get("X", 0))
+        y = coord_format_y.format(entry.get("Y", 0))
+        z = coord_format_z.format(entry.get("Z", 0))
         layer = entry.get("Layer")
         move_type = entry.get("Move")
         type_ = entry.get("Type", "UNKNOWN")

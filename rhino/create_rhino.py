@@ -1,29 +1,33 @@
 import rhinoinside
 
+# Load Rhino.Inside
 rhinoinside.load()
+
 import time
+import Rhino
+import Rhino.DocObjects as rdo
+import Rhino.FileIO as rfi
+import Rhino.Geometry as rg
+import System.Drawing as sd
 from pathlib import Path
-from Rhino.FileIO import File3dm
-from Rhino.DocObjects import Layer
-from System.Drawing import Color
 from rhino.rhino_layermanager import layer_structure
+from rhino.rhino_linemanager import linetype_patterns
 
 
 def initialize_rhino_file(output_directory, filename, max_layers):
     """
-    Initializes a Rhino file, creates a custom layer structure, and saves the file.
-    :param output_directory: Directory to save the file.
-    :param filename: Name of the file without extension.
-    :param max_layers: Maximum number of dynamic sublayers to create.
-    :return: Path to the saved file.
+    Initializes a Rhino file, creates a custom layer structure, adds linetypes, and saves the file.
     """
-    rhino_file = File3dm()
+    rhino_file = rfi.File3dm()
 
     # Generate the layer structure dynamically
     layers = layer_structure(max_layers)
 
     # Create the layer structure
     create_layer_structure(rhino_file, layers)
+
+    # Add custom linetypes to the file
+    create_linetypes(rhino_file)
 
     # Save the Rhino file
     current_time = time.strftime("%H_%M_%S")
@@ -36,14 +40,12 @@ def initialize_rhino_file(output_directory, filename, max_layers):
 def create_layer_structure(rhino_file, layers):
     """
     Creates a layer structure in the Rhino file based on the provided dictionary.
-    :param rhino_file: The Rhino file instance.
-    :param layers: Dictionary defining the layer structure.
     """
     for parent_name, layer_info in layers.items():
         # Create parent layer
-        parent_layer = Layer()
+        parent_layer = rdo.Layer()
         parent_layer.Name = parent_name
-        parent_layer.Color = Color.FromArgb(*layer_info["color"])
+        parent_layer.Color = sd.Color.FromArgb(*layer_info["color"])
         rhino_file.Layers.Add(parent_layer)
         print(f"Parent layer '{parent_name}' created.")
 
@@ -62,18 +64,41 @@ def create_layer_structure(rhino_file, layers):
             max_sublayers = layer_info.get("max_sublayers", 0)
             for i in range(max_sublayers + 1):
                 sublayer_name = f"{i:04d}"
-                sublayer = Layer()
+                sublayer = rdo.Layer()
                 sublayer.Name = sublayer_name
                 sublayer.ParentLayerId = parent_layer_id
-                sublayer.Color = Color.FromArgb(*layer_info["sublayer_color"])
+                sublayer.Color = sd.Color.FromArgb(*layer_info["sublayer_color"])
                 rhino_file.Layers.Add(sublayer)
                 print(f"  Sublayer '{sublayer_name}' added under '{parent_name}'.")
         # Create static sublayers if provided
         elif "sublayers" in layer_info:
             for sublayer_name in layer_info["sublayers"]:
-                sublayer = Layer()
+                sublayer = rdo.Layer()
                 sublayer.Name = sublayer_name
                 sublayer.ParentLayerId = parent_layer_id
-                sublayer.Color = Color.FromArgb(*layer_info["sublayer_color"])
+                sublayer.Color = sd.Color.FromArgb(*layer_info["sublayer_color"])
                 rhino_file.Layers.Add(sublayer)
                 print(f"  Sublayer '{sublayer_name}' added under '{parent_name}'.")
+
+
+def create_linetypes(rhino_file):
+    """
+    Creates linetypes in the Rhino file using patterns from rhino_linemanager.
+    """
+    patterns = linetype_patterns()
+
+    for i, (name, pattern) in enumerate(patterns.items()):
+        linetype = rdo.Linetype()
+        linetype.Name = name
+
+        # Apply the pattern
+        for segment_length, is_gap in pattern:
+            linetype.AppendSegment(segment_length, is_gap)
+
+        linetype.Width = 0.5  # Default width
+        linetype.WidthUnits = Rhino.UnitSystem.Millimeters
+        linetype.CommitChanges()
+
+        # Add to the Rhino file
+        rhino_file.AllLinetypes.Add(linetype)
+        print(f"Linetype '{name}' created with pattern {pattern}.")

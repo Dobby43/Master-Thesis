@@ -11,7 +11,7 @@ type_values = get_type_values()
 
 def color_name_to_rgb(color_name):
     """
-    Converts a color name (e.g., 'red') to an RGB tuple (0-255).
+    Converts a color name to an RGB tuple (0-255).
     :param color_name: The name of the color.
     :return: RGB tuple.
     """
@@ -55,8 +55,9 @@ def _create_polylines(points_list, rhino_file, line_width):
     polylines = {}
 
     for point_data in points_list:
-        layer = point_data["Layer"]
-        poly_num = point_data["poly_num"]
+        # Extract values from point_data
+        layer = f"{point_data['Layer']:04d}"
+        poly_num = f"{point_data['poly_num']:04d}"
         point = rg.Point3d(point_data["X"], point_data["Y"], point_data["Z"])
         type = point_data["Type"]
         move_command = point_data["Move"]
@@ -64,7 +65,11 @@ def _create_polylines(points_list, rhino_file, line_width):
         # Use (Layer, poly_num) as the key for grouping
         key = (layer, poly_num)
         if key not in polylines:
-            polylines[key] = {"points": [], "type": type, "move": move_command}
+            polylines[key] = {
+                "points": [],
+                "type": type,
+                "move": move_command,
+            }
 
         polylines[key]["points"].append(point)
 
@@ -87,10 +92,9 @@ def _create_polylines(points_list, rhino_file, line_width):
             net_points.Add(point)
 
         polyline_curve = rg.PolylineCurve(net_points)
-        attributes = rdo.ObjectAttributes()
 
-        # Determine the sublayer name
-        sublayer_name = f"{layer:04d}"  # Format layer as 4-digit number
+        # Determine the sublayer name and layer index
+        sublayer_name = layer
         layer_index = next(
             (l.Index for l in rhino_file.Layers if l.Name == sublayer_name), None
         )
@@ -102,12 +106,13 @@ def _create_polylines(points_list, rhino_file, line_width):
             continue
 
         # Assign attributes
-        polyline_name = f"{sublayer_name}/{poly_num:04d}"  # Name as "0001/0012"
+        attributes = rdo.ObjectAttributes()
         attributes.LayerIndex = layer_index
-        attributes.Name = polyline_name
-        attributes.SetUserString("name", polyline_name)
+        attributes.Name = f"{sublayer_name}/{poly_num}"
+        attributes.SetUserString("Layer", sublayer_name)
+        attributes.SetUserString("Line", poly_num)
         attributes.SetUserString("type", type)
-        attributes.SetUserString("extrusion", extrusion)  # Save extrusion value
+        attributes.SetUserString("extrusion", extrusion)
 
         # Assign color based on type_values
         line_type_color = type_values.get(type, {}).get("Color", "black")
@@ -126,78 +131,73 @@ def _create_polylines(points_list, rhino_file, line_width):
             )
             attributes.PlotWeight = float(line_width)  # Line width in mm
 
-        print(
-            f"Polyline {polyline_name}: Type '{type}', Extrusion {extrusion}, "
-            f"Color {line_type_color}"
+        # Assign linetype based on type_values
+        linetype_name = type_values.get(type, {}).get("Linetype", "Continuous")
+        linetype_index = next(
+            (lt.Index for lt in rhino_file.AllLinetypes if lt.Name == linetype_name),
+            None,
         )
+
+        if linetype_index is not None:
+            attributes.LinetypeSource = rdo.ObjectLinetypeSource.LinetypeFromObject
+            attributes.LinetypeIndex = linetype_index
+        else:
+            print(f"Linetype '{linetype_name}' not found. Using default 'Continuous'.")
+
+        # print(
+        #     f"Polyline '{attributes.Name}': Type '{type}', Extrusion {extrusion}, "
+        #     f"Color {line_type_color}, Linetype '{linetype_name}'"
+        # )
 
         # Add the polyline to the Rhino file
         rhino_file.Objects.AddCurve(polyline_curve, attributes)
-        print(f"Added polyline {polyline_name} to Layer '{sublayer_name}'.")
+        # print(f"Added polyline {attributes.Name} to Layer '{sublayer_name}'.")
 
 
 def _create_points(points_list, rhino_file, include_all_points=True):
     """
     Internal function to create points in the Rhino file.
-    :param points_list: List of points with attributes to process.
-    :param rhino_file: The Rhino file where points will be added.
-    :param include_all_points: If True, adds all points. If False, adds only start and stop points of extrusion moves.
     """
     for point_data in points_list:
         # Skip points that are not "start" or "stop" if only start/stop points are to be included
         if not include_all_points and point_data["point_info"] not in {"start", "stop"}:
             continue
 
-        # Extract point data
-        point = rg.Point3d(point_data["X"], point_data["Y"], point_data["Z"])
-        layer = point_data["Layer"]
-        poly_num = point_data["poly_num"]
-        point_num = point_data["point_num"]
+        # Extract values from point_data
+        layer = f"{point_data['Layer']:04d}"
+        poly_num = f"{point_data['poly_num']:04d}"
+        point_num = f"{point_data['point_num']:04d}"
         point_info = point_data["point_info"]
+        x, y, z = point_data["X"], point_data["Y"], point_data["Z"]
 
-        # Determine the color based on point_info
-        if point_info == "start":
-            color = Color.FromArgb(0, 255, 0)  # Neon Green for Start
-        elif point_info == "stop":
-            color = Color.FromArgb(255, 0, 0)  # Neon Red for Stop
-        elif point_info == "1":
-            color = Color.FromArgb(128, 128, 128)  # Darker Gray for Extrusion
-        else:
-            color = Color.FromArgb(0, 0, 0)  # Black for everything else
+        # Create the point object
+        point = rg.Point3d(x, y, z)
 
-        # Assign name to the point
-        point_name = f"{layer:04d}/{poly_num:04d}/{point_num:04d}"
+        # Assign color based on point_info
+        color = {
+            "start": Color.FromArgb(0, 255, 0),  # Neon Green for Start
+            "stop": Color.FromArgb(255, 0, 0),  # Neon Red for Stop
+            "1": Color.FromArgb(128, 128, 128),  # Darker Gray for Extrusion
+        }.get(
+            point_info, Color.FromArgb(0, 0, 0)
+        )  # Default to Black
 
-        # Add the point to the Rhino file
+        # Assign attributes
         attributes = rdo.ObjectAttributes()
         attributes.LayerIndex = next(
-            (l.Index for l in rhino_file.Layers if l.Name == f"{layer:04d}"), None
+            (l.Index for l in rhino_file.Layers if l.Name == layer),
+            None,
         )
         attributes.ObjectColor = color
         attributes.ColorSource = rdo.ObjectColorSource.ColorFromObject
         attributes.PlotColorSource = rdo.ObjectPlotColorSource.PlotColorFromObject
         attributes.PlotColor = attributes.ObjectColor
-        attributes.Name = point_name
-        attributes.SetUserString("name", point_name)
+        attributes.Name = f"{layer}/{poly_num}/{point_num}"
+        attributes.SetUserString("Layer", layer)
+        attributes.SetUserString("Line", poly_num)
+        attributes.SetUserString("Point", point_num)
         attributes.SetUserString("extrusion", point_info)
 
+        # Add the point to the Rhino file
         rhino_file.Objects.AddPoint(point, attributes)
-        print(f"Added point {point_name} at {point} with color {color}.")
-
-
-# def get_linetype_index(rhino_file, linetype_name):
-#     for linetype in rhino_file.Linetypes:
-#         if linetype.Name == linetype_name:
-#             return linetype.Index
-#     print(f"Linetype '{linetype_name}' not found. Using default 'Continuous'.")
-#     return 0  # Default linetype index for "Continuous"
-#
-#
-# # inside create_polyline
-# # Assign linetype based on type_values
-# linetype_name = type_values.get(type, {}).get("Linetype", "Continuous")
-# linetype_index = get_linetype_index(rhino_file, linetype_name)
-#
-# # Ensure linetype is taken from object and assign index
-# attributes.LinetypeSource = rdo.ObjectLinetypeSource.LinetypeFromObject
-# attributes.LinetypeIndex = linetype_index
+        print(f"Added point {attributes.Name} at {point} with color {color}.")
