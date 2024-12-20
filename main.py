@@ -6,7 +6,9 @@ __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
 __version__ = "1.4"
 
-import json
+from pathlib import Path
+
+from setup import directory_setup as dsu
 from gcode import get_gcode
 
 # Slicer
@@ -26,26 +28,28 @@ from rhino import draw_printbed as drp
 # Slicer used
 SLICER = "CURA"  # Sets dictionary used for essential G-Code lines in simplify_gcode
 
-# ----------------STL DIRECTORIES----------------
-IMPORT_DIRECTORY_STL = (
-    r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\STL"
-)
-IMPORT_FILE_STL = r"Cura_04_12_CFFFP_Quader 200x200x60.stl"
 
-EXPORT_DIRECTORY_STL = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\G_Code\manual"
-EXPORT_FILE_STL = r"Cura_04_12_CFFFP_xyzCalibration_cube"
+# ----------------CONFIGURE DIRECTORY & FOLDERS----------------
 
-# ----------------G-CODE DIRECTORIES----------------
-IMPORT_DIRECTORY_GCODE = EXPORT_DIRECTORY_STL
-IMPORT_FILE_GCODE = f"{EXPORT_FILE_STL}.gcode"
+# Aufruf der Funktion, um die Verzeichnisse zu initialisieren
+current_dir = Path(__file__).parent
+paths = dsu.get_directory_setup(current_dir / "setup" / "setup.json")
 
-# ----------------KRL DIRECTORIES----------------
-EXPORT_DIRECTORY_KRL = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\KRL_Files"
-EXPORT_FILE_KRL = "Cura_04_12_CFFFP_xyzCalibration_cube"
+# Zugriff auf die relevanten Pfade
+IMPORT_FILE_STL = paths["stl_input_path"]
+OUTPUT_DIRECTORY = paths["output_directory"]
+OUTPUT_BASE_NAME = paths["output_base_name"]
 
-# ----------------RHINO DIRECTORIES----------------
-EXPORT_DIRECTORY_RHINO = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\Rhino_Files\V1.4"
-EXPORT_FILE_RHINO = EXPORT_FILE_KRL
+# Weiterverarbeitung
+IMPORT_DIRECTORY_GCODE = OUTPUT_DIRECTORY
+IMPORT_FILE_GCODE = f"{OUTPUT_BASE_NAME}.gcode"
+
+EXPORT_DIRECTORY_KRL = OUTPUT_DIRECTORY
+EXPORT_FILE_KRL = f"{OUTPUT_BASE_NAME}.src"
+
+EXPORT_DIRECTORY_RHINO = OUTPUT_DIRECTORY
+EXPORT_FILE_RHINO = f"{OUTPUT_BASE_NAME}.3dm"
+
 
 # ----------------PRINTER CONFIGURATION----------------
 # Print-bed Size

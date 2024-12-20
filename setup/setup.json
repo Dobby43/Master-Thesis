@@ -1,0 +1,116 @@
+{
+    "name": "Slicing and Printing Configuration",
+    "version": 1,
+    "type": "configuration",
+    "author": "David Scheidt",
+    "settings": {
+        "Directory": {
+            "description": "Defines the input and output directories and filenames for the slicing and printing process.",
+            "input_directory": {
+                "description": "Base directory for input STL files",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Gcode",
+                "type": "str"
+            },
+            "input_name": {
+                "description": "Name of the input STL file (without extension)",
+                "value": "Cura_04_12_CFFFP_Quader 200x200x60",
+                "type": "str"
+            },
+            "output_directory": {
+                "description": "Base directory for storing output files",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Gcode",
+                "type": "str"
+            },
+            "output_name": {
+                "description": "Name of the output folder and files",
+                "value": "Cura_04_12_CFFFP_Quader 200x200x60",
+                "type": "str"
+            }
+        }
+    },
+
+        "Printer": {
+            "description": "Settings specific to the 3D printer, including dimensions and tool orientation.",
+            "printer_bed_size_x": {
+                "description": "Size of the printer bed along the X-axis in mm",
+                "value": 1200,
+                "type": "int"
+            },
+            "printer_bed_size_y": {
+                "description": "Size of the printer bed along the Y-axis in mm",
+                "value": 4500,
+                "type": "int"
+            },
+            "printer_bed_size_z": {
+                "description": "Size of the printer bed along the Z-axis in mm",
+                "value": 2000,
+                "type": "int"
+            },
+            "printer_tool_orientation": {
+                "description": "Orientation of the tool head in degrees",
+                "value": {
+                    "A": 0,
+                    "B": 0,
+                    "C": 180
+                },
+                "type": "dict"
+            }
+        },
+        "Slicer": {
+            "description": "Settings for the slicing software, including the slicer type and configuration.",
+            "slicer_type": {
+                "description": "The type of slicer used (CURA)",
+                "value": "CURA",
+                "type": "str"
+            },
+            "slicer_cmd_path": {
+                "description": "Path to the slicer's executable file",
+                "value": "C:\\path\\to\\slicer\\executable",
+                "type": "str"
+            },
+            "slicer_config_file_path": {
+                "description": "Path to the slicer configuration file",
+                "value": "C:\\path\\to\\slicer\\config",
+                "type": "str"
+            },
+            "slicer_arguments": {
+                "description": "Additional arguments for slicing. These overwrite the values in the printer setup data",
+                "value": null,
+                "type": "dict"
+            }
+        },
+        "Rhino": {
+            "description": "Settings for Rhino file generation and visualization. Available line types: Continuous, Dashed, DashDot, Dotted.",
+            "rhino_support_color": {
+                "description": "Color for support structures in hex format",
+                "value": "#FF0000",
+                "type": "str"
+            },
+            "rhino_support_linetype": {
+                "description": "Linetype for support structures",
+                "value": "Dashed",
+                "type": "str"
+            },
+            "rhino_geometry_color": {
+                "description": "Color for geometry in hex format",
+                "value": "#0000FF",
+                "type": "str"
+            },
+            "rhino_geometry_linetype": {
+                "description": "Linetype for geometry structures",
+                "value": "Continuous",
+                "type": "str"
+            },
+            "rhino_additional_layer_color": {
+                "description": "Color for additional layers in hex format",
+                "value": "#FFFF00",
+                "type": "str"
+            },
+            "rhino_additional_layer_linetype": {
+                "description": "Linetype for additional layers",
+                "value": "Dotted",
+                "type": "str"
+            }
+        }
+    }
+}
