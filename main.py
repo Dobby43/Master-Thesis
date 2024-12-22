@@ -48,11 +48,11 @@ OUTPUT_NAME = directory_setup["output_name"]
 INPUT_DIRECTORY_GCODE = INPUT_DIRECTORY_STL
 INPUT_FILE_GCODE = f"{OUTPUT_NAME}.gcode"
 # KRL Code
-EXPORT_DIRECTORY_KRL = OUTPUT_DIRECTORY
-EXPORT_FILE_KRL = f"{OUTPUT_NAME}.src"
+OUTPUT_DIRECTORY_KRL = OUTPUT_DIRECTORY
+OUTPUT_FILE_KRL = f"{OUTPUT_NAME}.src"
 # Rhino file
-EXPORT_DIRECTORY_RHINO = OUTPUT_DIRECTORY
-EXPORT_FILE_RHINO = f"{OUTPUT_NAME}.3dm"
+OUTPUT_DIRECTORY_RHINO = OUTPUT_DIRECTORY
+OUTPUT_FILE_RHINO = f"{OUTPUT_NAME}.3dm"
 
 # ----------------ROBOT CONFIGURATION----------------
 # evaluate setup.json file for "Robot" information
@@ -148,38 +148,38 @@ plt.plot_gcode(
 )
 
 
-# # ----------------KRL FORMATING OF G-CODE----------------
-# # Formats G-Code to KRL and appends tool-head orientation
-# krl_lines = mdf.krl_format(
-#     gcode_necessary,
-#     a=TOOL_ORIENTATION_A,
-#     b=TOOL_ORIENTATION_B,
-#     c=TOOL_ORIENTATION_C,
-#     end_pos=END_POSITION,
-#     vel=VEL_CP,
-# )
-#
-# # for line in krl_lines:
-# #     print(line)
-#
-# # Export of KRL-File
-# exp.export_to_src(
-#     krl_lines, robot_start_code, robot_end_code, OUTPUT_DIRECTORY, OUTPUT_NAME
-# )
-#
-# # ----------------RHINO FILE----------------
-# # Process G-Code for Rhino file
-# extended_gcode = prc.process_points(gcode_necessary)
-#
-# # for line in extended_gcode:
-# #     print(line)
-#
-# # Get filepath of generated Rhino file
-# filepath = crt.initialize_rhino_file(
-#     EXPORT_DIRECTORY_RHINO, EXPORT_FILE_RHINO, LAYER_MAX
-# )
-#
-# # Generate toolpath in Rhino
-# drg.create_geometry(extended_gcode, filepath, line_width=15, type_values=TYPE_VALUES)
-# # Generate printbed in Rhino
-# drp.add_print_bed(filepath, X_MAX=BED_SIZE_X, Y_MAX=BED_SIZE_Y, parent_layer="printbed")
+# ----------------KRL FORMATING OF G-CODE----------------
+# Formats G-Code to KRL and appends tool-head orientation
+krl_lines = mdf.krl_format(
+    gcode_necessary,
+    a=TOOL_ORIENTATION_A,
+    b=TOOL_ORIENTATION_B,
+    c=TOOL_ORIENTATION_C,
+    end_pos=END_POSITION,
+    vel=VEL_CP,
+)
+
+# for line in krl_lines:
+#     print(line)
+
+# Export of KRL-File
+exp.export_to_src(
+    krl_lines, robot_start_code, robot_end_code, OUTPUT_DIRECTORY, OUTPUT_NAME
+)
+
+# ----------------RHINO FILE----------------
+# Process G-Code for Rhino file
+extended_gcode = prc.process_points(gcode_necessary)
+
+# for line in extended_gcode:
+#     print(line)
+
+# Get filepath of generated Rhino file
+filepath = crt.initialize_rhino_file(
+    OUTPUT_DIRECTORY_RHINO, OUTPUT_FILE_RHINO, LAYER_MAX
+)
+
+# Generate toolpath in Rhino
+drg.create_geometry(extended_gcode, filepath, line_width=15, type_values=TYPE_VALUES)
+# Generate printbed in Rhino
+drp.add_print_bed(filepath, X_MAX=BED_SIZE_X, Y_MAX=BED_SIZE_Y, parent_layer="printbed")

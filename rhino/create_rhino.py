@@ -30,9 +30,9 @@ def initialize_rhino_file(output_directory, filename, max_layers):
 
     # Save the Rhino file
     current_time = time.strftime("%H_%M_%S")
-    output_path = Path(output_directory) / f"{current_time}_{filename}.3dm"
+    output_path = Path(output_directory) / f"{current_time}_{filename}"
     rhino_file.Write(str(output_path), 8)
-    print(f"Rhino file saved to {output_path}.")
+    print(f"Rhino file saved to {output_path}")
     return output_path
 
 
