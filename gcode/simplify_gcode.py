@@ -8,7 +8,16 @@ SLICER_PATTERNS = slicer_keywordmanager.get_slicer_pattern()
 
 def translate_type(type_name: str, slicer: str, type_values: Dict) -> str:
     """
+    DESCRIPTION:
     Translates a raw type name from the slicer into a unified category.
+
+    ARGUMENTS:
+    type_name: The raw type name from the slicer.
+    slicer: The slicer name (e.g., "CURA").
+    type_values: A dictionary mapping slicer types to unified categories.
+
+    RETURNS:
+    A string representing the unified type category or "UNKNOWN" if no match is found.
     """
     slicer = slicer.upper()
     for category, slicers in type_values.items():
@@ -21,8 +30,21 @@ def process_gcode(
     gcode: List[str], slicer: str, type_values: Dict
 ) -> List[Dict[str, Union[str, float, int, None]]]:
     """
-    Processes G-code lines to extract attributes and keep only lines with meaningful G0 or G1 moves.
-    Updates missing Z values and Type with the last known value and maintains Layer information.
+    DESCRIPTION:
+    Processes G-code lines to extract attributes and filter only meaningful G0 or G1 moves.
+    Updates missing Z values, infers layer and type information, and maintains the current state.
+
+    ARGUMENTS:
+    gcode: List of G-code lines as strings.
+    slicer: The slicer name (e.g., "CURA").
+    type_values: Dictionary containing mappings of slicer types and attributes.
+
+    RETURNS:
+    A list of dictionaries, each containing processed G-code attributes, including:
+    - Move type (G0 or G1)
+    - X, Y, Z coordinates
+    - Layer
+    - Type
     """
     # Select patterns for the given slicer
     slicer = slicer.upper()

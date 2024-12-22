@@ -1,18 +1,24 @@
 import json
+from typing import Any
 
 
-def get_slicer_settings(json_file):
+def get_slicer_settings(json_file: str) -> dict[str, Any]:
     """
-    Extrahiert die Slicer-Einstellungen aus der JSON-Datei.
+    DESCRIPTION:
+    Extracts slicer settings from a JSON file.
 
-    :param json_file: Pfad zur JSON-Datei mit den Konfigurationsinformationen
-    :return: Dictionary mit den Slicer-Einstellungen
+    ARGUMENTS:
+    json_file: Path to the JSON file.
+
+    RETURNS:
+    A dictionary with slicer settings [slicer_name, slicer_cmd_path,
+    slicer_config_file_path, slicer_arguments].
     """
-    # JSON-Datei laden
+    # Load the JSON file
     with open(json_file, "r") as file:
         config = json.load(file)
 
-    # Slicer-Einstellungen extrahieren
+    # Extract slicer settings
     slicer_settings = {
         "slicer_name": config["settings"]["Slicer"]["slicer_name"]["value"],
         "slicer_cmd_path": config["settings"]["Slicer"]["slicer_cmd_path"]["value"],

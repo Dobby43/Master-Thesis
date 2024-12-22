@@ -4,9 +4,6 @@ import Rhino.DocObjects as rdo
 import Rhino.FileIO as rfi
 from System.Drawing import Color
 from System.Collections.Generic import List as NetList
-from gcode.slicer_keywordmanager import get_type_values
-
-type_values = get_type_values()
 
 
 def color_name_to_rgb(color_name):
@@ -23,7 +20,7 @@ def color_name_to_rgb(color_name):
         return (0, 0, 0)  # Default to black if invalid
 
 
-def create_geometry(points_list, filepath, line_width):
+def create_geometry(points_list, filepath, line_width, type_values):
     """
     Creates geometry in a Rhino file: polylines and colored points.
     :param points_list: List of points with attributes (Layer, poly_num, Type, Move, etc.).
@@ -37,7 +34,7 @@ def create_geometry(points_list, filepath, line_width):
         return False
 
     print("Creating polylines...")
-    _create_polylines(points_list, rhino_file, line_width)
+    _create_polylines(points_list, rhino_file, line_width, type_values)
 
     print("Creating points...")
     _create_points(points_list, rhino_file, include_all_points=False)
@@ -48,7 +45,7 @@ def create_geometry(points_list, filepath, line_width):
     return True
 
 
-def _create_polylines(points_list, rhino_file, line_width):
+def _create_polylines(points_list, rhino_file, line_width, type_values):
     """
     Internal function to create polylines in the Rhino file.
     """

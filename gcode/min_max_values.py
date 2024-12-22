@@ -2,19 +2,20 @@ import re
 from typing import List, Dict, Union, Any
 
 
-def get_max_values(gcode: List[str]) -> Dict[str, float | None | Any]:
+def get_max_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
     """
-    Searches G-Code for maximum values of X, Y, and Z.
+    DESCRIPTION:
+    Searches G-code lines to determine the maximum X, Y, and Z coordinate values.
 
-    :param gcode: Original list of G-code lines.
-    :type gcode: List[str]
-    :returns: Dictionary containing the maximum values for X, Y, and Z coordinates.
-    :rtype: dict[str, Union[float, None]]
+    ARGUMENTS:
+    gcode: A list of G-code lines as strings.
+
+    RETURNS:
+    A dictionary containing the maximum X, Y, and Z coordinate values. Returns None if no values are found.
     """
-
     x_max, y_max, z_max = None, None, None
 
-    # Updated pattern to match optional blocks in G-code lines
+    # Pattern to match optional blocks in G-code lines
     pattern = r"(G[01])?(?:\s*F\d+)?(?:\s*X([-?\d\.]+))?(?:\s*Y([-?\d\.]+))?(?:\s*Z([-?\d\.]+))?(?:\s*E[-?\d\.]+)?"
 
     for line in gcode:
@@ -36,15 +37,17 @@ def get_max_values(gcode: List[str]) -> Dict[str, float | None | Any]:
     return {"x_max": x_max, "y_max": y_max, "z_max": z_max}
 
 
-def get_min_values(gcode: List[str]) -> dict[str, float | None | Any]:
+def get_min_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
     """
-    searches G-Code for minimum value of X, Y and Z
-    :param gcode: Original list of G-code lines.
-    :type gcode: List[str]
-    :returns: Dictionary containing the minimum values for X, Y, and Z coordinates.
-    :rtype: dict[str, float | None]
-    """
+    DESCRIPTION:
+    Searches G-code lines to determine the minimum X, Y, and Z coordinate values.
 
+    ARGUMENTS:
+    gcode: A list of G-code lines as strings.
+
+    RETURNS:
+    A dictionary containing the minimum X, Y, and Z coordinate values. Returns None if no values are found.
+    """
     x_min, y_min, z_min = None, None, None
     pattern = r"(G[01])?(?:\s*F\d+)?(?:\s*X([-?\d\.]+))?(?:\s*Y([-?\d\.]+))?(?:\s*Z([-?\d\.]+))?(?:\s*E[-?\d\.]+)?"
 
@@ -56,7 +59,7 @@ def get_min_values(gcode: List[str]) -> dict[str, float | None | Any]:
             y_val = float(match.group(3)) if match.group(3) else None
             z_val = float(match.group(4)) if match.group(4) else None
 
-            # Aktualisiere Min-Werte
+            # Update minimum values for X, Y, and Z
             if x_val is not None:
                 x_min = x_val if x_min is None else min(x_min, x_val)
             if y_val is not None:

@@ -12,14 +12,18 @@ def plot_bed(
     tick_font_size: float = 12.0,
 ):
     """
-    Creates and displays the 3D printing bed with specified dimensions.
+    DESCRIPTION:
+    Creates and displays a 3D printing bed with the specified dimensions and visualization details.
 
-    :param bed_size_x: Size of the print bed along the X-axis.
-    :param bed_size_y: Size of the print bed along the Y-axis.
-    :param bed_size_z: Size of the print volume along the Z-axis.
-    :param line_thickness: Thickness of the outline lines for the volume edges.
-    :param tick_font_size: Font size for the axis ticks.
-    :return: A PyVista plotter object containing the print bed.
+    ARGUMENTS:
+    bed_size_x: Size of the print bed along the X-axis.
+    bed_size_y: Size of the print bed along the Y-axis.
+    bed_size_z: Size of the print volume along the Z-axis.
+    line_thickness: Thickness of the outline lines for the volume edges.
+    tick_font_size: Font size for the axis ticks.
+
+    RETURNS:
+    A PyVista plotter object containing the rendered print bed visualization.
     """
     # Initialize PyVista plotter
     plotter = pv.Plotter()
@@ -88,13 +92,18 @@ def plot_gcode(
     type_values: Dict[str, Dict[str, Union[List[str], str]]],
 ):
     """
-    Adds a G-code path to an existing PyVista plotter instance, with colors for different line types.
+    DESCRIPTION:
+    Adds a G-code path visualization to an existing PyVista plotter instance with color-coded types.
 
-    :param plotter: A PyVista plotter object that contains the print bed.
-    :param processed_gcode: List of processed G-code dictionaries.
-    :param layers: Specify layers to plot as "all", a single layer number (e.g., "1"),
-                   or a range of layers (e.g., "1-5").
-    :param type_values: Dictionary containing type mappings and attributes (Color, Linetype).
+    ARGUMENTS:
+    plotter: A PyVista plotter object where the G-code visualization will be added.
+    processed_gcode: List of dictionaries representing processed G-code lines.
+    layers: Specify layers to visualize. Use "all" for all layers, a single layer number (e.g., "1"),
+            or a range of layers (e.g., "1-5").
+    type_values: Dictionary defining type mappings and attributes (e.g., colors and linetypes).
+
+    RETURNS:
+    None. Updates the PyVista plotter with the G-code visualization.
     """
     # Extract color mapping from type_values
     color_mapping = {key: value["Color"] for key, value in type_values.items()}

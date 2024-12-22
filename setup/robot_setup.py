@@ -1,18 +1,22 @@
 import re
 import json
+from typing import Dict, Any, Set
 
-
-def extract_placeholders_from_robot(json_data):
+def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
     """
+    DESCRIPTION:
     Extracts placeholders from the 'Robot' section of the JSON data, excluding certain keys.
 
-    :param json_data: The loaded JSON object (dictionary).
-    :return: A set of placeholders found in the 'Robot' section.
+    ARGUMENTS:
+    json_data: The loaded JSON object (dictionary).
+
+    RETURNS:
+    A set of placeholders found in the 'Robot' section.
     """
     placeholders = set()
     excluded_keys = {"description"}  # Keys to exclude from placeholder search
 
-    def recursive_search(data, parent_key=None):
+    def recursive_search(data: Any, parent_key: str = None):
         if isinstance(data, dict):
             for key, value in data.items():
                 # Skip keys in the exclusion list
@@ -33,23 +37,32 @@ def extract_placeholders_from_robot(json_data):
     return placeholders
 
 
-def replace_placeholders(json_data, placeholders):
+def replace_placeholders(
+    json_data: Dict[str, Any], placeholders: Set[str]
+) -> Dict[str, Any]:
     """
+    DESCRIPTION:
     Replaces placeholders in the entire JSON file with their corresponding values.
 
-    :param json_data: Loaded JSON object (dictionary)
-    :param placeholders: List of placeholder names to replace
-    :return: Dictionary of placeholders and their corresponding values
+    ARGUMENTS:
+    json_data: Loaded JSON object (dictionary).
+    placeholders: Set of placeholder names to replace.
+
+    RETURNS:
+    A dictionary of placeholders and their corresponding values.
     """
     replaced_values = {}
 
-    def find_value_for_placeholder(placeholder, data):
+    def find_value_for_placeholder(placeholder: str, data: Any) -> Any:
         """
         Finds the value for a placeholder based on its name.
 
-        :param placeholder: Name of the placeholder
-        :param data: Current JSON data fragment
-        :return: The value for the placeholder, if found
+        ARGUMENTS:
+        placeholder: Name of the placeholder.
+        data: Current JSON data fragment.
+
+        RETURNS:
+        The value for the placeholder, if found.
         """
         if isinstance(data, dict):
             for key, value in data.items():
@@ -84,16 +97,21 @@ def replace_placeholders(json_data, placeholders):
     return replaced_values
 
 
-def apply_replacements_to_robot(json_data, replacements):
+def apply_replacements_to_robot(
+    json_data: Dict[str, Any], replacements: Dict[str, Any]
+) -> Dict[str, Any]:
     """
-    Applies the replaced placeholder values to the `Robot` section.
+    DESCRIPTION:
+    Applies the replaced placeholder values to the 'Robot' section.
 
-    :param json_data: Loaded JSON object (dictionary)
-    :param replacements: Dictionary of placeholder values
-    :return: Updated `Robot` section with placeholders replaced
+    ARGUMENTS:
+    json_data: Loaded JSON object (dictionary).
+    replacements: Dictionary of placeholder values.
+
+    RETURNS:
+    Updated 'Robot' section with placeholders replaced.
     """
-
-    def recursive_replace(data):
+    def recursive_replace(data: Any) -> Any:
         if isinstance(data, dict):
             return {key: recursive_replace(value) for key, value in data.items()}
         elif isinstance(data, list):
@@ -105,17 +123,21 @@ def apply_replacements_to_robot(json_data, replacements):
             return data
         return data
 
-    # Replace values only in the `Robot` section
+    # Replace values only in the 'Robot' section
     robot_section = json_data.get("settings", {}).get("Robot", {})
     return recursive_replace(robot_section)
 
 
-def get_robot_settings(json_file):
+def get_robot_settings(json_file: str) -> Dict[str, Any]:
     """
-    Extracts and replaces placeholders in the `Robot` section of the JSON file.
+    DESCRIPTION:
+    Extracts and replaces placeholders in the 'Robot' section of the JSON file.
 
-    :param json_file: Path to the JSON file
-    :return: Dictionary of relevant robot setup configurations
+    ARGUMENTS:
+    json_file: Path to the JSON file.
+
+    RETURNS:
+    Dictionary of relevant robot setup configurations.
     """
     # Load the JSON file
     with open(json_file, "r") as file:
@@ -123,8 +145,10 @@ def get_robot_settings(json_file):
 
     # Step 1: Extract placeholders
     placeholders = extract_placeholders_from_robot(config)
+
     # Step 2: Replace placeholders with their values
     placeholder_values = replace_placeholders(config, placeholders)
+
     # Step 3: Apply replacements to the Robot section
     updated_robot_section = apply_replacements_to_robot(config, placeholder_values)
 

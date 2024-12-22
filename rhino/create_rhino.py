@@ -7,7 +7,6 @@ import time
 import Rhino
 import Rhino.DocObjects as rdo
 import Rhino.FileIO as rfi
-import Rhino.Geometry as rg
 import System.Drawing as sd
 from pathlib import Path
 from rhino.rhino_layermanager import layer_structure
