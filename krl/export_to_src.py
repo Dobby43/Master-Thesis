@@ -1,46 +1,33 @@
-import os
-
-
 def export_to_src(
-    setup: str,
-    init: str,
-    sta_conc_print: str,
-    end_conc_print: str,
-    bco: str,
-    move: str,
-    code: list,
-    file_directory: str,
+    krl_lines: list[str],
+    start_code: list[str],
+    end_code: list[str],
+    output_path: str,
     file_name: str,
 ):
     """
-    Exports a list of KRL code lines with setup and initialization text blocks to a .src file.
+    Combines the robot start code, KRL lines, and end code into a single .src file.
 
-    :param setup: Project setup text block.
-    :param init: Initialization text block.
-    :param con_prin: Concrete printing configuration text block.
-    :param bco: Block coordinates (BCO) text block.
-    :param move: Motion settings text block.
-    :param code: List of KRL code lines to export.
-    :param file_directory: Directory where the .src file should be saved.
-    :param file_name: Name of the .src file (without extension).
+    :param krl_lines: List of KRL-formatted lines (main G-code converted to KRL).
+    :param start_code: List of robot start code lines.
+    :param end_code: List of robot end code lines.
+    :param output_path: Path to the directory where the .src file will be saved.
+    :param file_name: Name of the output .src file (without extension).
     """
-    # collects all given textblocks
-    text_blocks_start = [
-        block if block is not None else ""
-        for block in [setup, init, sta_conc_print, bco, move]
-    ]
+    # Ensure the output path ends with a separator
+    if not output_path.endswith(("\\", "/")):
+        output_path += "/"
 
-    text_blocks_end = [block if block is not None else "" for block in [end_conc_print]]
+    # Combine all lines into a single list
+    combined_lines = start_code + [""] + krl_lines + [""] + end_code
 
-    # Zusammenfügen der Textbausteine und des eigentlichen Codes
-    full_krl_code = (
-        "".join(text_blocks_start) + "".join(code) + "".join(text_blocks_end)
-    )
+    # Construct the full file path
+    full_file_path = f"{output_path}{file_name}.src"
 
-    full_path = os.path.join(file_directory, f"{file_name}.src")
-
-    # writes complete KRL-Code to give path
-    with open(full_path, "w") as file:
-        file.write(full_krl_code)
-
-    print(f"Export completed. File saved at: {full_path}")
+    try:
+        # Write the combined lines to the .src file
+        with open(full_file_path, "w") as file:
+            file.write("\n".join(combined_lines))
+        print(f"Successfully exported to {full_file_path}")
+    except Exception as e:
+        print(f"[ERROR] Failed to export .src file: {e}")

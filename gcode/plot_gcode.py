@@ -1,7 +1,7 @@
+from pathlib import Path
 import pyvista as pv
 import numpy as np
 from typing import List, Dict, Union
-from gcode.slicer_keywordmanager import get_type_values
 
 
 def plot_bed(
@@ -83,8 +83,9 @@ def plot_bed(
 
 def plot_gcode(
     plotter: pv.Plotter,
-    processed_gcode: List[Dict[str, str | float | int | None]],
+    processed_gcode: List[Dict[str, Union[str, float, int, None]]],
     layers: str,
+    type_values: Dict[str, Dict[str, Union[List[str], str]]],
 ):
     """
     Adds a G-code path to an existing PyVista plotter instance, with colors for different line types.
@@ -93,10 +94,10 @@ def plot_gcode(
     :param processed_gcode: List of processed G-code dictionaries.
     :param layers: Specify layers to plot as "all", a single layer number (e.g., "1"),
                    or a range of layers (e.g., "1-5").
+    :param type_values: Dictionary containing type mappings and attributes (Color, Linetype).
     """
-    # Import type values and extract color mapping
-    TYPE_VALUES = get_type_values()
-    color_mapping = {key: value["Color"] for key, value in TYPE_VALUES.items()}
+    # Extract color mapping from type_values
+    color_mapping = {key: value["Color"] for key, value in type_values.items()}
 
     # Determine layer filter based on user input
     layer_range = None

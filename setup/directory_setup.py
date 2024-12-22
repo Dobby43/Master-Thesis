@@ -17,14 +17,10 @@ def get_directory_setup(json_file):
     # Input STL-Pfad
     input_directory = config["settings"]["Directory"]["input_directory"]["value"]
     input_name = config["settings"]["Directory"]["input_name"]["value"]
-    stl_input_path = os.path.join(input_directory, f"{input_name}.stl")
 
     # Basis-Output-Verzeichnis und Name des Output-Ordners
-    base_output_directory = config["settings"]["Directory"]["output_directory"]["value"]
+    output_directory = config["settings"]["Directory"]["output_directory"]["value"]
     output_name = config["settings"]["Directory"]["output_name"]["value"]
-
-    # Full Output Directory Path erstellen
-    output_directory = os.path.join(base_output_directory, output_name)
 
     # Aktuelle Zeit für den Unterordner
     current_time = datetime.now().strftime("%H_%M_%S")
@@ -38,7 +34,8 @@ def get_directory_setup(json_file):
 
     # Rückgabe der relevanten Pfade
     return {
-        "stl_input_path": stl_input_path,
+        "input_directory": input_directory,
+        "input_name": input_name,
         "output_directory": final_output_directory,
-        "output_base_name": output_name,
+        "output_name": output_name,
     }

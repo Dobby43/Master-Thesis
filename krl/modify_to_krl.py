@@ -52,12 +52,12 @@ def krl_format(
 
         # Insert a layer comment on layer change
         if layer != current_layer:
-            krl_lines.append(f";LAYER: {layer}" "\n")
+            krl_lines.append("\n" f";LAYER: {layer}")
             current_layer = layer
 
         # Insert a type comment on type change
         if type_ != current_type:
-            krl_lines.append(f";TYPE: {type_}" "\n")
+            krl_lines.append("\n" f";TYPE: {type_}")
             current_type = type_
 
         # Format the KRL command
@@ -67,16 +67,14 @@ def krl_format(
                 krl_lines.append(
                     f"PTP {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
                     f"E1 0, E2 0, E3 0, E4 0}} C_PTP"
-                    "\n"
                 )
-                krl_lines.append(f"$VEL.CP={vel:.2f}" "\n")  # Add velocity only once
+                krl_lines.append("\n" f"$VEL.CP={vel:.2f}")  # Add velocity only once
                 first_position = False
             else:
                 # LIN movements for subsequent points
                 krl_lines.append(
                     f"LIN {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
                     f"E1 0, E2 0, E3 0, E4 0}} C_DIS"
-                    "\n"
                 )
 
     # Append the final position

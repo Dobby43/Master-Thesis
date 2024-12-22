@@ -4,34 +4,25 @@ from gcode import slicer_keywordmanager
 
 # Define dictionaries for different slicers
 SLICER_PATTERNS = slicer_keywordmanager.get_slicer_pattern()
-TYPE_VALUES = slicer_keywordmanager.get_type_values()
 
 
-def translate_type(type_name: str, slicer: str) -> str:
+def translate_type(type_name: str, slicer: str, type_values: Dict) -> str:
     """
     Translates a raw type name from the slicer into a unified category.
     """
     slicer = slicer.upper()
-    for category, slicers in TYPE_VALUES.items():
+    for category, slicers in type_values.items():
         if type_name in slicers.get(slicer, []):
             return category
     return "UNKNOWN"
 
 
 def process_gcode(
-    gcode: List[str],
-    slicer: str,
-) -> List[Dict[str, str | float | int | None]]:
+    gcode: List[str], slicer: str, type_values: Dict
+) -> List[Dict[str, Union[str, float, int, None]]]:
     """
     Processes G-code lines to extract attributes and keep only lines with meaningful G0 or G1 moves.
     Updates missing Z values and Type with the last known value and maintains Layer information.
-
-    :param gcode: List of G-code lines.
-    :type gcode: List[str]
-    :param slicer: The slicer used to generate the G-code (e.g., "CURA", "ORCA").
-    :type slicer: str
-    :returns: Processed G-code lines containing only meaningful G0 or G1 moves with attributes.
-    :rtype: List[Dict[str, Union[str, float, int, None]]]
     """
     # Select patterns for the given slicer
     slicer = slicer.upper()
@@ -70,7 +61,7 @@ def process_gcode(
         type_match = re.match(type_pattern, line)
         if type_match:
             raw_type = type_match.group(1)
-            current_type = translate_type(raw_type, slicer)
+            current_type = translate_type(raw_type, slicer, type_values)
             continue
 
         # Match G-code coordinates and decide move type

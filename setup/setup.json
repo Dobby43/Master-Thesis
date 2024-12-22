@@ -18,35 +18,27 @@
             },
             "output_directory": {
                 "description": "Base directory for storing output files",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Gcode",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\Output",
                 "type": "str"
             },
             "output_name": {
-                "description": "Name of the output folder and files",
+                "description": "Name of the output folder and files as well as .src top line",
                 "value": "Cura_04_12_CFFFP_Quader 200x200x60",
                 "type": "str"
             }
-        }
-    },
-
-        "Printer": {
-            "description": "Settings specific to the 3D printer, including dimensions and tool orientation.",
-            "printer_bed_size_x": {
-                "description": "Size of the printer bed along the X-axis in mm",
-                "value": 1200,
-                "type": "int"
+        },
+        "Robot": {
+            "description": "Settings specific to the robot, including dimensions, tool orientation, and motion parameters. If new categories ar defined with [category_name][value], they can be referenced in the robot start or endcode with {category_name}",
+            "bed_size": {
+                "description": "Size of the robot bed in mm along X, Y, and Z axes",
+                "value": {
+                    "X": 1200,
+                    "Y": 4500,
+                    "Z": 2000
+                },
+                "type": "dict"
             },
-            "printer_bed_size_y": {
-                "description": "Size of the printer bed along the Y-axis in mm",
-                "value": 4500,
-                "type": "int"
-            },
-            "printer_bed_size_z": {
-                "description": "Size of the printer bed along the Z-axis in mm",
-                "value": 2000,
-                "type": "int"
-            },
-            "printer_tool_orientation": {
+            "tool_orientation": {
                 "description": "Orientation of the tool head in degrees",
                 "value": {
                     "A": 0,
@@ -54,11 +46,140 @@
                     "C": 180
                 },
                 "type": "dict"
+            },
+            "base_coordinates": {
+                "description": "Base coordinate frame in the robot's workspace",
+                "value": "{X 1460.9, Y -2237.66, Z 268.5, A 0.0, B 0.0, C 0.0}",
+                "type": "str"
+            },
+            "tool_coordinates": {
+                "description": "Tool coordinate frame in the robot's workspace",
+                "value": "{X -10.99, Y -0.86, Z 917.61, A 0.0, B 0.0, C 0.0}",
+                "type": "str"
+            },
+            "start_position": {
+                "description": "Start position of the robot's tool",
+                "value": "{A1 75.0, A2 -90.0, A3 90.0, A4 0.0, A5 90.0, A6 0.0}",
+                "type": "str"
+            },
+            "end_position": {
+                "description": "End position of the robot's tool",
+                "value": "{A1 75.0, A2 -90.0, A3 90.0, A4 0.0, A5 90.0, A6 0.0}",
+                "type": "str"
+            },
+            "print_speed": {
+                "description": "Printing speed of the robot in [m/s]",
+                "value": 0.35,
+                "type": "float"
+            },
+            "start_code": {
+                "description": "Robot start code",
+                "value": [
+                    "DEF {output_name} ()",
+                    "",
+                    ";Declarations for RSI",
+                    "DECL INT RET",
+                    "DECL INT CONTID",
+                    "",
+                    ";FOLD       INI",
+                    "  ;FOLD     BASISTECH INI",
+                    "    GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )",
+                    "    INTERRUPT ON 3",
+                    "    BAS (#INITMOV,0)",
+                    "   ;ENDFOLD BASISTECH INI",
+                    ";ENDFOLD    INI",
+                    "",
+                    ";FOLD    3DCP",
+                    "  RET = RSI_CREATE(\"rsi3dcp\",CONTID,TRUE)",
+                    "  IF (RET <> RSIOK) THEN",
+                    "    HALT",
+                    "  ENDIF",
+                    "",
+                    "  RET = RSI_ON(#ABSOLUTE)",
+                    "  IF (RET <> RSIOK) THEN",
+                    "    HALT",
+                    "  ENDIF",
+                    "",
+                    " ; IF $USER_LEVEL > 19 THEN ;EXPERT Mode required",
+                    " ;   MyHmiOpen(\"dn\",#Half)",
+                    " ; ENDIF",
+                    "",
+                    "  PRINT_PROGRESS = 0",
+                    "  LAYER = 1",
+                    "",
+                    "  $TIMER[1] = 0 ;Reset",
+                    "  $TIMER_STOP[1] = FALSE ;Start",
+                    "",
+                    "  $TIMER[4] = 0 ;Reset",
+                    "  $TIMER_STOP[4] = FALSE ;Start",
+                    "",
+                    "  IF $ENERGY_MEASURING.ACTIVE == TRUE THEN",
+                    "    $ENERGY_MEASURING.ACTIVE = FALSE",
+                    "    $ENERGY_MEASURING.ACTIVE = TRUE",
+                    "  ELSE",
+                    "    $ENERGY_MEASURING.ACTIVE = TRUE",
+                    "  ENDIF",
+                    ";ENDFOLD 3DCP",
+                    "",
+                    ";FOLD    BCO",
+                    "  TOOL_DATA[1] = {tool_coordinates}",
+                    "  BASE_DATA[1] = {base_coordinates}",
+                    "  $BWDSTART = FALSE",
+                    "",
+                    "  SWITCH $MODE_OP",
+                    "    CASE #T1",
+                    "      PDAT_ACT = {VEL 100,ACC 100,APO_DIST 10}",
+                    "      BAS (#PTP_PARAMS,100)",
+                    "    CASE #T2",
+                    "      PDAT_ACT = {VEL 20,ACC 100,APO_DIST 10}",
+                    "      BAS (#PTP_PARAMS,20)",
+                    "    CASE #AUT",
+                    "      PDAT_ACT = {VEL 20,ACC 100,APO_DIST 10}",
+                    "      BAS (#PTP_PARAMS,20)",
+                    "    DEFAULT",
+                    "      PDAT_ACT = {VEL 20,ACC 100,APO_DIST 10}",
+                    "      BAS (#PTP_PARAMS,20)",
+                    "   ENDSWITCH",
+                    "",
+                    "   FDAT_ACT = {TOOL_NO 1,BASE_NO 1,IPO_FRAME #BASE}",
+                    "",
+                    "   PTP  {start_position}",
+                    ";ENDFOLD BCO",
+                    "",
+                    ";FOLD    MOTION",
+                    "   $VEL.CP   = {print_speed} ;m/sec",
+                    "   $VEL.ORI1 = 100  ;deg/sec",
+                    "   $VEL.ORI2 = 100  ;deg/sec",
+                    "   $ADVANCE = 3",
+                    ";ENDFOLD MOTION"
+                ],
+                "type": "list[str]"
+            },
+            "end_code": {
+                "description": "Robot end code",
+                "value": [
+                    ";",
+                    "",
+                    ";FOLD    3DCP",
+                    "  RET = RSI_OFF()",
+                    "  IF (RET <> RSIOK) THEN",
+                    "    HALT",
+                    "  ENDIF",
+                    "",
+                    "  $ENERGY_MEASURING.ACTIVE = FALSE",
+                    "",
+                    "  $TIMER_STOP[1] = TRUE",
+                    "  $TIMER_STOP[4] = TRUE",
+                    ";ENDFOLD 3DCP",
+                    "",
+                    "END"
+                ],
+                "type": "list[str]"
             }
         },
         "Slicer": {
             "description": "Settings for the slicing software, including the slicer type and configuration.",
-            "slicer_type": {
+            "slicer_name": {
                 "description": "The type of slicer used (CURA)",
                 "value": "CURA",
                 "type": "str"
@@ -79,37 +200,132 @@
                 "type": "dict"
             }
         },
+
         "Rhino": {
-            "description": "Settings for Rhino file generation and visualization. Available line types: Continuous, Dashed, DashDot, Dotted.",
-            "rhino_support_color": {
-                "description": "Color for support structures in hex format",
-                "value": "#FF0000",
-                "type": "str"
-            },
-            "rhino_support_linetype": {
-                "description": "Linetype for support structures",
-                "value": "Dashed",
-                "type": "str"
-            },
-            "rhino_geometry_color": {
-                "description": "Color for geometry in hex format",
-                "value": "#0000FF",
-                "type": "str"
-            },
-            "rhino_geometry_linetype": {
-                "description": "Linetype for geometry structures",
-                "value": "Continuous",
-                "type": "str"
-            },
-            "rhino_additional_layer_color": {
-                "description": "Color for additional layers in hex format",
-                "value": "#FFFF00",
-                "type": "str"
-            },
-            "rhino_additional_layer_linetype": {
-                "description": "Linetype for additional layers",
-                "value": "Dotted",
-                "type": "str"
+            "description": "Defines TYPE_VALUES (ensures a clear assignment of printline-types from different slicers) , including colors and linetypes, for visualization in Rhino. Available line types: Continuous, Dashed, DashDot, Dotted.",
+            "TYPE_VALUES": {
+                "SUPPORT": {
+                    "CURA": ["SUPPORT", "SUPPORT-INTERFACE"],
+                    "ORCA": ["Support", "Support interface"],
+                    "color": {
+                        "description": "Color for support structures in hex format",
+                        "value": "#00FF00",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for support structures",
+                        "value": "Continuous",
+                        "type": "str"
+                    }
+                },
+                "WALL_OUTER": {
+                    "CURA": ["WALL-OUTER"],
+                    "ORCA": ["Outer wall", "Overhang wall"],
+                    "color": {
+                        "description": "Color for outer walls in hex format",
+                        "value": "#0000FF",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for outer walls",
+                        "value": "Continuous",
+                        "type": "str"
+                    }
+                },
+                "WALL_INNER": {
+                    "CURA": ["WALL-INNER"],
+                    "ORCA": ["Inner wall"],
+                    "color": {
+                        "description": "Color for inner walls in hex format",
+                        "value": "#00FFFF",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for inner walls",
+                        "value": "Continuous",
+                        "type": "str"
+                    }
+                },
+                "SURFACE": {
+                    "CURA": ["SKIN"],
+                    "ORCA": ["Bottom surface", "Top surface"],
+                    "color": {
+                        "description": "Color for surfaces in hex format",
+                        "value": "#FFFF00",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for surfaces",
+                        "value": "Continuous",
+                        "type": "str"
+                    }
+                },
+                "INFILL": {
+                    "CURA": ["FILL"],
+                    "ORCA": ["Internal solid infill", "Spars infill"],
+                    "color": {
+                        "description": "Color for infill in hex format",
+                        "value": "#FF0000",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for infill",
+                        "value": "Continuous",
+                        "type": "str"
+                    }
+                },
+                "CURB": {
+                    "CURA": ["SKIRT", "BRIM", "RAFT"],
+                    "ORCA": ["Skirt", "Brim", "Raft"],
+                    "color": {
+                        "description": "Color for skirts, brims, and rafts in hex format",
+                        "value": "#FF00FF",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for skirts, brims, and rafts",
+                        "value": "Continuous",
+                        "type": "str"
+                    }
+                },
+                "BRIDGE": {
+                    "CURA": [],
+                    "ORCA": ["Bridge", "Internal Bridge"],
+                    "color": {
+                        "description": "Color for bridges in hex format",
+                        "value": "#FFA500",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for bridges",
+                        "value": "Continuous",
+                        "type": "str"
+                    }
+                },
+                "UNKNOWN": {
+                    "color": {
+                        "description": "Color for unknown types in hex format",
+                        "value": "#00FF00",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for unknown types",
+                        "value": "DashDot",
+                        "type": "str"
+                    }
+                },
+                "TRAVEL": {
+                    "color": {
+                        "description": "Color for travel moves in hex format",
+                        "value": "#808080",
+                        "type": "str"
+                    },
+                    "linetype": {
+                        "description": "Linetype for travel moves",
+                        "value": "Dashed",
+                        "type": "str"
+                    }
+                }
             }
         }
     }
