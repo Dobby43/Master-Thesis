@@ -1,8 +1,8 @@
 import re
 import json
-from typing import Dict, Any, Set
 
-def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
+
+def extract_placeholders_from_robot(json_data: dict[str, any]) -> set[str]:
     """
     DESCRIPTION:
     Extracts placeholders from the 'Robot' section of the JSON data, excluding certain keys.
@@ -16,7 +16,7 @@ def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
     placeholders = set()
     excluded_keys = {"description"}  # Keys to exclude from placeholder search
 
-    def recursive_search(data: Any, parent_key: str = None):
+    def recursive_search(data: any, parent_key: str = None):
         if isinstance(data, dict):
             for key, value in data.items():
                 # Skip keys in the exclusion list
@@ -38,8 +38,8 @@ def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
 
 
 def replace_placeholders(
-    json_data: Dict[str, Any], placeholders: Set[str]
-) -> Dict[str, Any]:
+    json_data: dict[str, any], placeholders: set[str]
+) -> dict[str, any]:
     """
     DESCRIPTION:
     Replaces placeholders in the entire JSON file with their corresponding values.
@@ -53,7 +53,7 @@ def replace_placeholders(
     """
     replaced_values = {}
 
-    def find_value_for_placeholder(placeholder: str, data: Any) -> Any:
+    def find_value_for_placeholder(placeholder: str, data: any) -> any:
         """
         Finds the value for a placeholder based on its name.
 
@@ -98,8 +98,8 @@ def replace_placeholders(
 
 
 def apply_replacements_to_robot(
-    json_data: Dict[str, Any], replacements: Dict[str, Any]
-) -> Dict[str, Any]:
+    json_data: dict[str, any], replacements: dict[str, any]
+) -> dict[str, any]:
     """
     DESCRIPTION:
     Applies the replaced placeholder values to the 'Robot' section.
@@ -111,7 +111,8 @@ def apply_replacements_to_robot(
     RETURNS:
     Updated 'Robot' section with placeholders replaced.
     """
-    def recursive_replace(data: Any) -> Any:
+
+    def recursive_replace(data: any) -> any:
         if isinstance(data, dict):
             return {key: recursive_replace(value) for key, value in data.items()}
         elif isinstance(data, list):
@@ -128,7 +129,7 @@ def apply_replacements_to_robot(
     return recursive_replace(robot_section)
 
 
-def get_robot_settings(json_file: str) -> Dict[str, Any]:
+def get_robot_settings(json_file: str) -> dict[str, any]:
     """
     DESCRIPTION:
     Extracts and replaces placeholders in the 'Robot' section of the JSON file.

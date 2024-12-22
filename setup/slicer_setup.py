@@ -1,8 +1,7 @@
 import json
-from typing import Any
 
 
-def get_slicer_settings(json_file: str) -> dict[str, Any]:
+def get_slicer_settings(json_file: str) -> dict[str, any]:
     """
     DESCRIPTION:
     Extracts slicer settings from a JSON file.

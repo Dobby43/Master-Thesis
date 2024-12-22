@@ -1,8 +1,7 @@
 import json
-from typing import Dict, Any
 
 
-def get_rhino_settings(json_file: str) -> dict[str, Any]:
+def get_rhino_settings(json_file: str) -> dict[str, any]:
     """
     DESCRIPTION:
     Extracts Rhino settings from the JSON file and returns them in a formatted dictionary.
