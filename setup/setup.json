@@ -8,22 +8,22 @@
             "description": "Defines the input and output directories and filenames for the slicing and printing process.",
             "input_directory": {
                 "description": "Base directory for input STL files",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Gcode",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Dateien_Beispiele\\STL",
                 "type": "str"
             },
             "input_name": {
                 "description": "Name of the input STL file (without extension)",
-                "value": "Cura_04_12_CFFFP_Quader 200x200x60",
+                "value": "Test_Quader 200x200x200",
                 "type": "str"
             },
             "output_directory": {
                 "description": "Base directory for storing output files",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\Output",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\V1.5",
                 "type": "str"
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
-                "value": "Cura_04_12_CFFFP_Quader 200x200x60",
+                "value": "Test_Quader 200x200x200",
                 "type": "str"
             }
         },
@@ -158,7 +158,6 @@
             "end_code": {
                 "description": "Robot end code",
                 "value": [
-                    ";",
                     "",
                     ";FOLD    3DCP",
                     "  RET = RSI_OFF()",
@@ -180,27 +179,62 @@
         "Slicer": {
             "description": "Settings for the slicing software, including the slicer type and configuration.",
             "slicer_name": {
-                "description": "The type of slicer used (CURA)",
+                "description": "The type of slicer used (CURA, ORCA, OPEN_SLICER)",
                 "value": "CURA",
                 "type": "str"
             },
-            "slicer_cmd_path": {
-                "description": "Path to the slicer's executable file",
-                "value": "C:\\path\\to\\slicer\\executable",
-                "type": "str"
+            "CURA": {
+                "cura_cmd_path": {
+                    "description": "Path to CURA's executable file",
+                    "value": "C:\\Program Files\\UltiMaker Cura 5.8.1\\CuraEngine.exe",
+                    "type": "str"
+                },
+                "cura_config_file_path": {
+                    "description": "Path to CURA's configuration file",
+                    "value": "C:\\Program Files\\UltiMaker Cura 5.8.1\\share\\cura\\resources\\definitions\\12_command_line_settings_fdmprinter.def - Kopie.json",
+                    "type": "str"
+                },
+                "cura_arguments": {
+                    "description": "Additional arguments for CURA slicing. These overwrite the values in the printer setup data",
+                    "value": null,
+                    "type": "list[str]"
+                }
             },
-            "slicer_config_file_path": {
-                "description": "Path to the slicer configuration file",
-                "value": "C:\\path\\to\\slicer\\config",
-                "type": "str"
+            "ORCA": {
+                "orca_cmd_path": {
+                    "description": "Path to ORCA's executable file",
+                    "value": "C:\\path\\to\\orca\\executable",
+                    "type": "str"
+                },
+                "orca_config_file_path": {
+                    "description": "Path to ORCA's configuration file",
+                    "value": "C:\\path\\to\\orca\\config",
+                    "type": "str"
+                },
+                "orca_arguments": {
+                    "description": "Additional arguments for ORCA slicing. These overwrite the values in the printer setup data",
+                    "value": null,
+                    "type": "list[str]"
+                }
             },
-            "slicer_arguments": {
-                "description": "Additional arguments for slicing. These overwrite the values in the printer setup data",
-                "value": null,
-                "type": "dict"
+            "OPEN_SLICER": {
+                "open_slicer_cmd_path": {
+                    "description": "Path to Open Slicer's executable file",
+                    "value": "C:\\path\\to\\open_slicer\\executable",
+                    "type": "str"
+                },
+                "open_slicer_config_file_path": {
+                    "description": "Path to Open Slicer's configuration file",
+                    "value": "C:\\path\\to\\open_slicer\\config",
+                    "type": "str"
+                },
+                "open_slicer_arguments": {
+                    "description": "Additional arguments for Open Slicer slicing. These overwrite the values in the printer setup data",
+                    "value": null,
+                    "type": "list[str]"
+                }
             }
         },
-
         "Rhino": {
             "description": "Defines TYPE_VALUES (ensures a clear assignment of printline-types from different slicers) , including colors and linetypes, for visualization in Rhino. Available line types: Continuous, Dashed, DashDot, Dotted.",
             "TYPE_VALUES": {

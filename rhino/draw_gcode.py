@@ -14,7 +14,7 @@ def color_name_to_rgb(color_name):
     """
     try:
         rgb_normalized = colors.to_rgb(color_name)
-        return tuple(int(c * 255) for c in rgb_normalized)
+        return tuple(int(c * 255) for c in rgb_normalized)  # TODO: AUF HEX CODE UMBAUEN
     except ValueError:
         print(f"Invalid color name: {color_name}. Defaulting to black.")
         return (0, 0, 0)  # Default to black if invalid

@@ -7,9 +7,9 @@ def slice(
     stl_file: str,
     import_directory_stl: str,
     export_directory_gcode: str,
-    export_file_gcode: str = None,
-    cura_engine_path: str = r"C:\Program Files\UltiMaker Cura 5.8.1\CuraEngine.exe",
-    cura_def_file: str = r"C:\Program Files\UltiMaker Cura 5.8.1\share\cura\resources\definitions\creality_ender3.def.json",
+    export_file_gcode: str,
+    cura_engine_path: str,
+    cura_def_file: str,
     **kwargs,
 ) -> tuple[bool, str]:
     """
@@ -23,7 +23,7 @@ def slice(
     # Set the output directory and file
     gcode_path = Path(export_directory_gcode)
     gcode_path.mkdir(parents=True, exist_ok=True)  # Ensure the export directory exists
-    gcode_file = gcode_path / (export_file_gcode or stl_path.stem + ".gcode")
+    gcode_file = gcode_path / (export_file_gcode + ".gcode")
 
     # Construct the slicing command
     command = [

@@ -79,8 +79,8 @@ def krl_format(
 
     # Append the final position
     krl_lines.append(
-        f"\n "
-        ";TYPE TRAVEL "
+        f"\n"
+        f";TYPE: TRAVEL"
         "\n"
         f"PTP {{{end_pos[1:-1]}, E1 0, E2 0, E3 0, E4 0 }} C_PTP"
     )

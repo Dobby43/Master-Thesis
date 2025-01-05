@@ -4,21 +4,25 @@ This file contains the basis for all adjacent functions
 
 __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
-__version__ = "1.4"
+__version__ = "1.5"
 
 from pathlib import Path
 
+# Setup
 from setup import directory_setup as disu
 from setup import slicer_setup as slsu
 from setup import robot_setup as rosu
 from setup import rhino_setup as rhsu
 
-# gcode
+# Slice
+from slicer.cura import slice as slic
+
+# G-Code
 from gcode import get_gcode
 from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
 
-# plot
+# Plot
 from gcode import plot_gcode as plt
 
 # krl
@@ -39,13 +43,13 @@ setup_path = str(Path(__file__).parent / "setup" / "setup.json")
 directory_setup = disu.get_directory_setup(setup_path)
 
 # Directories and Filenames
+# STL file
 INPUT_DIRECTORY_STL = directory_setup["input_directory"]
-INPUT_NAME_STL = directory_setup["input_name"]
+INPUT_NAME_STL = f"{directory_setup["input_name"]}.stl"
 OUTPUT_DIRECTORY = directory_setup["output_directory"]
 OUTPUT_NAME = directory_setup["output_name"]
-
 # G-Code
-INPUT_DIRECTORY_GCODE = INPUT_DIRECTORY_STL
+INPUT_DIRECTORY_GCODE = OUTPUT_DIRECTORY
 INPUT_FILE_GCODE = f"{OUTPUT_NAME}.gcode"
 # KRL Code
 OUTPUT_DIRECTORY_KRL = OUTPUT_DIRECTORY
@@ -98,15 +102,17 @@ TYPE_VALUES = rhino_settings["TYPE_VALUES"]
 
 
 # ----------------SLICING OF .STL FILE----------------
-# print("Starting to slice")
-# sucess, message = slicu.slice(
-#     stl_file=INPUT_FILE_STL,
-#     INPUT_directory_stl=INPUT_DIRECTORY_STL,
-#     export_directory_gcode=EXPORT_DIRECTORY_GCODE,
-#     export_file_gcode=EXPORT_FILE_GCODE,
-# )
-# print(message)
-# print(f"Finished slicing {INPUT_FILE_GCODE}")
+print("Starting to slice")
+sucess, message = slic.slice(
+    import_directory_stl=INPUT_DIRECTORY_STL,
+    stl_file=INPUT_NAME_STL,
+    export_directory_gcode=OUTPUT_DIRECTORY,
+    export_file_gcode=OUTPUT_NAME,
+    cura_engine_path=SLICER_CMD_PATH,
+    cura_def_file=SLICER_CONFIG_FILE_PATH,
+)
+print(message)
+print(f"Finished slicing {INPUT_NAME_STL}")
 
 # ----------------G-CODE IMPORT AND EVALUATION----------------
 # Read the G-Code lines
@@ -130,7 +136,6 @@ for line in gcode_necessary:
 
 # Gets maximum layer number
 LAYER_MAX = gcode_necessary[-1]["Layer"]
-
 
 # ----------------PYVISTA PLOT----------------
 plotter = plt.plot_bed(
