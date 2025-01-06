@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 
 
 def slice(
@@ -10,7 +10,7 @@ def slice(
     export_file_gcode: str,
     cura_engine_path: str,
     cura_def_file: str,
-    **kwargs: str,
+    additional_args: List[str],
 ) -> Tuple[bool, str]:
     """
     DESCRIPTION:
@@ -23,7 +23,7 @@ def slice(
     export_file_gcode (str): Name of the output G-code file (without extension).
     cura_engine_path (str): Path to the CuraEngine executable.
     cura_def_file (str): Path to the Cura printer definition file.
-    kwargs (str): Additional slicing settings as key-value pairs.
+    additional_args (List[str]): Additional slicing arguments in the format ["key=value"].
 
     RETURNS:
     tuple[bool, str]: A tuple containing:
@@ -59,25 +59,32 @@ def slice(
         "-j",
         str(cura_def),
         "-s",
-        "roofing_layer_count=1",
-        "-s",
-        "layer_height_0=2",
-        "-l",
-        str(stl_path),
-        "-o",
-        str(gcode_file),
+        "roofing_layer_count=1",  # TODO: roofing_layer_count lösen
     ]
 
-    # Append additional slicing settings from kwargs
-    for key, value in kwargs.items():
-        command.extend(["-s", f"{key}={value}"])
+    # Add additional arguments immediately after the definition file
+    if additional_args:
+        for arg in additional_args:
+            command.extend(["-s", arg])
+
+    # Append STL and output G-code file paths
+    command.extend(
+        [
+            "-l",
+            str(stl_path),
+            "-o",
+            str(gcode_file),
+        ]
+    )
 
     # Debugging: Print the constructed command
     print("Generated Command:", " ".join(command))
 
     try:
         # Execute the slicing command
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        result = subprocess.run(
+            command, check=True, capture_output=True, text=True
+        )  # TODO: Error message überprüfen
         return (
             True,
             f"G-code successfully generated at {gcode_file}\nOutput:\n{result.stdout}",

@@ -121,9 +121,9 @@ if SLICER == "CURA":
         SLICER_ARGUMENTS, default_arguments_cura
     )
     # summarize all necessary user arguments for slicing process
-    # all_arguments_cura = setar.set_user_arguments(
-    #     user_arguments=user_arguments_cura, additional_args=preset_arguments_cura
-    # )
+    selected_arguments_cura = setar.set_user_arguments(
+        user_arguments=user_arguments_cura, additional_args=preset_arguments_cura
+    )
     # slice STL with user arguments
     print("Starting to slice")
     sucess, message = slic.slice(
@@ -133,6 +133,7 @@ if SLICER == "CURA":
         export_file_gcode=OUTPUT_NAME,
         cura_engine_path=SLICER_CMD_PATH,
         cura_def_file=SLICER_CONFIG_FILE_PATH,
+        additional_args=selected_arguments_cura,
     )
     print(message)
     print(f"Finished slicing {INPUT_NAME_STL}")

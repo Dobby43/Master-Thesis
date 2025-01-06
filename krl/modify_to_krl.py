@@ -11,22 +11,19 @@ def krl_format(
     vel: float,
 ) -> list[str]:
     """
-    Converts processed G-code to KRL format, including layer and type annotations.
+    DESCRIPTION:
+    Converts processed G-code into KRL format, including layer and type annotations.
 
-    :param gcode: List of processed G-code entries.
-    :type gcode: List[Dict[str, Union[str, float, int, None]]]
-    :param a: Orientation of rotary axis A in degrees.
-    :type a: float
-    :param b: Orientation of rotary axis B in degrees.
-    :type b: float
-    :param c: Orientation of rotary axis C in degrees.
-    :type c: float
-    :param end_pos: End position of robot in KRL format.
-    :type end_pos: str
-    :param vel: Velocity of robot during printing.
-    :type vel: float
-    :returns: Updated list of KRL formatted lines.
-    :rtype: List[str]
+    ARGUMENTS:
+    gcode: A list of dictionaries containing processed G-code entries.
+    a: Orientation of rotary axis A in degrees.
+    b: Orientation of rotary axis B in degrees.
+    c: Orientation of rotary axis C in degrees.
+    end_pos: The robot's end position in KRL format.
+    vel: The velocity of the robot during printing.
+
+    RETURNS:
+    A list of KRL-formatted lines, including layer and type annotations.
     """
     krl_lines = []
     current_layer = None

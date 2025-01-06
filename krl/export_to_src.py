@@ -4,15 +4,20 @@ def export_to_src(
     end_code: list[str],
     output_path: str,
     file_name: str,
-):
+) -> None:
     """
+    DESCRIPTION:
     Combines the robot start code, KRL lines, and end code into a single .src file.
 
-    :param krl_lines: List of KRL-formatted lines (main G-code converted to KRL).
-    :param start_code: List of robot start code lines.
-    :param end_code: List of robot end code lines.
-    :param output_path: Path to the directory where the .src file will be saved.
-    :param file_name: Name of the output .src file (without extension).
+    ARGUMENTS:
+    krl_lines: A list of KRL-formatted lines (main G-code converted to KRL).
+    start_code: A list of robot start code lines.
+    end_code: A list of robot end code lines.
+    output_path: The directory where the .src file will be saved.
+    file_name: The name of the output .src file (without extension).
+
+    RETURNS:
+    None
     """
     # Ensure the output path ends with a separator
     if not output_path.endswith(("\\", "/")):

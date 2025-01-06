@@ -191,16 +191,15 @@
                 },
                 "cura_config_file_path": {
                     "description": "Path to CURA's configuration file",
-                    "value": "C:\\Program Files\\UltiMaker Cura 5.8.1\\share\\cura\\resources\\definitions\\12_command_line_settings_fdmprinter.def - Kopie.json",
+                    "value": "C:\\Program Files\\UltiMaker Cura 5.8.1\\share\\cura\\resources\\definitions\\12_KUKA_fdmprinter.def.json",
                     "type": "str"
                 },
                 "cura_arguments": {
                     "description": "Additional arguments for CURA slicing. These overwrite the values in the printer setup data",
                     "value": {
                         "layer_height_0": "15",
-                        "layer_height": "10",
-                        "wall_thickness": "1.0",
-                        "infill_density": "yes"
+                        "layer_height": "15",
+                        "infill_density": "20"
                     },
                     "type": "dict[str|str]"
                 }
