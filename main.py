@@ -15,7 +15,13 @@ from setup import robot_setup as rosu
 from setup import rhino_setup as rhsu
 
 # Slice
+# Cura
 from slicer.cura import slice as slic
+from slicer.cura import get_default_arguments as defcu
+from slicer.cura import get_user_arguments as usrcu
+from slicer.cura import set_user_arguments as setar
+
+# Orca
 
 # G-Code
 from gcode import get_gcode
@@ -82,8 +88,8 @@ END_POSITION = robot_settings["end_position"]
 VEL_CP = robot_settings["print_speed"]
 
 # Start- and End- Code of Robot
-robot_start_code = robot_settings["start_code"]
-robot_end_code = robot_settings["end_code"]
+ROBOT_START_CODE = robot_settings["start_code"]
+ROBOT_END_CODE = robot_settings["end_code"]
 
 # ----------------SLICER CONFIGURATION----------------
 # evaluate setup.json file for "Slicer" information
@@ -94,25 +100,44 @@ SLICER_CMD_PATH = slicer_settings["slicer_cmd_path"]
 SLICER_CONFIG_FILE_PATH = slicer_settings["slicer_config_file_path"]
 SLICER_ARGUMENTS = slicer_settings["slicer_arguments"]
 
-
 # ----------------RHINO CONFIGURATION----------------
 # evaluate setup.json dile for "Rhino" information
 rhino_settings = rhsu.get_rhino_settings(setup_path)
 TYPE_VALUES = rhino_settings["TYPE_VALUES"]
 
-
 # ----------------SLICING OF .STL FILE----------------
-print("Starting to slice")
-sucess, message = slic.slice(
-    import_directory_stl=INPUT_DIRECTORY_STL,
-    stl_file=INPUT_NAME_STL,
-    export_directory_gcode=OUTPUT_DIRECTORY,
-    export_file_gcode=OUTPUT_NAME,
-    cura_engine_path=SLICER_CMD_PATH,
-    cura_def_file=SLICER_CONFIG_FILE_PATH,
-)
-print(message)
-print(f"Finished slicing {INPUT_NAME_STL}")
+if SLICER == "CURA":
+    # arguments from setup.json that also need to be handled by Cura
+    preset_arguments_cura = {
+        "machine_width": BED_SIZE_X,
+        "machine_depth": BED_SIZE_Y,
+        "machine_height": BED_SIZE_Z,
+    }
+
+    # collect all default slicing parameters
+    default_arguments_cura = defcu.extract_slicer_arguments(SLICER_CONFIG_FILE_PATH)
+    # validate user input with default slicing parameters
+    user_arguments_cura = usrcu.validate_user_arguments(
+        SLICER_ARGUMENTS, default_arguments_cura
+    )
+    # summarize all necessary user arguments for slicing process
+    # all_arguments_cura = setar.set_user_arguments(
+    #     user_arguments=user_arguments_cura, additional_args=preset_arguments_cura
+    # )
+    # slice STL with user arguments
+    print("Starting to slice")
+    sucess, message = slic.slice(
+        import_directory_stl=INPUT_DIRECTORY_STL,
+        stl_file=INPUT_NAME_STL,
+        export_directory_gcode=OUTPUT_DIRECTORY,
+        export_file_gcode=OUTPUT_NAME,
+        cura_engine_path=SLICER_CMD_PATH,
+        cura_def_file=SLICER_CONFIG_FILE_PATH,
+    )
+    print(message)
+    print(f"Finished slicing {INPUT_NAME_STL}")
+else:
+    print("Choose valid slicer")
 
 # ----------------G-CODE IMPORT AND EVALUATION----------------
 # Read the G-Code lines
@@ -152,7 +177,6 @@ plt.plot_gcode(
     type_values=TYPE_VALUES,
 )
 
-
 # ----------------KRL FORMATING OF G-CODE----------------
 # Formats G-Code to KRL and appends tool-head orientation
 krl_lines = mdf.krl_format(
@@ -169,7 +193,7 @@ krl_lines = mdf.krl_format(
 
 # Export of KRL-File
 exp.export_to_src(
-    krl_lines, robot_start_code, robot_end_code, OUTPUT_DIRECTORY, OUTPUT_NAME
+    krl_lines, ROBOT_START_CODE, ROBOT_END_CODE, OUTPUT_DIRECTORY, OUTPUT_NAME
 )
 
 # ----------------RHINO FILE----------------

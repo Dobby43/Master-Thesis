@@ -1,6 +1,6 @@
 import subprocess
-import os
 from pathlib import Path
+from typing import Tuple
 
 
 def slice(
@@ -10,40 +10,69 @@ def slice(
     export_file_gcode: str,
     cura_engine_path: str,
     cura_def_file: str,
-    **kwargs,
-) -> tuple[bool, str]:
+    **kwargs: str,
+) -> Tuple[bool, str]:
     """
-    Slices an STL file using CuraEngine.
-    """
-    # Ensure the input directory and STL file are valid
-    stl_path = Path(import_directory_stl) / stl_file
-    if not stl_path.exists() or stl_path.suffix.lower() != ".stl":
-        return False, f"Error: {stl_path} is not a valid .stl file or does not exist."
+    DESCRIPTION:
+    Slices an STL file using CuraEngine and generates G-code.
 
-    # Set the output directory and file
+    ARGUMENTS:
+    stl_file (str): Name of the STL file to be sliced.
+    import_directory_stl (str): Directory containing the STL file.
+    export_directory_gcode (str): Directory to save the generated G-code.
+    export_file_gcode (str): Name of the output G-code file (without extension).
+    cura_engine_path (str): Path to the CuraEngine executable.
+    cura_def_file (str): Path to the Cura printer definition file.
+    kwargs (str): Additional slicing settings as key-value pairs.
+
+    RETURNS:
+    tuple[bool, str]: A tuple containing:
+        - bool: Success status (True if slicing succeeded, False otherwise).
+        - str: Message with details of success or error.
+    """
+    # Validate STL input file
+    stl_path = Path(import_directory_stl) / stl_file
+    if not stl_path.exists():
+        return False, f"Error: STL file not found at {stl_path}."
+    if stl_path.suffix.lower() != ".stl":
+        return False, f"Error: {stl_path} is not a valid STL file."
+
+    # Validate CuraEngine path
+    cura_engine = Path(cura_engine_path)
+    if not cura_engine.exists() or not cura_engine.is_file():
+        return False, f"Error: CuraEngine not found at {cura_engine_path}."
+
+    # Validate Cura definition file
+    cura_def = Path(cura_def_file)
+    if not cura_def.exists() or not cura_def.is_file():
+        return False, f"Error: Cura definition file not found at {cura_def_file}."
+
+    # Prepare G-code output directory and file
     gcode_path = Path(export_directory_gcode)
-    gcode_path.mkdir(parents=True, exist_ok=True)  # Ensure the export directory exists
-    gcode_file = gcode_path / (export_file_gcode + ".gcode")
+    gcode_path.mkdir(parents=True, exist_ok=True)
+    gcode_file = gcode_path / f"{export_file_gcode}.gcode"
 
     # Construct the slicing command
     command = [
-        cura_engine_path,
+        str(cura_engine),
         "slice",
         "-j",
-        cura_def_file,
+        str(cura_def),
         "-s",
         "roofing_layer_count=1",
+        "-s",
+        "layer_height_0=2",
         "-l",
         str(stl_path),
         "-o",
         str(gcode_file),
     ]
 
-    # Add additional settings from kwargs
+    # Append additional slicing settings from kwargs
     for key, value in kwargs.items():
         command.extend(["-s", f"{key}={value}"])
 
-    # Debugging: Print the command
+    # Debugging: Print the constructed command
     print("Generated Command:", " ".join(command))
 
     try:
@@ -55,28 +84,10 @@ def slice(
         )
 
     except subprocess.CalledProcessError as error:
-        # Capture stderr or stdout for debugging
-        return False, f"Error during slicing:\n{error.stderr or error.stdout}"
+        # Handle Cura slicing errors
+        error_message = error.stderr if error.stderr else error.stdout
+        return False, f"Error during slicing:\n{error_message}"
 
-
-if __name__ == "__main__":
-    # Define input parameters
-    IMPORT_DIRECTORY_STL = (
-        r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Input\STL"
-    )
-    IMPORT_FILE_STL = r"Quader 200x200x60.stl"
-
-    # Define output parameters
-    EXPORT_DIRECTORY_GCODE = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Slicing_Data\Output\GCODE_Files\automated"
-    EXPORT_FILE_GCODE = r"Quader_200x200x60.gcode"
-
-    # Call the slicing function
-    success, message = slice(
-        stl_file=IMPORT_FILE_STL,
-        import_directory_stl=IMPORT_DIRECTORY_STL,
-        export_directory_gcode=EXPORT_DIRECTORY_GCODE,
-        export_file_gcode=EXPORT_FILE_GCODE,
-    )
-
-    # Print the result
-    print(message)
+    except Exception as e:
+        # Catch unexpected errors
+        return False, f"Unexpected error: {str(e)}"

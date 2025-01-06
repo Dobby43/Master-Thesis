@@ -28,9 +28,9 @@
             }
         },
         "Robot": {
-            "description": "Settings specific to the robot, including dimensions, tool orientation, and motion parameters. If new categories ar defined with [category_name][value], they can be referenced in the robot start or endcode with {category_name}",
+            "description": "Settings specific to the robot, including dimensions, tool orientation, and motion parameters. If new categories ar defined inside this .json file, with [category_name][value], they can be referenced in the robot start or endcode with {category_name}",
             "bed_size": {
-                "description": "Size of the robot bed in mm along X, Y, and Z axes",
+                "description": "Size of the robot bed in mm along X, Y, and Z axes; Sets bedsize for slicing process",
                 "value": {
                     "X": 1200,
                     "Y": 4500,
@@ -196,8 +196,13 @@
                 },
                 "cura_arguments": {
                     "description": "Additional arguments for CURA slicing. These overwrite the values in the printer setup data",
-                    "value": null,
-                    "type": "list[str]"
+                    "value": {
+                        "layer_height_0": "15",
+                        "layer_height": "10",
+                        "wall_thickness": "1.0",
+                        "infill_density": "yes"
+                    },
+                    "type": "dict[str|str]"
                 }
             },
             "ORCA": {
