@@ -1,59 +1,59 @@
 import re
 import json
+from typing import Any, Dict, Set
 
 
-def extract_placeholders_from_robot(json_data: dict[str, any]) -> set[str]:
+def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
     """
     DESCRIPTION:
-    Extracts placeholders from the 'Robot' section of the JSON data, excluding certain keys.
+    Extracts placeholders from the 'Robot' start and end code sections in the JSON data.
 
     ARGUMENTS:
     json_data: The loaded JSON object (dictionary).
 
     RETURNS:
-    A set of placeholders found in the 'Robot' section.
+    A set of placeholders found in the 'Robot' start and end code sections.
     """
     placeholders = set()
-    excluded_keys = {"description"}  # Keys to exclude from placeholder search
 
-    def recursive_search(data: any, parent_key: str = None):
+    def recursive_search(data: Any):
         if isinstance(data, dict):
-            for key, value in data.items():
-                # Skip keys in the exclusion list
-                if key in excluded_keys:
-                    continue
-                recursive_search(value, key)
+            for value in data.values():
+                recursive_search(value)
         elif isinstance(data, list):
             for item in data:
                 recursive_search(item)
         elif isinstance(data, str):
-            # Look for placeholders in the string
-            matches = re.findall(r"\{([a-zA-Z_]+)\}", data)
+            matches = re.findall(r"\{([a-zA-Z0-9_]+)\}", data)
             placeholders.update(matches)
 
-    # Start search only in the 'Robot' section
+    # Search only in the start and end code of the Robot section
     robot_section = json_data.get("settings", {}).get("Robot", {})
-    recursive_search(robot_section)
+    start_code = robot_section.get("start_code", [])
+    end_code = robot_section.get("end_code", [])
+    recursive_search(start_code)
+    recursive_search(end_code)
+
     return placeholders
 
 
 def replace_placeholders(
-    json_data: dict[str, any], placeholders: set[str]
-) -> dict[str, any]:
+    json_data: Dict[str, Any], placeholders: Set[str]
+) -> Dict[str, Any]:
     """
     DESCRIPTION:
-    Replaces placeholders in the entire JSON file with their corresponding values.
+    Replaces placeholders in the 'Robot' start and end code with corresponding values from the JSON.
 
     ARGUMENTS:
     json_data: Loaded JSON object (dictionary).
     placeholders: Set of placeholder names to replace.
 
     RETURNS:
-    A dictionary of placeholders and their corresponding values.
+    A dictionary with the replaced values for the placeholders.
     """
     replaced_values = {}
 
-    def find_value_for_placeholder(placeholder: str, data: any) -> any:
+    def find_value_for_placeholder(placeholder: str, data: Any) -> Any:
         """
         Finds the value for a placeholder based on its name.
 
@@ -66,43 +66,35 @@ def replace_placeholders(
         """
         if isinstance(data, dict):
             for key, value in data.items():
-                # Check if the current key matches the placeholder and contains a "value"
                 if key == placeholder and isinstance(value, dict) and "value" in value:
                     return value["value"]
-
-                # Recursive search in subcategories
                 result = find_value_for_placeholder(placeholder, value)
                 if result is not None:
                     return result
-
         elif isinstance(data, list):
             for item in data:
                 result = find_value_for_placeholder(placeholder, item)
                 if result is not None:
                     return result
-
         return None
 
-    # Search for each placeholder in the JSON
     for placeholder in placeholders:
         value = find_value_for_placeholder(placeholder, json_data)
-
-        # Special handling for `output_name`: truncate to max. 25 characters
-        if placeholder == "output_name" and value is not None:
-            value = value[:25]
-
         if value is not None:
+            # Format dictionaries as "key value, key value"
+            if isinstance(value, dict):
+                value = ", ".join(f"{key} {val}" for key, val in value.items())
             replaced_values[placeholder] = value
 
     return replaced_values
 
 
 def apply_replacements_to_robot(
-    json_data: dict[str, any], replacements: dict[str, any]
-) -> dict[str, any]:
+    json_data: Dict[str, Any], replacements: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     DESCRIPTION:
-    Applies the replaced placeholder values to the 'Robot' section.
+    Applies placeholder replacements to 'start_code' and 'end_code' in the Robot section.
 
     ARGUMENTS:
     json_data: Loaded JSON object (dictionary).
@@ -112,27 +104,60 @@ def apply_replacements_to_robot(
     Updated 'Robot' section with placeholders replaced.
     """
 
-    def recursive_replace(data: any) -> any:
-        if isinstance(data, dict):
-            return {key: recursive_replace(value) for key, value in data.items()}
-        elif isinstance(data, list):
-            return [recursive_replace(item) for item in data]
-        elif isinstance(data, str):
-            # Replace all placeholders in the string
-            for placeholder, replacement in replacements.items():
-                data = data.replace(f"{{{placeholder}}}", str(replacement))
-            return data
-        return data
+    def convert_value_to_string(value: Any) -> str:
+        """
+        Converts a value to a string based on its type.
+        - dict: "key value, key value"
+        - list: "[item1, item2, ...]"
+        - float: Rounded to 2 decimal places
+        - int: As-is
+        - bool: "TRUE"/"FALSE"
+        - str: Returns as-is
+        """
+        if isinstance(value, dict):
+            return ", ".join(
+                f"{key} {convert_value_to_string(val)}" for key, val in value.items()
+            )
+        elif isinstance(value, list):
+            return f"[{', '.join(map(convert_value_to_string, value))}]"
+        elif isinstance(value, bool):
+            return "TRUE" if value else "FALSE"
+        elif isinstance(value, float):
+            return f"{value:.2f}"
+        elif isinstance(value, int):
+            return str(value)
+        return value
 
-    # Replace values only in the 'Robot' section
+    def replace_placeholders_in_list(code_list: list[str]) -> list[str]:
+        """
+        Replaces placeholders in a list of strings and returns the updated list.
+        """
+        updated_list = []
+        for line in code_list:
+            if isinstance(line, str):  # Ensure it's a string
+                for placeholder, replacement in replacements.items():
+                    # Replace the placeholder with its string representation
+                    replacement_str = convert_value_to_string(replacement)
+                    line = line.replace(f"{{{placeholder}}}", replacement_str)
+            updated_list.append(line)
+        return updated_list
+
+    # Extract 'start_code' and 'end_code' from the Robot section
     robot_section = json_data.get("settings", {}).get("Robot", {})
-    return recursive_replace(robot_section)
+    start_code = robot_section.get("start_code", {}).get("value", [])
+    end_code = robot_section.get("end_code", {}).get("value", [])
+
+    # Ensure start_code and end_code remain lists of strings
+    robot_section["start_code"] = replace_placeholders_in_list(start_code)
+    robot_section["end_code"] = replace_placeholders_in_list(end_code)
+
+    return robot_section
 
 
-def get_robot_settings(json_file: str) -> dict[str, any]:
+def get_robot_settings(json_file: str) -> Dict[str, Any]:
     """
     DESCRIPTION:
-    Extracts and replaces placeholders in the 'Robot' section of the JSON file.
+    Extracts and replaces placeholders in the 'Robot' start and end code, and returns specific robot settings.
 
     ARGUMENTS:
     json_file: Path to the JSON file.
@@ -140,20 +165,13 @@ def get_robot_settings(json_file: str) -> dict[str, any]:
     RETURNS:
     Dictionary of relevant robot setup configurations.
     """
-    # Load the JSON file
     with open(json_file, "r") as file:
         config = json.load(file)
 
-    # Step 1: Extract placeholders
     placeholders = extract_placeholders_from_robot(config)
-
-    # Step 2: Replace placeholders with their values
     placeholder_values = replace_placeholders(config, placeholders)
-
-    # Step 3: Apply replacements to the Robot section
     updated_robot_section = apply_replacements_to_robot(config, placeholder_values)
 
-    # Return relevant robot setup values
     return {
         "bed_size": updated_robot_section.get("bed_size", {}).get("value"),
         "tool_orientation": updated_robot_section.get("tool_orientation", {}).get(
@@ -168,6 +186,13 @@ def get_robot_settings(json_file: str) -> dict[str, any]:
         "start_position": updated_robot_section.get("start_position", {}).get("value"),
         "end_position": updated_robot_section.get("end_position", {}).get("value"),
         "print_speed": updated_robot_section.get("print_speed", {}).get("value"),
-        "start_code": updated_robot_section.get("start_code", {}).get("value"),
-        "end_code": updated_robot_section.get("end_code", {}).get("value"),
+        "start_code": updated_robot_section.get("start_code", []),
+        "end_code": updated_robot_section.get("end_code", []),
     }
+
+
+if __name__ == "__main__":
+    # Example usage
+    json_file_path = "setup.json"  # Replace with your JSON file path
+    robot_settings = get_robot_settings(json_file_path)
+    print(json.dumps(robot_settings, indent=4))

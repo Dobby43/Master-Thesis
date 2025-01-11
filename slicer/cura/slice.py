@@ -2,6 +2,8 @@ import subprocess
 from pathlib import Path
 from typing import Tuple, List
 
+# TODO: roofing_layer_count lösen
+
 
 def slice(
     stl_file: str,
@@ -58,8 +60,6 @@ def slice(
         "slice",
         "-j",
         str(cura_def),
-        "-s",
-        "roofing_layer_count=1",  # TODO: roofing_layer_count lösen
     ]
 
     # Add additional arguments immediately after the definition file
@@ -82,12 +82,10 @@ def slice(
 
     try:
         # Execute the slicing command
-        result = subprocess.run(
-            command, check=True, capture_output=True, text=True
-        )  # TODO: Error message überprüfen
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
         return (
             True,
-            f"G-code successfully generated at {gcode_file}\nOutput:\n{result.stdout}",
+            f"G-code getting generated at {gcode_file}\nOutput:\n{result.stdout}",
         )
 
     except subprocess.CalledProcessError as error:

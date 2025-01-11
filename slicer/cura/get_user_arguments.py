@@ -16,7 +16,9 @@ def validate_user_arguments(
     for key, user_value in user_arguments.items():
         # Check if the key exists in the default arguments
         if key not in default_arguments:
-            print(f"[WARNING] Key '{key}' not found in default arguments. Skipping.")
+            print(
+                f"[WARNING] Key '{key}' not found in default arguments. User input skipped."
+            )
             continue
 
         default_data = default_arguments[key]
@@ -66,6 +68,9 @@ def validate_user_arguments(
             )
 
     return validated_arguments
+
+
+# TODO: Implement Scaling and Rotation with [%] and [deg]
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@
                 "type": "str"
             },
             "input_name": {
-                "description": "Name of the input STL file (without extension)",
+                "description": "Name of the input STL file (without data type)",
                 "value": "Test_Quader 200x200x200",
                 "type": "str"
             },
@@ -28,44 +28,36 @@
             }
         },
         "Robot": {
-            "description": "Settings specific to the robot, including dimensions, tool orientation, and motion parameters. If new categories ar defined inside this .json file, with [category_name][value], they can be referenced in the robot start or endcode with {category_name}",
+            "description": "Settings specific to the robot, including dimensions, tool orientation, and motion parameters. If new categories ar defined inside this .json file, with [category_name][value], they can be referenced in the robot start or endcode with {category_name}; only names with letters and numbers seperated by '_' are valid",
             "bed_size": {
                 "description": "Size of the robot bed in mm along X, Y, and Z axes; Sets bedsize for slicing process",
-                "value": {
-                    "X": 1200,
-                    "Y": 4500,
-                    "Z": 2000
-                },
-                "type": "dict"
+                "value": {"X": 1200, "Y": 4500, "Z": 2000},
+                "type": "dict[str,int]"
             },
             "tool_orientation": {
-                "description": "Orientation of the tool head in degrees",
-                "value": {
-                    "A": 0,
-                    "B": 0,
-                    "C": 180
-                },
-                "type": "dict"
+                "description": "Orientation of the tool head from robot flange in degrees",
+                "value": {"A": 0, "B": 0, "C": 180},
+                "type": "dict[str,int|float]"
             },
             "base_coordinates": {
-                "description": "Base coordinate frame in the robot's workspace",
-                "value": "{X 1460.9, Y -2237.66, Z 268.5, A 0.0, B 0.0, C 0.0}",
-                "type": "str"
+                "description": "Base coordinate frame in the robot's workspace relative to printbed origin; example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
+                "value": {"X": 1460.9, "Y": -2237.66, "Z": 268.5, "A": 0.0, "B": 0.0, "C": 0.0},
+                "type": "dict[str,float|int]"
             },
             "tool_coordinates": {
-                "description": "Tool coordinate frame in the robot's workspace",
-                "value": "{X -10.99, Y -0.86, Z 917.61, A 0.0, B 0.0, C 0.0}",
-                "type": "str"
+                "description": "Tool coordinate frame in the robot's workspace relative to robot flange; example: '{\"X\": -10.99, \"Y\": -0.86, \"Z\": 917.61, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
+                "value": {"X": -10.99, "Y": -0.86, "Z": 917.61, "A": 0.0, "B": 0.0, "C": 180},
+                "type": "dict[str,float|int]"
             },
             "start_position": {
-                "description": "Start position of the robot's tool",
-                "value": "{A1 75.0, A2 -90.0, A3 90.0, A4 0.0, A5 90.0, A6 0.0}",
-                "type": "str"
+                "description": "Start position of the robot's tool relative to neutral frame; example: '{\"A1\": 75.0, \"A2\": -90.0, \"A3\": 90.0, \"A4\": 0.0, \"A5\": 90.0, \"A6\": 0.0}'",
+                "value": {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
+                "type": "dict[str,float|int]"
             },
             "end_position": {
-                "description": "End position of the robot's tool",
-                "value": "{A1 75.0, A2 -90.0, A3 90.0, A4 0.0, A5 90.0, A6 0.0}",
-                "type": "str"
+                "description": "End position of the robot's tool relative to neutral frame; example: '{\"A1\": 75.0, \"A2\": -90.0, \"A3\": 90.0, \"A4\": 0.0, \"A5\": 90.0, \"A6\": 0.0}'",
+                "value": {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
+                "type": "dict[str,float|int]"
             },
             "print_speed": {
                 "description": "Printing speed of the robot in [m/s]",
@@ -122,8 +114,8 @@
                     ";ENDFOLD 3DCP",
                     "",
                     ";FOLD    BCO",
-                    "  TOOL_DATA[1] = {tool_coordinates}",
-                    "  BASE_DATA[1] = {base_coordinates}",
+                    "  TOOL_DATA[1] = {{tool_coordinates}}",
+                    "  BASE_DATA[1] = {{base_coordinates}}",
                     "  $BWDSTART = FALSE",
                     "",
                     "  SWITCH $MODE_OP",
@@ -143,7 +135,7 @@
                     "",
                     "   FDAT_ACT = {TOOL_NO 1,BASE_NO 1,IPO_FRAME #BASE}",
                     "",
-                    "   PTP  {start_position}",
+                    "   PTP  {{start_position}}",
                     ";ENDFOLD BCO",
                     "",
                     ";FOLD    MOTION",
@@ -158,6 +150,9 @@
             "end_code": {
                 "description": "Robot end code",
                 "value": [
+                    ";TYPE: TRAVEL",
+                    "PTP {{end_position}} C_PTP",
+                    "",
                     "",
                     ";FOLD    3DCP",
                     "  RET = RSI_OFF()",
@@ -195,13 +190,19 @@
                     "type": "str"
                 },
                 "cura_arguments": {
-                    "description": "Additional arguments for CURA slicing. These overwrite the values in the printer setup data",
+                    "description": "Additional arguments as str for CURA slicing. These overwrite the values in the printer setup data",
                     "value": {
                         "layer_height_0": "15",
                         "layer_height": "15",
-                        "infill_density": "20"
+                        "infill_sparse_density": "20",
+                        "roofing_layer_count": "1"
                     },
-                    "type": "dict[str|str]"
+                    "type": "dict[str,str]"
+                },
+                "cura_scaling": {
+                    "description": "Sets scaling and rotation values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
+                    "value": {"sX": 100, "sY": 200, "sZ": 100, "rX": 0, "rY": 0, "rZ": 60},
+                    "type": "dict [str,float|int]"
                 }
             },
             "ORCA": {

@@ -8,38 +8,42 @@ __version__ = "1.5"
 
 from pathlib import Path
 
-# Setup
+# SETUP
 from setup import directory_setup as disu
 from setup import slicer_setup as slsu
 from setup import robot_setup as rosu
 from setup import rhino_setup as rhsu
 
-# Slice
-# Cura
-from slicer.cura import slice as slic
+# SLICER
+# CURA
+from slicer.cura import slice as slicu
 from slicer.cura import get_default_arguments as defcu
 from slicer.cura import get_user_arguments as usrcu
-from slicer.cura import set_user_arguments as setar
+from slicer.cura import set_user_arguments as stacu
+from slicer.cura import set_scaling_matrix as smacu
 
-# Orca
+# ORCA
 
-# G-Code
-from gcode import get_gcode
+# G-CODE
+from gcode import get_gcode as getgc
 from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
 
-# Plot
+# PLOT
 from gcode import plot_gcode as plt
 
-# krl
-from krl import modify_to_krl as mdf
-from krl import export_to_src as exp
+# KRL
+from krl import modify_to_krl as mdfkr
+from krl import export_to_src as expkr
 
-# rhino
-from rhino import create_rhino as crt
-from rhino import process_gcode as prc
-from rhino import draw_gcode as drg
-from rhino import draw_printbed as drp
+# ROBOT
+from robot import transform_gcode as trfgc
+
+# RHINO
+from rhino import create_rhino as crtrh
+from rhino import process_gcode as prcrh
+from rhino import draw_gcode as drgrh
+from rhino import draw_printbed as drprh
 
 # ----------------GET SETUP PATH----------------
 setup_path = str(Path(__file__).parent / "setup" / "setup.json")
@@ -51,7 +55,7 @@ directory_setup = disu.get_directory_setup(setup_path)
 # Directories and Filenames
 # STL file
 INPUT_DIRECTORY_STL = directory_setup["input_directory"]
-INPUT_NAME_STL = f"{directory_setup["input_name"]}.stl"
+INPUT_FILE_STL = f"{directory_setup["input_name"]}.stl"
 OUTPUT_DIRECTORY = directory_setup["output_directory"]
 OUTPUT_NAME = directory_setup["output_name"]
 # G-Code
@@ -72,20 +76,20 @@ BED_SIZE_Y = robot_settings["bed_size"]["Y"]
 BED_SIZE_Z = robot_settings["bed_size"]["Z"]
 
 # Tool-head orientation
-TOOL_ORIENTATION_A = robot_settings["tool_orientation"]["A"]
-TOOL_ORIENTATION_B = robot_settings["tool_orientation"]["B"]
-TOOL_ORIENTATION_C = robot_settings["tool_orientation"]["C"]
+ROBOT_TOOL_ORIENTATION_A = robot_settings["tool_coordinates"]["A"]
+ROBOT_TOOL_ORIENTATION_B = robot_settings["tool_coordinates"]["B"]
+ROBOT_TOOL_ORIENTATION_C = robot_settings["tool_coordinates"]["C"]
 
 # Coordinate frames
-BASE = robot_settings["base_coordinates"]
-TOOL = robot_settings["tool_coordinates"]
+ROBOT_BASE = robot_settings["base_coordinates"]
+ROBOT_TOOL = robot_settings["tool_coordinates"]
 
 # Start and End Coordinates
-START_POSITION = robot_settings["start_position"]
-END_POSITION = robot_settings["end_position"]
+ROBOT_START_POSITION = robot_settings["start_position"]
+ROBOT_END_POSITION = robot_settings["end_position"]
 
 # Print speed
-VEL_CP = robot_settings["print_speed"]
+ROBOT_VEL_CP = robot_settings["print_speed"]
 
 # Start- and End- Code of Robot
 ROBOT_START_CODE = robot_settings["start_code"]
@@ -99,6 +103,7 @@ SLICER = slicer_settings["slicer_name"]
 SLICER_CMD_PATH = slicer_settings["slicer_cmd_path"]
 SLICER_CONFIG_FILE_PATH = slicer_settings["slicer_config_file_path"]
 SLICER_ARGUMENTS = slicer_settings["slicer_arguments"]
+SLICER_SCALING = slicer_settings["slicer_scaling"]
 
 # ----------------RHINO CONFIGURATION----------------
 # evaluate setup.json dile for "Rhino" information
@@ -107,11 +112,13 @@ TYPE_VALUES = rhino_settings["TYPE_VALUES"]
 
 # ----------------SLICING OF .STL FILE----------------
 if SLICER == "CURA":
+    CURA_SCALING = smacu.compute_scaling_and_rotation_matrix(SLICER_SCALING)
     # arguments from setup.json that also need to be handled by Cura
     preset_arguments_cura = {
         "machine_width": BED_SIZE_X,
         "machine_depth": BED_SIZE_Y,
         "machine_height": BED_SIZE_Z,
+        "mesh_rotation_matrix": CURA_SCALING,
     }
 
     # collect all default slicing parameters
@@ -121,14 +128,14 @@ if SLICER == "CURA":
         SLICER_ARGUMENTS, default_arguments_cura
     )
     # summarize all necessary user arguments for slicing process
-    selected_arguments_cura = setar.set_user_arguments(
+    selected_arguments_cura = stacu.set_user_arguments(
         user_arguments=user_arguments_cura, additional_args=preset_arguments_cura
     )
     # slice STL with user arguments
     print("Starting to slice")
-    sucess, message = slic.slice(
+    sucess, message = slicu.slice(
         import_directory_stl=INPUT_DIRECTORY_STL,
-        stl_file=INPUT_NAME_STL,
+        stl_file=INPUT_FILE_STL,
         export_directory_gcode=OUTPUT_DIRECTORY,
         export_file_gcode=OUTPUT_NAME,
         cura_engine_path=SLICER_CMD_PATH,
@@ -136,13 +143,13 @@ if SLICER == "CURA":
         additional_args=selected_arguments_cura,
     )
     print(message)
-    print(f"Finished slicing {INPUT_NAME_STL}")
+    print(f"Finished slicing {INPUT_FILE_STL}")
 else:
     print("Choose valid slicer")
 
 # ----------------G-CODE IMPORT AND EVALUATION----------------
 # Read the G-Code lines
-gcode_lines = get_gcode.get_gcode_lines(INPUT_DIRECTORY_GCODE, INPUT_FILE_GCODE)
+gcode_lines = getgc.get_gcode_lines(INPUT_DIRECTORY_GCODE, INPUT_FILE_GCODE)
 
 # Simplify_gcode
 # Gets min X, Y and Z values
@@ -178,38 +185,44 @@ plt.plot_gcode(
     type_values=TYPE_VALUES,
 )
 
-# ----------------KRL FORMATING OF G-CODE----------------
-# Formats G-Code to KRL and appends tool-head orientation
-krl_lines = mdf.krl_format(
-    gcode_necessary,
-    a=TOOL_ORIENTATION_A,
-    b=TOOL_ORIENTATION_B,
-    c=TOOL_ORIENTATION_C,
-    end_pos=END_POSITION,
-    vel=VEL_CP,
-)
+# # ----------------KRL FORMATING OF G-CODE----------------
+# # Formats G-Code to KRL and appends tool-head orientation
+# krl_lines = mdfkr.krl_format(
+#     gcode_necessary,
+#     a=TOOL_ORIENTATION_A,
+#     b=TOOL_ORIENTATION_B,
+#     c=TOOL_ORIENTATION_C,
+#     vel=VEL_CP,
+# )
+#
+# # for line in krl_lines:
+# #     print(line)
+#
+# # Export of KRL-File
+# expkr.export_to_src(
+#     krl_lines, ROBOT_START_CODE, ROBOT_END_CODE, OUTPUT_DIRECTORY, OUTPUT_NAME
+# )
 
-# for line in krl_lines:
+# ----------------ROBOT SIMULATION----------------
+# gcode_transf = trfgc.transform_tcp_to_base(gcode_necessary, ROBOT_TOOL, ROBOT_BASE, 3)
+# for line in gcode_transf:
 #     print(line)
-
-# Export of KRL-File
-exp.export_to_src(
-    krl_lines, ROBOT_START_CODE, ROBOT_END_CODE, OUTPUT_DIRECTORY, OUTPUT_NAME
-)
 
 # ----------------RHINO FILE----------------
-# Process G-Code for Rhino file
-extended_gcode = prc.process_points(gcode_necessary)
-
-# for line in extended_gcode:
-#     print(line)
-
-# Get filepath of generated Rhino file
-filepath = crt.initialize_rhino_file(
-    OUTPUT_DIRECTORY_RHINO, OUTPUT_FILE_RHINO, LAYER_MAX
-)
-
-# Generate toolpath in Rhino
-drg.create_geometry(extended_gcode, filepath, line_width=15, type_values=TYPE_VALUES)
-# Generate printbed in Rhino
-drp.add_print_bed(filepath, X_MAX=BED_SIZE_X, Y_MAX=BED_SIZE_Y, parent_layer="printbed")
+# # Process G-Code for Rhino file
+# extended_gcode = prcrh.process_points(gcode_necessary)
+#
+# # for line in extended_gcode:
+# #     print(line)
+#
+# # Get filepath of generated Rhino file
+# filepath = crtrh.initialize_rhino_file(
+#     OUTPUT_DIRECTORY_RHINO, OUTPUT_FILE_RHINO, LAYER_MAX
+# )
+#
+# # Generate toolpath in Rhino
+# drgrh.create_geometry(extended_gcode, filepath, line_width=15, type_values=TYPE_VALUES)
+# # Generate printbed in Rhino
+# drprh.add_print_bed(
+#     filepath, X_MAX=BED_SIZE_X, Y_MAX=BED_SIZE_Y, parent_layer="printbed"
+# )

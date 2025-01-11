@@ -1,4 +1,4 @@
-from matplotlib import colors
+from matplotlib.colors import to_rgb
 import Rhino.Geometry as rg
 import Rhino.DocObjects as rdo
 import Rhino.FileIO as rfi
@@ -8,16 +8,15 @@ from System.Collections.Generic import List as NetList
 
 def color_name_to_rgb(color_name):
     """
-    Converts a color name to an RGB tuple (0-255).
-    :param color_name: The name of the color.
+    Converts a HEX color name to an RGB tuple (0-255).
+    :param color_name: The name or HEX value of the color.
     :return: RGB tuple.
     """
-    try:
-        rgb_normalized = colors.to_rgb(color_name)
-        return tuple(int(c * 255) for c in rgb_normalized)  # TODO: AUF HEX CODE UMBAUEN
-    except ValueError:
-        print(f"Invalid color name: {color_name}. Defaulting to black.")
-        return (0, 0, 0)  # Default to black if invalid
+    if color_name.startswith("#") and len(color_name) in {7, 9}:  # #RRGGBB or #RRGGBBAA
+        return tuple(int(c * 255) for c in to_rgb(color_name))
+    else:
+        print(f"Invalid HEX color: {color_name}. Defaulting to black.")
+        return (0, 0, 0)
 
 
 def create_geometry(points_list, filepath, line_width, type_values):

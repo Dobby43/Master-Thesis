@@ -7,7 +7,6 @@ def krl_format(
     a: float,
     b: float,
     c: float,
-    end_pos: str,
     vel: float,
 ) -> list[str]:
     """
@@ -73,13 +72,5 @@ def krl_format(
                     f"LIN {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
                     f"E1 0, E2 0, E3 0, E4 0}} C_DIS"
                 )
-
-    # Append the final position
-    krl_lines.append(
-        f"\n"
-        f";TYPE: TRAVEL"
-        "\n"
-        f"PTP {{{end_pos[1:-1]}, E1 0, E2 0, E3 0, E4 0 }} C_PTP"
-    )
 
     return krl_lines

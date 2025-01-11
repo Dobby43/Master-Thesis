@@ -36,6 +36,7 @@ def get_slicer_settings(json_file: str) -> Dict[str, Any]:
             f"{slicer_name.lower()}_config_file_path"
         ]["value"],
         "slicer_arguments": slicer_section[f"{slicer_name.lower()}_arguments"]["value"],
+        "slicer_scaling": slicer_section[f"{slicer_name.lower()}_scaling"]["value"],
     }
 
     return slicer_settings
