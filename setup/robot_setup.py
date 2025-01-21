@@ -173,21 +173,29 @@ def get_robot_settings(json_file: str) -> Dict[str, Any]:
     updated_robot_section = apply_replacements_to_robot(config, placeholder_values)
 
     return {
-        "bed_size": updated_robot_section.get("bed_size", {}).get("value"),
-        "tool_orientation": updated_robot_section.get("tool_orientation", {}).get(
-            "value"
-        ),
+        "id": updated_robot_section.get("id", {}).get("value"),
+        "geometry": updated_robot_section.get("geometry", {}).get("value"),
         "base_coordinates": updated_robot_section.get("base_coordinates", {}).get(
             "value"
         ),
-        "tool_coordinates": updated_robot_section.get("tool_coordinates", {}).get(
+        "tool_offset": updated_robot_section.get("tool_offset", {}).get("value"),
+        "tool_orientation": updated_robot_section.get("tool_orientation", {}).get(
             "value"
         ),
         "start_position": updated_robot_section.get("start_position", {}).get("value"),
         "end_position": updated_robot_section.get("end_position", {}).get("value"),
-        "print_speed": updated_robot_section.get("print_speed", {}).get("value"),
+        "rotation_limit": updated_robot_section.get("rotation_limit", {}).get("value"),
+        "rotation_sign": updated_robot_section.get("rotation_sign", {}).get("value"),
+        "rotation_offset": updated_robot_section.get("rotation_offset", {}).get(
+            "value"
+        ),
         "start_code": updated_robot_section.get("start_code", []),
         "end_code": updated_robot_section.get("end_code", []),
+        "bed_size": updated_robot_section.get("bed_size", {}).get("value"),
+        "tool_coordinates": updated_robot_section.get("tool_coordinates", {}).get(
+            "value"
+        ),
+        "print_speed": updated_robot_section.get("print_speed", {}).get("value"),
     }
 
 

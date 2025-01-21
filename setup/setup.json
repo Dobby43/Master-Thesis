@@ -18,7 +18,7 @@
             },
             "output_directory": {
                 "description": "Base directory for storing output files",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\V1.5",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\V1.6",
                 "type": "str"
             },
             "output_name": {
@@ -28,46 +28,63 @@
             }
         },
         "Robot": {
-            "description": "Settings specific to the robot, including dimensions, tool orientation, and motion parameters. If new categories ar defined inside this .json file, with [category_name][value], they can be referenced in the robot start or endcode with {category_name}; only names with letters and numbers seperated by '_' are valid",
-            "bed_size": {
-                "description": "Size of the robot bed in mm along X, Y, and Z axes; Sets bedsize for slicing process",
-                "value": {"X": 1200, "Y": 4500, "Z": 2000},
-                "type": "dict[str,int]"
+            "description": "Settings specific to the robot, including dimensions, tool orientation, and motion parameters. If new categories ar defined inside this .json file, with [category_name][value], they can be referenced in [Robot][start_code] or [Robot][end_code] with {category_name}; only names with letters and numbers seperated by '_' are valid",
+            "id": {
+                "description": "name of robot",
+                "value": "KUKA KR340 R3330",
+                "type": "str"
             },
-            "tool_orientation": {
-                "description": "Orientation of the tool head from robot flange in degrees",
-                "value": {"A": 0, "B": 0, "C": 180},
-                "type": "dict[str,int|float]"
+            "geometry": {
+                "describtion": "measurement of robot arm & offset in accordance with to https://de.mathworks.com/matlabcentral/fileexchange/48468-inverse-kinematics-of-serial-robots-with-wrist?s%5C_tid=prof%5C_contriblnk",
+                "value": {"a1": 500, "a2": 55, "b": 0, "c1": 1045, "c2": 1300, "c3": 1525, "c4": 290},
+                "type": "dict[str,float]"
             },
             "base_coordinates": {
-                "description": "Base coordinate frame in the robot's workspace relative to printbed origin; example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
-                "value": {"X": 1460.9, "Y": -2237.66, "Z": 268.5, "A": 0.0, "B": 0.0, "C": 0.0},
-                "type": "dict[str,float|int]"
+                "description": "Base coordinate frame ($ROBOTROOT) in the robot's workspace relative to $BASE (coordinate system of printbed); This defines leads to T($ROBOTROOT,$BASE) example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
+                "value": {"X": -1460.9, "Y": 2237.66, "Z": -268.5, "A": 0.0, "B": 0.0, "C": 0.0},
+                "type": "dict[str,float]"
             },
-            "tool_coordinates": {
-                "description": "Tool coordinate frame in the robot's workspace relative to robot flange; example: '{\"X\": -10.99, \"Y\": -0.86, \"Z\": 917.61, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
-                "value": {"X": -10.99, "Y": -0.86, "Z": 917.61, "A": 0.0, "B": 0.0, "C": 180},
-                "type": "dict[str,float|int]"
+            "tool_offset": {
+                "description": "Tool offset from $NULLFRAME (flange of robot hand) in direction of $NULLFRAME; This leads to T($NULLFRAME,$TCP)",
+                "value": {"X": -10.99, "Y": -0.86, "Z": 917.61},
+                "type": "dict[str,float]"
+            },
+            "tool_orientation": {
+                "description": "Tool orientation relative to $BASE/$FRAME (coordinate system of printbed); This leads to T($FRAME,$TCP)",
+                "value": {"A": 0, "B": 0, "C": 180},
+                "type": "dict[str,float]"
             },
             "start_position": {
                 "description": "Start position of the robot's tool relative to neutral frame; example: '{\"A1\": 75.0, \"A2\": -90.0, \"A3\": 90.0, \"A4\": 0.0, \"A5\": 90.0, \"A6\": 0.0}'",
                 "value": {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
-                "type": "dict[str,float|int]"
+                "type": "dict[str,float]"
             },
             "end_position": {
                 "description": "End position of the robot's tool relative to neutral frame; example: '{\"A1\": 75.0, \"A2\": -90.0, \"A3\": 90.0, \"A4\": 0.0, \"A5\": 90.0, \"A6\": 0.0}'",
                 "value": {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
-                "type": "dict[str,float|int]"
+                "type": "dict[str,float]"
             },
-            "print_speed": {
-                "description": "Printing speed of the robot in [m/s]",
-                "value": 0.35,
-                "type": "float"
+            "rotation_limit": {
+                "description": "Limit angles of robot axis for each joint; valid rotation is between those angles",
+                "value": {"A1":[-185, 185], "A2":[-130, 20],"A3": [-100, 144], "A4": [-350, 350],"A5": [-120, 120],"A6": [-350, 350]},
+                "type": "dict [str,list[int]]"
+            },
+            "rotation_sign": {
+                "description": "value defining positiv rotation direction of axis; 1 along z-axis definition, -1 against z-axis definition",
+                "value": {"A1": -1, "A2": 1, "A3": 1, "A4": -1, "A5": 1, "A6": -1},
+                "type": "dict [str,int]"
+            },
+            "rotation_offset": {
+                "description": "defines rotational offset along robot rotation definition to match 'Brandstötter'",
+                "value": {"A1": 0,"A2": -90,"A3": 0,"A4": 0,"A5": 0,"A6": 0},
+                "type": "dict[str,float]"
             },
             "start_code": {
                 "description": "Robot start code",
                 "value": [
                     "DEF {output_name} ()",
+                    "",
+                    ";Printer: {robot_id}",
                     "",
                     ";Declarations for RSI",
                     "DECL INT RET",
@@ -169,6 +186,16 @@
                     "END"
                 ],
                 "type": "list[str]"
+            },
+            "bed_size": {
+                "description": "Size of the robot bed in mm along X, Y, and Z axes; Sets bedsize for slicing process",
+                "value": {"X": 1200, "Y": 4500, "Z": 2000},
+                "type": "dict[str,float]"
+            },
+            "print_speed": {
+                "description": "Printing speed of the robot in [m/s]",
+                "value": 0.35,
+                "type": "float"
             }
         },
         "Slicer": {

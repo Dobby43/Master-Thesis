@@ -173,45 +173,96 @@ import matplotlib.pyplot as plt
 
 ## type hinting
 # ohne type hinting
-def calculation(x, y):
-    return (x + y) ** 2
+# def calculation(x, y):
+#     return (x + y) ** 2
+#
+#
+# print(calculation(3, 2))
+#
+#
+# # mit type hinting
+# def calculation2(x: int, y: int) -> int:
+#     return (x + y) ** 2
+#
+#
+# print(calculation2(3.2, 2.3))
+#
+#
+# # mit type hinting und union (mehrere Eingaben gemeinsam möglich)
+# from typing import Union
+#
+#
+# def calculation3(x: Union[int, float], y: Union[int, float]) -> Union[int, float]:
+#     return (x + y) ** 2
+#
+#
+# print(calculation3(3.2, 2.2))
+#
+#
+# def calculation3(x: int | float, y: int | float) -> Union[int, float]:
+#     return (x + y) ** 2
+#
+#
+# print(calculation3(3.2, 2.2))
+#
+#
+# ## Colour code
+# aswf: int = 5  # grün unterringelt == Hinweis auf Rechtschreibung / Benennung
+# f: float = 4.3  # rot unterringelt == nicht verwendet
+# line: str = "fuck"  # ausgegraut == ungenutzt
+#
+# ## Print
+# name = "Luke"
+# print("Hello", name, "!" "I am your father.", end="|\n")
+# print("My name is", name, sep=" | ")
+#
+#
+# class Monster:  # CamelCase
+#     # every methode inside a class has to have a argument that catches the reference to the class
+#     # this is the first thing python creates when the class is called
+#     # usually done by def funtion(self):
+#
+#     # Dunder Methodes first
+#     def __init__(
+#         self, health, energy, position
+#     ):  # every time the class is called the Dunder methode is called
+#         self.health = health
+#         self.energy = energy
+#         self.position = position
+#
+#     # regular methodes inside class
+#     def move(self, amount):
+#         location = self.position + amount
+#         self.position = location
+#         print(f"Monster moved to {location}")
 
 
-print(calculation(3, 2))
+# Passing functions around:
+class Attacks:
+
+    def bite(self):
+        print("bite")
+
+    def strike(self):
+        print("strike")
+
+    def slash(self):
+        print("slash")
+
+    def kick(self):
+        print("kick")
 
 
-# mit type hinting
-def calculation2(x: int, y: int) -> int:
-    return (x + y) ** 2
+class Monster:
+    def __init__(self, health, energy, position, func):
+        self.health = health
+        self.energy = energy
+        self.position = position
+        self.func = func
 
 
-print(calculation2(3.2, 2.3))
-
-
-# mit type hinting und union (mehrere Eingaben gemeinsam möglich)
-from typing import Union
-
-
-def calculation3(x: Union[int, float], y: Union[int, float]) -> Union[int, float]:
-    return (x + y) ** 2
-
-
-print(calculation3(3.2, 2.2))
-
-
-def calculation3(x: int | float, y: int | float) -> Union[int, float]:
-    return (x + y) ** 2
-
-
-print(calculation3(3.2, 2.2))
-
-
-## Colour code
-aswf: int = 5  # grün unterringelt == Hinweis auf Rechtschreibung / Benennung
-f: float = 4.3  # rot unterringelt == nicht verwendet
-line: str = "fuck"  # ausgegraut == ungenutzt
-
-## Print
-name = "Luke"
-print("Hello", name, "!" "I am your father.", end="|\n")
-print("My name is", name, sep=" | ")
+attacks = Attacks()  # turns class into object
+monster1 = Monster(
+    100, 100, 0, attacks.bite
+)  # calls a entry of the object attacks and assigns it to class monster
+monster1.func()

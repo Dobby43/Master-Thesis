@@ -4,9 +4,10 @@ This file contains the basis for all adjacent functions
 
 __author__ = "<DAVID SCHEIDT>"
 __email__ = "<<david.scheidt@tum.de>>"
-__version__ = "1.5"
+__version__ = "1.6"
 
 from pathlib import Path
+import typing
 
 # SETUP
 from setup import directory_setup as disu
@@ -33,17 +34,13 @@ from gcode import simplify_gcode as smplf
 from gcode import plot_gcode as plt
 
 # KRL
-from krl import modify_to_krl as mdfkr
-from krl import export_to_src as expkr
 
 # ROBOT
-from robot import transform_gcode as trfgc
+
+from robot.pre_processing import transf_gcode_to_robotroot as trfgc
+from robot.processing import kinematiks_test as rokin
 
 # RHINO
-from rhino import create_rhino as crtrh
-from rhino import process_gcode as prcrh
-from rhino import draw_gcode as drgrh
-from rhino import draw_printbed as drprh
 
 # ----------------GET SETUP PATH----------------
 setup_path = str(Path(__file__).parent / "setup" / "setup.json")
@@ -71,29 +68,36 @@ OUTPUT_FILE_RHINO = f"{OUTPUT_NAME}.3dm"
 # ----------------ROBOT CONFIGURATION----------------
 # evaluate setup.json file for "Robot" information
 robot_settings = rosu.get_robot_settings(setup_path)
-BED_SIZE_X = robot_settings["bed_size"]["X"]
-BED_SIZE_Y = robot_settings["bed_size"]["Y"]
-BED_SIZE_Z = robot_settings["bed_size"]["Z"]
 
-# Tool-head orientation
-ROBOT_TOOL_ORIENTATION_A = robot_settings["tool_coordinates"]["A"]
-ROBOT_TOOL_ORIENTATION_B = robot_settings["tool_coordinates"]["B"]
-ROBOT_TOOL_ORIENTATION_C = robot_settings["tool_coordinates"]["C"]
+# Robot
+ROBOT_ID = robot_settings["id"]
+ROBOT_GEOMETRY = robot_settings["geometry"]
 
 # Coordinate frames
 ROBOT_BASE = robot_settings["base_coordinates"]
-ROBOT_TOOL = robot_settings["tool_coordinates"]
+ROBOT_TOOL_OFFSET = robot_settings["tool_offset"]
+ROBOT_TOOL_ORIENTATION = robot_settings["tool_orientation"]
 
 # Start and End Coordinates
 ROBOT_START_POSITION = robot_settings["start_position"]
 ROBOT_END_POSITION = robot_settings["end_position"]
-
-# Print speed
-ROBOT_VEL_CP = robot_settings["print_speed"]
+ROBOT_ROTATION_LIMIT = robot_settings["rotation_limit"]
+ROBOT_ROTATION_SIGN = robot_settings["rotation_sign"]
+ROBOT_ROTATION_OFFSET = robot_settings["rotation_offset"]
 
 # Start- and End- Code of Robot
 ROBOT_START_CODE = robot_settings["start_code"]
 ROBOT_END_CODE = robot_settings["end_code"]
+
+
+# Printbed measurements
+BED_SIZE_X = robot_settings["bed_size"]["X"]
+BED_SIZE_Y = robot_settings["bed_size"]["Y"]
+BED_SIZE_Z = robot_settings["bed_size"]["Z"]
+
+# Print speed
+ROBOT_VEL_CP = robot_settings["print_speed"]
+
 
 # ----------------SLICER CONFIGURATION----------------
 # evaluate setup.json file for "Slicer" information
@@ -115,6 +119,7 @@ if SLICER == "CURA":
     CURA_SCALING = smacu.compute_scaling_and_rotation_matrix(SLICER_SCALING)
     # arguments from setup.json that also need to be handled by Cura
     preset_arguments_cura = {
+        "machine_name": f"{ROBOT_ID} BEDSIZE: {BED_SIZE_X}x{BED_SIZE_Y}x{BED_SIZE_Z} [mm]",
         "machine_width": BED_SIZE_X,
         "machine_depth": BED_SIZE_Y,
         "machine_height": BED_SIZE_Z,
@@ -144,8 +149,13 @@ if SLICER == "CURA":
     )
     print(message)
     print(f"Finished slicing {INPUT_FILE_STL}")
+
+elif SLICER == "OPEN SLICER":
+    print("Slicer not yet implemented")
+elif SLICER == "ORCA":
+    print("Slicer not yet implemented")
 else:
-    print("Choose valid slicer")
+    print("Choose valid Slicer")
 
 # ----------------G-CODE IMPORT AND EVALUATION----------------
 # Read the G-Code lines
@@ -204,9 +214,36 @@ plt.plot_gcode(
 # )
 
 # ----------------ROBOT SIMULATION----------------
-# gcode_transf = trfgc.transform_tcp_to_base(gcode_necessary, ROBOT_TOOL, ROBOT_BASE, 3)
-# for line in gcode_transf:
-#     print(line)
+
+# initialize robot
+robot = rokin.RobotOPW(
+    robot_id=ROBOT_ID,
+    robot_geometry=ROBOT_GEOMETRY,
+    robot_rotation_sign=ROBOT_ROTATION_SIGN,
+    robot_rotation_limit=ROBOT_ROTATION_LIMIT,
+    robot_rotation_offset=ROBOT_ROTATION_OFFSET,
+)
+
+# calculate Transformation matrix for point in $BASE (account for tool_offset) and return T for inverse kinematic
+transf_matrix = []
+joint_angles = []
+for point in gcode_necessary:
+    # calculate T for point in points
+    point_transf_robotroot = trfgc.transform_gcode_point(
+        point=point,
+        tool_orientation=ROBOT_TOOL_ORIENTATION,
+        tool_offset=ROBOT_TOOL_OFFSET,
+        robot_base=ROBOT_BASE,
+    )
+    transf_matrix.append(point_transf_robotroot)
+
+    # calculate all joint angles for point in points
+    robot_angles = robot.inverse_kinematics(point_transf_robotroot)
+    joint_angles.append(robot_angles)
+
+for line in joint_angles:
+    print(line)
+
 
 # ----------------RHINO FILE----------------
 # # Process G-Code for Rhino file
