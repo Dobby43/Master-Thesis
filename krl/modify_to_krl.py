@@ -1,9 +1,5 @@
-from typing import List, Dict, Union
-
-
 def krl_format(
     gcode: list[dict[str, str | float | int | None]],
-    *,
     a: float,
     b: float,
     c: float,
@@ -25,8 +21,8 @@ def krl_format(
     A list of KRL-formatted lines, including layer and type annotations.
     """
     krl_lines = []
-    current_layer = None
-    current_type = None
+    previous_layer = None
+    previous_type = None
     first_position = True  # To handle the first position separately
 
     # Define column widths for alignment
@@ -42,29 +38,31 @@ def krl_format(
         x = coord_format_x.format(entry.get("X", 0))
         y = coord_format_y.format(entry.get("Y", 0))
         z = coord_format_z.format(entry.get("Z", 0))
-        layer = entry.get("Layer")
+        current_layer = entry.get("Layer")
         move_type = entry.get("Move")
-        type_ = entry.get("Type", "UNKNOWN")
+        current_type = entry.get("Type", "UNKNOWN")
 
         # Insert a layer comment on layer change
-        if layer != current_layer:
-            krl_lines.append("\n" f";LAYER: {layer}")
-            current_layer = layer
+        if current_layer != previous_layer:
+            krl_lines.append("\n" f"LAYER = {current_layer}")
+            current_layer = previous_layer
 
         # Insert a type comment on type change
-        if type_ != current_type:
-            krl_lines.append("\n" f";TYPE: {type_}")
-            current_type = type_
+        if current_type != previous_type:
+            krl_lines.append("\n" f"PATH_TYPE = {current_type}")
+            previous_type = current_type
 
         # Format the KRL command
         if move_type in ["G1", "G0"]:  # Only process G0 (Travel) or G1 (Print)
             if first_position:
                 # First position is a PTP movement
                 krl_lines.append(
+                    ""
                     f"PTP {{X {x}, Y {y}, Z {z}, A {a}, B {b}, C {c}, "
                     f"E1 0, E2 0, E3 0, E4 0}} C_PTP"
+                    ""
+                    f"$VEL.CP={vel:.2f}"
                 )
-                krl_lines.append("\n" f"$VEL.CP={vel:.2f}")  # Add velocity only once
                 first_position = False
             else:
                 # LIN movements for subsequent points

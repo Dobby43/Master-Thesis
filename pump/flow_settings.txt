@@ -1,0 +1,95 @@
+-s flow_rate_extrusion_offset_factor="100.000000"
+"How far to move the filament in order to compensate for changes in flow rate, as a percentage of
+how far the filament would move in one second of extrusion."
+
+-s flow_rate_max_extrusion_offset="0.000000"
+The maximum distance in mm to move the filament to compensate for changes in flow rate."
+
+-s raft_base_flow="100.000000"
+The amount of material, relative to a normal extrusion line, to extrude during raft base printing.
+Having an increased flow may improve adhesion and raft structural strength.
+
+-s wall_x_material_flow_roofing="100.000000"
+Flow compensation on wall lines for all wall lines except the outermost one.
+
+-s support_material_flow="100.000000"
+Flow compensation on support structure lines.
+
+-s speed_equalize_flow_width_factor="100.000000"
+Extrusion width based correction factor on the speed. At 0% the movement speed is kept constant at the Print Speed.
+At 100% the movement speed is adjusted so that the flow (in mm\u00b3/s) is kept constant, i.e.
+lines half the normal Line Width are printed twice as fast and lines twice as wide are printed half as fast.
+A value larger than 100% can help to compensate for the higher pressure required to extrude wide lines.
+
+-s skin_material_flow="100.000000"
+When printing bridge skin regions, the amount of material extruded is multiplied by this value.
+
+-s raft_interface_flow="100.000000"
+The amount of material, relative to a normal extrusion line, to extrude during raft interface printing.
+Having an increased flow may improve adhesion and raft structural strength.
+
+-s ironing_flow="10.000000"
+The amount of material, relative to a normal skin line, to extrude during ironing.
+Keeping the nozzle filled helps filling some of the crevices of the top surface,
+but too much results in overextrusion and blips on the side of the surface.
+
+-s support_bottom_material_flow="100.000000"
+Flow compensation on support floor lines.
+
+
+-s wall_0_material_flow="100.000000"
+Flow compensation on the outermost wall line of the first layer.
+
+-s wall_x_material_flow="100.000000"
+Flow compensation on wall lines for all wall lines except the outermost one.
+
+-s wall_0_material_flow_roofing="100.000000"
+Flow compensation on the top surface outermost wall line.
+
+-s roofing_material_flow="100.000000"
+Flow compensation on lines of the areas at the top of the print.
+
+-s infill_material_flow="100.000000"
+Flow compensation on infill lines.
+
+-s wall_0_material_flow_layer_0="100.000000"
+Flow compensation on the outermost wall line of the first layer.
+
+
+-s skirt_brim_material_flow="100.000000"
+The speed at which the skirt and brim are printed.
+Normally this is done at the initial layer speed, but sometimes you might want to print the skirt or brim at a different speed.
+
+-s support_roof_material_flow="100.000000"
+Flow compensation on support roof lines.
+
+-s prime_tower_flow="100.000000"
+Flow compensation on prime tower lines.
+
+-s material_flow_layer_0="100.000000"
+Flow compensation for the first layer: the amount of material extruded on the initial layer is multiplied by this value.
+
+-s wall_x_material_flow_layer_0="100.000000"
+Flow compensation on wall lines for all wall lines except the outermost one, but only for the first layer
+
+-s skin_material_flow_layer_0="100.000000"
+Flow compensation on bottom lines of the first layer
+
+-s flow_anomaly_limit="25.000000"
+Limit on flow anomaly for detection.
+
+-s raft_surface_flow="100.000000"
+The amount of material, relative to a normal extrusion line, to extrude during raft surface printing.
+Having an increased flow may improve adhesion and raft structural strength.
+
+-s bridge_skin_material_flow_2="100.000000"
+When printing the second bridge skin layer, the amount of material extruded is multiplied by this value.
+
+-s bridge_wall_material_flow="50.000000"
+When printing bridge walls, the amount of material extruded is multiplied by this value.
+
+-s bridge_skin_material_flow="60.000000"
+When printing bridge skin regions, the amount of material extruded is multiplied by this value.
+
+-s bridge_skin_material_flow_3="110.000000"
+When printing the third bridge skin layer, the amount of material extruded is multiplied by this value.

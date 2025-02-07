@@ -106,7 +106,7 @@ def plot_gcode(
     None. Updates the PyVista plotter with the G-code visualization.
     """
     # Extract color mapping from type_values
-    color_mapping = {key: value["Color"] for key, value in type_values.items()}
+    color_mapping = {key: value["color"] for key, value in type_values.items()}
 
     # Determine layer filter based on user input
     layer_range = None
@@ -129,7 +129,7 @@ def plot_gcode(
 
         if entry["X"] is not None and entry["Y"] is not None and entry["Z"] is not None:
             current_point = [entry["X"], entry["Y"], entry["Z"]]
-            current_type = entry["Type"] or "UNKNOWN"
+            current_type = entry["Type"] or "unknown"
 
             if previous_point is not None:
                 grouped_lines[current_type].append([previous_point, current_point])

@@ -1,7 +1,7 @@
 def export_to_src(
     krl_lines: list[str],
-    start_code: list[str],
-    end_code: list[str],
+    start_code_json: list[str],
+    end_code_json: list[str],
     output_path: str,
     file_name: str,
 ) -> None:
@@ -24,7 +24,7 @@ def export_to_src(
         output_path += "/"
 
     # Combine all lines into a single list
-    combined_lines = start_code + [""] + krl_lines + [""] + end_code
+    combined_lines = start_code_json + [""] + krl_lines + [""] + end_code_json
 
     # Construct the full file path
     full_file_path = f"{output_path}{file_name}.src"

@@ -13,6 +13,8 @@ def get_rhino_settings(json_file: str) -> dict[str, any]:
     A dictionary with formatted Rhino settings, including TYPE_VALUES
     with attributes like CURA, ORCA, Color, and Linetype.
     """
+    # TODO: only import necessary rhino settings, not cura and orca (only whats needed)
+
     # Load the JSON file
     with open(json_file, "r") as file:
         config = json.load(file)
@@ -21,18 +23,21 @@ def get_rhino_settings(json_file: str) -> dict[str, any]:
     rhino_config = config["settings"]["Rhino"]
 
     # Access "TYPE_VALUES" and format the data
-    raw_type_values = rhino_config["TYPE_VALUES"]
+    raw_type_values = rhino_config["type_values"]
     formatted_type_values = {
         key: {
-            "CURA": value.get("CURA", []),
-            "ORCA": value.get("ORCA", []),
-            "Color": value["color"]["value"],
-            "Linetype": value["linetype"]["value"],
+            "cura": value.get("cura", []),
+            "orca": value.get("orca", []),
+            "type_number": value["type_number"]["value"],
+            "color": value["color"]["value"],
+            "linetype": value["linetype"]["value"],
         }
         for key, value in raw_type_values.items()
     }
+    line_widths = rhino_config["line_widths"]
 
     # Return a dictionary with all Rhino settings
     return {
-        "TYPE_VALUES": formatted_type_values,
+        "type_values": formatted_type_values,
+        "line_widths": line_widths,
     }

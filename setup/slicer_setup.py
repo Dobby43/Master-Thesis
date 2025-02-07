@@ -19,7 +19,7 @@ def get_slicer_settings(json_file: str) -> Dict[str, Any]:
         config = json.load(file)
 
     # Extract slicer name
-    slicer_name = config["settings"]["Slicer"]["slicer_name"]["value"].upper()
+    slicer_name = config["settings"]["Slicer"]["slicer_name"]["value"].lower()
 
     # Ensure the slicer exists in the JSON
     if slicer_name not in config["settings"]["Slicer"]:

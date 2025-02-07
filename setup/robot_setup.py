@@ -24,7 +24,7 @@ def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
             for item in data:
                 recursive_search(item)
         elif isinstance(data, str):
-            matches = re.findall(r"\{([a-zA-Z0-9_]+)\}", data)
+            matches = re.findall(r"\{([a-zA-Z0-9_]+)}", data)
             placeholders.update(matches)
 
     # Search only in the start and end code of the Robot section
@@ -174,6 +174,9 @@ def get_robot_settings(json_file: str) -> Dict[str, Any]:
 
     return {
         "id": updated_robot_section.get("id", {}).get("value"),
+        "nozzle_diameter": updated_robot_section.get("nozzle_diameter", {}).get(
+            "value"
+        ),
         "geometry": updated_robot_section.get("geometry", {}).get("value"),
         "base_coordinates": updated_robot_section.get("base_coordinates", {}).get(
             "value"

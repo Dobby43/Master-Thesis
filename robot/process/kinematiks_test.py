@@ -42,6 +42,8 @@ class RobotOPW:
         self.limits_lower = self.lim[:, 0].reshape(self.num_axis, 1)
         self.limits_upper = self.lim[:, 1].reshape(self.num_axis, 1)
 
+        self.precision = 2
+
     def __str__(self):
         geometry = f"a1={self.a1}, a2={self.a2}, b={self.b}, c1={self.c1}, c2={self.c2}, c3={self.c3}, c4={self.c4}"
         limits = ", ".join(
@@ -68,32 +70,27 @@ class RobotOPW:
         """
         return A * self.sign[:, np.newaxis] + self.offset[:, np.newaxis]
 
-    def validate_joint_limits(self, solutions_rad) -> np.ndarray:
+    def forward_kinematics(
+        self, joint_angles: dict[str, float], tool_offset: dict[str, float] = None
+    ):
         """
-        Validate if joint angles are within the specified limits.
-        :param solutions_rad: Solutions in radians, shape (6, N).
-        :return: Solutions with an additional row indicating validity (True/False).
+        Calculates the forward kinematics of the robot including tool offset.
+        :param A: Joint angles in degrees.
+        :param tool_offset: Optional dictionary with tool offset {"X": float, "Y": float, "Z": float}.
+        :return: Transformation matrix including tool offset.
         """
-        # Check joint limits
-        within_lower_limits = robot.sub_correction(solutions_rad) >= np.deg2rad(
-            self.limits_lower
+        A = self.add_correction(
+            np.deg2rad(
+                [
+                    joint_angles["A1"],
+                    joint_angles["A2"],
+                    joint_angles["A3"],
+                    joint_angles["A4"],
+                    joint_angles["A5"],
+                    joint_angles["A6"],
+                ]
+            )
         )
-        within_upper_limits = robot.add_correction(solutions_rad) <= np.deg2rad(
-            self.limits_upper
-        )
-        is_valid = np.all(within_lower_limits & within_upper_limits, axis=0)
-
-        # Append validity row to the solutions
-        validated_solutions = np.vstack((solutions_rad, is_valid))
-        return validated_solutions
-
-    def forward_kinematics(self, A: np.array):
-        """
-        Calculates the forward kinematics of the robot using RobotOPW.
-        :param A:
-        :return:
-        """
-        A = self.add_correction(np.deg2rad(A))
 
         # forward kinematics (orientation part)
         s, c = np.sin(A), np.cos(A)
@@ -101,11 +98,9 @@ class RobotOPW:
         psi3 = np.arctan2(self.a2, self.c3)
         k = np.sqrt(self.a2**2 + self.c3**2)
 
-        d = A[1] + A[2] + psi3
-
-        cx1 = self.c2 * s[1] + k * np.sin(d) + self.a1
+        cx1 = self.c2 * s[1] + k * np.sin(A[1] + A[2] + psi3) + self.a1
         cy1 = self.b
-        cz1 = self.c2 * c[1] + k * np.cos(d)
+        cz1 = self.c2 * c[1] + k * np.cos(A[1] + A[2] + psi3)
 
         cx0 = cx1 * c[0] - cy1 * s[0]
         cy0 = cx1 * s[0] + cy1 * c[0]
@@ -147,10 +142,21 @@ class RobotOPW:
 
         u = np.array([cx0, cy0, cz0]) + self.c4 * (r_0e @ np.array([0, 0, 1]))
 
+        # Add tool offset (if provided)
+        if tool_offset:
+            tool_translation = np.array(
+                [tool_offset["X"], tool_offset["Y"], tool_offset["Z"]]
+            )
+            u += (
+                r_0e @ tool_translation
+            )  # Apply rotation to the tool offset before adding
+
         T = np.eye(4)
         T[:3, :3] = r_0e
         T[:3, 3] = u
-        return T
+        T_round = np.round(T, self.precision)
+
+        return T_round
 
     def inverse_kinematics(self, T: np.ndarray):
         """
@@ -181,14 +187,14 @@ class RobotOPW:
             # Solve for theta1
             if np.isreal(n_x1 + self.a1):
                 theta1_1 = np.arctan2(cy0, cx0) - np.arctan2(self.b, n_x1 + self.a1)
-                theta1_3 = (
+                theta1_2 = (
                     np.arctan2(cy0, cx0) - np.arctan2(self.b, n_x1 + self.a1) + np.pi
                 )
 
                 theta[0, 0] = theta1_1
                 theta[0, 1] = theta1_1
-                theta[0, 2] = theta1_3
-                theta[0, 3] = theta1_3
+                theta[0, 2] = theta1_2
+                theta[0, 3] = theta1_2
 
             # Solve for theta2
             value1 = (s_12 + self.c2**2 - k**2) / (2 * np.sqrt(s_12) * self.c2)
@@ -281,7 +287,6 @@ class RobotOPW:
             theta_4_q = theta_4_i + np.pi
 
             # Calculate theta_5
-            print(m)
             theta_5_i = np.arctan2(np.sqrt(1 - m**2), m)
             theta_5_q = -theta_5_i
 
@@ -331,7 +336,7 @@ if __name__ == "__main__":
         "A5": [-120, 120],
         "A6": [-350, 350],
     }
-    robot_rotation_offset = {"A1": 0, "A2": 0, "A3": 0, "A4": 0, "A5": 0, "A6": 0}
+    robot_rotation_offset = {"A1": 0, "A2": -90, "A3": 0, "A4": 0, "A5": 0, "A6": 0}
 
     # Initialize robot
     robot = RobotOPW(
@@ -343,22 +348,22 @@ if __name__ == "__main__":
     )
 
     # Example 4x4 transformation matrix (input)
-    T = np.array(
-        [
-            [-1.0, 0.0, 0.0, 2025],
-            [0.0, 1.0, 0.0, -1494.637],
-            [0.0, 0.0, -1.0, 1042.17],
-            [0.0, 0.0, 0.0, 1.0],
-        ]
-    )
+    # T = np.array(
+    #     [
+    #         [-1.0, 0.0, 0.0, 2025],
+    #         [0.0, 1.0, 0.0, -1494.637],
+    #         [0.0, 0.0, -1.0, 752.17],
+    #         [0.0, 0.0, 0.0, 1.0],
+    #     ]
+    # )
 
-    A = [0, 100, 10, 0, 100, 0]
+    # Tool offset relative to TCP
+    tool_offset = {"X": 0, "Y": 0, "Z": 500}
 
-    # Step 1: Calculate inverse kinematics
-    # solutions_rad = robot.inverse_kinematics(T)
-    fwkin = robot.forward_kinematics(A)
+    A = {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0}
+    # A = {"A1": 0, "A2": -90, "A3": 0, "A4": 0, "A5": 0, "A6": 0}
 
-    print(fwkin)
+    solutions = robot.forward_kinematics(A, tool_offset)
 
-    # print("Inverse Kinematics Solutions (Radians):")
-    # print(solutions_rad)
+    print("Forward Kinematics Solutions relative to ROBOTROOT (deg):")
+    print(solutions)

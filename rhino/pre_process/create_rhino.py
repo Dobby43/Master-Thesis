@@ -3,14 +3,13 @@ import rhinoinside
 # Load Rhino.Inside
 rhinoinside.load()
 
-import time
 import Rhino
 import Rhino.DocObjects as rdo
 import Rhino.FileIO as rfi
 import System.Drawing as sd
 from pathlib import Path
-from rhino.rhino_layermanager import layer_structure
-from rhino.rhino_linemanager import linetype_patterns
+from rhino.pre_process.rhino_layermanager import layer_structure
+from rhino.pre_process.rhino_linemanager import linetype_patterns
 
 
 def initialize_rhino_file(output_directory, filename, max_layers):
@@ -29,9 +28,8 @@ def initialize_rhino_file(output_directory, filename, max_layers):
     create_linetypes(rhino_file)
 
     # Save the Rhino file
-    current_time = time.strftime("%H_%M_%S")
-    output_path = Path(output_directory) / f"{current_time}_{filename}"
-    rhino_file.Write(str(output_path), 8)
+    output_path = Path(output_directory) / f"{filename}"
+    rhino_file.Write(str(output_path), 8)  # version of Rhino
     print(f"Rhino file saved to {output_path}")
     return output_path
 
@@ -69,6 +67,7 @@ def create_layer_structure(rhino_file, layers):
                 sublayer.Color = sd.Color.FromArgb(*layer_info["sublayer_color"])
                 rhino_file.Layers.Add(sublayer)
                 print(f"  Sublayer '{sublayer_name}' added under '{parent_name}'.")
+
         # Create static sublayers if provided
         elif "sublayers" in layer_info:
             for sublayer_name in layer_info["sublayers"]:
@@ -82,9 +81,10 @@ def create_layer_structure(rhino_file, layers):
 
 def create_linetypes(rhino_file):
     """
-    Creates linetypes in the Rhino file using patterns from rhino_linemanager.
+    Creates linetypes in the Rhino file using patterns from rhino_linemanager
+    and applies line widths from the provided dictionary.
     """
-    patterns = linetype_patterns()
+    patterns = linetype_patterns()  # Retrieve patterns from the linetype manager
 
     for i, (name, pattern) in enumerate(patterns.items()):
         linetype = rdo.Linetype()
@@ -94,10 +94,6 @@ def create_linetypes(rhino_file):
         for segment_length, is_gap in pattern:
             linetype.AppendSegment(segment_length, is_gap)
 
-        linetype.Width = 0.5  # Default width
-        linetype.WidthUnits = Rhino.UnitSystem.Millimeters
-        linetype.CommitChanges()
-
         # Add to the Rhino file
         rhino_file.AllLinetypes.Add(linetype)
-        print(f"Linetype '{name}' created with pattern {pattern}.")
+        print(f"linetype '{name}' created with pattern {pattern}.")
