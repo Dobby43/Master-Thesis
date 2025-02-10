@@ -4,12 +4,12 @@ from Rhino.DocObjects import ObjectAttributes, ObjectColorSource
 from System.Drawing import Color
 
 
-def add_print_bed(filename, X_MAX, Y_MAX, parent_layer, sublayer=None):
+def add_print_bed(filename, x_max, y_max, parent_layer, sublayer=None):
     """
     Adds a print bed surface to a Rhino file under a specified parent or sublayer.
     :param filename: Path to the Rhino file.
-    :param X_MAX: Maximum X dimension of the print bed.
-    :param Y_MAX: Maximum Y dimension of the print bed.
+    :param x_max: Maximum X dimension of the print bed.
+    :param y_max: Maximum Y dimension of the print bed.
     :param parent_layer: Parent layer name for the print bed.
     :param sublayer: Optional sublayer name. If None, the print bed is added to the parent layer.
     """
@@ -29,7 +29,7 @@ def add_print_bed(filename, X_MAX, Y_MAX, parent_layer, sublayer=None):
         return False
 
     # Create the print bed geometry
-    rect = rg.Rectangle3d(rg.Plane.WorldXY, X_MAX, Y_MAX)
+    rect = rg.Rectangle3d(rg.Plane.WorldXY, x_max, y_max)
 
     # Convert the rectangle to a polyline curve
     rect_curve = rect.ToPolyline().ToNurbsCurve()

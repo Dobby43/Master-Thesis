@@ -1,43 +1,52 @@
 import json
+from typing import Dict, Any
 
 
-def get_rhino_settings(json_file: str) -> dict[str, any]:
+def get_rhino_settings(json_file: str) -> Dict[str, Any]:
     """
     DESCRIPTION:
-    Extracts Rhino settings from the JSON file and returns them in a formatted dictionary.
+    Extracts relevant Rhino settings from a JSON file without validation.
 
     ARGUMENTS:
     json_file: Path to the JSON file.
-
-    RETURNS:
-    A dictionary with formatted Rhino settings, including TYPE_VALUES
-    with attributes like CURA, ORCA, Color, and Linetype.
     """
-    # TODO: only import necessary rhino settings, not cura and orca (only whats needed)
-
     # Load the JSON file
     with open(json_file, "r") as file:
         config = json.load(file)
 
     # Access the "Rhino" section in "settings"
-    rhino_config = config["settings"]["Rhino"]
+    rhino_config = config.get("settings", {}).get("Rhino", {})
 
-    # Access "TYPE_VALUES" and format the data
-    raw_type_values = rhino_config["type_values"]
-    formatted_type_values = {
+    # Extract point_print (bool)
+    point_print = rhino_config.get("point_print", {}).get("value", False)
+
+    # Extract point_types (dict[str, str])
+    point_types = {
+        key: value.get("value", "")
+        for key, value in rhino_config.get("point_types", {}).items()
+        if isinstance(value, dict) and "value" in value
+    }
+
+    # Extract line_types (dict[str, dict[str, Any]])
+    raw_line_types = rhino_config.get("line_types", {})
+    line_types = {
         key: {
             "cura": value.get("cura", []),
             "orca": value.get("orca", []),
-            "type_number": value["type_number"]["value"],
-            "color": value["color"]["value"],
-            "linetype": value["linetype"]["value"],
+            "color": value.get("color", {}).get("value", ""),
+            "linetype": value.get("linetype", {}).get("value", ""),
         }
-        for key, value in raw_type_values.items()
+        for key, value in raw_line_types.items()
+        if isinstance(value, dict)
     }
-    line_widths = rhino_config["line_widths"]
 
-    # Return a dictionary with all Rhino settings
+    # Extract line_widths (dict[str, float])
+    line_widths = rhino_config.get("line_widths", {}).get("value", {})
+
+    # Return extracted settings as a dictionary
     return {
-        "type_values": formatted_type_values,
+        "point_print": point_print,
+        "point_types": point_types,
+        "line_types": line_types,
         "line_widths": line_widths,
     }

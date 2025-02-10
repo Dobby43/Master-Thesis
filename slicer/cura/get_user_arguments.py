@@ -1,27 +1,27 @@
 def validate_user_arguments(
-    user_arguments: dict[str, str], default_arguments: dict[str, dict]
+    user_input: dict[str, str], default_input: dict[str, dict]
 ) -> list[str]:
     """
     Validates user arguments against default arguments and types.
 
     Args:
-        user_arguments: User-provided arguments as key-value pairs (all values as strings).
-        default_arguments: Default arguments with metadata, including default_value, type, and options.
+        user_input: User-provided arguments as key-value pairs (all values as strings).
+        default_input: Default arguments with metadata, including default_value, type, and options.
 
     Returns:
         A list of validated arguments formatted as "key=value".
     """
-    validated_arguments = []
+    validated_input = []
 
-    for key, user_value in user_arguments.items():
+    for key, user_value in user_input.items():
         # Check if the key exists in the default arguments
-        if key not in default_arguments:
+        if key not in default_input:
             print(
                 f"[WARNING] Key '{key}' not found in default arguments. User input skipped."
             )
             continue
 
-        default_data = default_arguments[key]
+        default_data = default_input[key]
         default_type = default_data.get(
             "type"
         )  # The expected type (e.g., "float", "int", "enum")
@@ -60,17 +60,14 @@ def validate_user_arguments(
                 continue
 
             # Add the validated argument to the list
-            validated_arguments.append(f"{key}={validated_value}")
+            validated_input.append(f"{key}={validated_value}")
 
         except ValueError as e:
             print(
                 f"[ERROR] Value '{user_value}' for key '{key}' is invalid for type '{default_type}'. Skipping."
             )
 
-    return validated_arguments
-
-
-# TODO: Implement Scaling and Rotation with [%] and [deg]
+    return validated_input
 
 
 if __name__ == "__main__":

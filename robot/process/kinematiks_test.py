@@ -348,22 +348,25 @@ if __name__ == "__main__":
     )
 
     # Example 4x4 transformation matrix (input)
-    # T = np.array(
-    #     [
-    #         [-1.0, 0.0, 0.0, 2025],
-    #         [0.0, 1.0, 0.0, -1494.637],
-    #         [0.0, 0.0, -1.0, 752.17],
-    #         [0.0, 0.0, 0.0, 1.0],
-    #     ]
-    # )
+    T = np.array(
+        [
+            [-1.0, 0.0, 0.0, 2025],
+            [0.0, 1.0, 0.0, -1494.637],
+            [0.0, 0.0, -1.0, 752.17],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    )
 
-    # Tool offset relative to TCP
-    tool_offset = {"X": 0, "Y": 0, "Z": 500}
+    solution_inv = robot.inverse_kinematics(T)
+    print(np.rad2deg(solution_inv))
 
-    A = {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0}
-    # A = {"A1": 0, "A2": -90, "A3": 0, "A4": 0, "A5": 0, "A6": 0}
-
-    solutions = robot.forward_kinematics(A, tool_offset)
-
-    print("Forward Kinematics Solutions relative to ROBOTROOT (deg):")
-    print(solutions)
+    # # Tool offset relative to TCP
+    # tool_offset = {"X": 0, "Y": 0, "Z": 500}
+    #
+    # A = {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0}
+    # # A = {"A1": 0, "A2": -90, "A3": 0, "A4": 0, "A5": 0, "A6": 0}
+    #
+    # solutions = robot.forward_kinematics(A, tool_offset)
+    #
+    # print("Forward Kinematics Solutions relative to ROBOTROOT (deg):")
+    # print(solutions)

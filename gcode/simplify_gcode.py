@@ -12,20 +12,6 @@ def translate_type(type_name: str, slicer: str, type_values: Dict) -> str:
     return "unknown"
 
 
-import re
-from typing import List, Dict, Union
-
-
-def translate_type(type_name: str, slicer: str, type_values: Dict) -> str:
-    """
-    Translates a raw type name from the slicer into a unified category.
-    """
-    for category, slicers in type_values.items():
-        if type_name in slicers.get(slicer, []):
-            return category.lower()
-    return "unknown"
-
-
 def simplify_gcode(
     gcode: List[str],
     slicer: str,

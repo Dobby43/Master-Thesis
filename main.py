@@ -7,10 +7,13 @@ __email__ = "<<david.scheidt@tum.de>>"
 __version__ = "1.6"
 
 from pathlib import Path
+
+
 import numpy as np
 
 # SETUP
 from setup import directory_setup as disu
+from setup.check import check_input as chksu
 from setup import slicer_setup as slsu
 from setup import robot_setup as rosu
 from setup import pump_setup as pusu
@@ -37,8 +40,11 @@ from gcode import filter_gcode as filtr
 from gcode import plot_gcode as plt
 
 # KRL
-from krl import modify_to_krl_2 as mdfkr
+from krl import filename as flnkr
+from krl import start_code_python as scpkr
+from krl import modify_to_krl as mdfkr
 from krl import export_to_src as expkr
+
 
 # ROBOT
 from robot.pre_process.mathematical_operators import Transformation
@@ -47,7 +53,7 @@ from robot.process import kinematiks_test as rokin
 
 # RHINO
 from rhino.process import extend_gcode as prcrh
-from rhino.process import draw_gcode_2 as drgrh
+from rhino.process import draw_gcode as drgrh
 from rhino.process import draw_printbed as drprh
 from rhino.pre_process import create_rhino as crtrh
 
@@ -58,6 +64,10 @@ setup_path = str(Path(__file__).parent / "setup" / "setup.json")
 # evaluate setup.json file for "Directory" information
 directory_setup = disu.get_directory_setup(setup_path)
 
+# Check input for valid type
+input_check = chksu.validate_json_types(setup_path)
+
+
 # Directories and Filenames
 # STL file
 INPUT_DIRECTORY_STL = directory_setup["input_directory"]
@@ -65,6 +75,7 @@ INPUT_FILE = directory_setup["input_name"]
 INPUT_FILE_STL = f"{INPUT_FILE}.stl"
 OUTPUT_DIRECTORY = directory_setup["output_directory"]
 OUTPUT_NAME = directory_setup["output_name"]
+
 # G-Code
 INPUT_DIRECTORY_GCODE = OUTPUT_DIRECTORY  # for pre-sliced G-Code set from OUTPUT_DIRECTORY to INPUT_DIRECTORY_STL and give Input directory of G-Code
 INPUT_FILE_GCODE = f"{OUTPUT_NAME}.gcode"  # for pre-sliced G-Code set from OUTPUT_NAME to INPUT_FILE_STL and give name of G-CODE in setup.json
@@ -74,6 +85,7 @@ OUTPUT_FILE_KRL = f"{OUTPUT_NAME}.src"
 # Rhino file
 OUTPUT_DIRECTORY_RHINO = OUTPUT_DIRECTORY
 OUTPUT_FILE_RHINO = f"{OUTPUT_NAME}.3dm"
+
 
 # ----------------ROBOT CONFIGURATION----------------
 # evaluate setup.json file for "Robot" information
@@ -100,7 +112,6 @@ ROBOT_ROTATION_OFFSET = robot_settings["rotation_offset"]
 ROBOT_START_CODE_JSON = robot_settings["start_code"]
 ROBOT_END_CODE_JSON = robot_settings["end_code"]
 
-
 # Printbed measurements
 BED_SIZE_X = robot_settings["bed_size"]["X"]
 BED_SIZE_Y = robot_settings["bed_size"]["Y"]
@@ -108,6 +119,10 @@ BED_SIZE_Z = robot_settings["bed_size"]["Z"]
 
 # Print speed
 ROBOT_VEL_CP = robot_settings["print_speed"]
+
+# Line_type translation to int value
+ROBOT_TYPE_NUMBER = robot_settings["type_number"]
+
 
 # ----------------PUMP CONFIGURATION----------------
 pump_settings = pusu.get_pump_settings(setup_path)
@@ -125,11 +140,15 @@ SLICER_CONFIG_FILE_PATH = slicer_settings["slicer_config_file_path"]
 SLICER_ARGUMENTS = slicer_settings["slicer_arguments"]
 SLICER_SCALING = slicer_settings["slicer_scaling"]
 
+
 # ----------------RHINO CONFIGURATION----------------
-# evaluate setup.json dile for "Rhino" information
+# evaluate setup.json file for "Rhino" information
 rhino_settings = rhsu.get_rhino_settings(setup_path)
-TYPE_VALUES = rhino_settings["type_values"]
-LINE_WIDTHS = rhino_settings["line_widths"]
+
+RHINO_POINT_PRINT = rhino_settings["point_print"]
+RHINO_POINT_TYPES = rhino_settings["point_types"]
+RHINO_LINE_TYPES = rhino_settings["line_types"]
+RHINO_LINE_WIDTHS = rhino_settings["line_widths"]
 
 
 # ----------------SLICING OF .STL FILE----------------
@@ -159,7 +178,7 @@ if SLICER == "cura":
         user_arguments=user_arguments_cura, additional_args=preset_arguments_cura
     )
     # slice STL with user arguments
-    print("Starting to slice")
+    print("[INFO] Starting to slice")
     sucess, message = slicu.slice(
         import_directory_stl=INPUT_DIRECTORY_STL,
         stl_file=INPUT_FILE_STL,
@@ -206,6 +225,16 @@ X_MAX = max_values["x_max"]
 Y_MAX = max_values["y_max"]
 Z_MAX = max_values["z_max"]
 
+# Gets necessary G-Code lines
+gcode_necessary = smplf.simplify_gcode(
+    gcode_lines, SLICER, RHINO_LINE_TYPES, X_MIN, Y_MIN, Z_MIN
+)
+# Gets maximum layer number
+LAYER_MAX = gcode_necessary[-1]["Layer"]
+
+for line in gcode_necessary:
+    print(line)
+
 # Calculation of Start and End coordinates
 START_POS_ROBOTROOT = robot.forward_kinematics(ROBOT_START_POSITION, ROBOT_TOOL_OFFSET)
 END_POS_ROBOTROOT = robot.forward_kinematics(ROBOT_END_POSITION, ROBOT_TOOL_OFFSET)
@@ -219,34 +248,26 @@ T_BASE_ROBOTROOT = Transformation.invert(T_ROBOTROOT_BASE)
 START_POS_BASE = np.round(T_ROBOTROOT_BASE @ START_POS_ROBOTROOT, 2)
 END_POS_BASE = np.round(T_ROBOTROOT_BASE @ END_POS_ROBOTROOT, 2)
 
-ROBOT_START_POSITION = {
+ROBOT_START_LINE = {
+    "Move": "G0",
     "X": float(START_POS_BASE[0, 3]),
     "Y": float(START_POS_BASE[1, 3]),
     "Z": float(START_POS_BASE[2, 3]),
+    "E_Rel": 0,
+    "Layer": 0,
+    "Type": "travel",
+    "Layer_Height": 0,
 }
-ROBOT_END_POSITION = {
+ROBOT_END_LINE = {
+    "Move": "G0",
     "X": float(END_POS_BASE[0, 3]),
     "Y": float(END_POS_BASE[1, 3]),
     "Z": float(END_POS_BASE[2, 3]),
+    "E_Rel": 0,
+    "Layer": LAYER_MAX,
+    "Type": "travel",
+    "Layer_Height": 0,
 }
-
-# print(f"Start Pos Robotroot \n{START_POS_ROBOTROOT}\n")
-# print(f"End pos Robotroot \n{END_POS_ROBOTROOT}\n")
-# print(f"T_ROBOTROOT_BASE \n{T_ROBOTROOT_BASE}\n")
-# print(f"T_BASE_ROBOTROOT \n{Transformation.invert(T_ROBOTROOT_BASE)}\n")
-# print(f"START_POS_BASE \n{START_POS_BASE}\n")
-# print(f"END_POS_BASE \n{END_POS_BASE}\n")
-#
-# print(f"ROBOT_START_POSITION \n{ROBOT_START_POSITION}\n")
-# print(f"ROBOT_END_POSITION \n{ROBOT_END_POSITION}\n")
-
-
-# Gets necessary G-Code lines
-gcode_necessary = smplf.simplify_gcode(
-    gcode_lines, SLICER, TYPE_VALUES, X_MIN, Y_MIN, Z_MIN
-)
-# Gets maximum layer number
-LAYER_MAX = gcode_necessary[-1]["Layer"]
 
 # ----------------PUMP IMPLEMENTATION
 if PUMP_RETRACT is False:
@@ -257,9 +278,6 @@ else:
 for line in gcode_filtered:
     print(line)
 
-gcode_line_width = 0
-
-
 # ----------------PYVISTA PLOT----------------
 plotter = plt.plot_bed(
     bed_size_x=BED_SIZE_X,
@@ -268,18 +286,18 @@ plotter = plt.plot_bed(
 )
 
 # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
-plt.plot_gcode(
-    plotter=plotter,
-    processed_gcode=gcode_filtered,
-    layers="all",
-    type_values=TYPE_VALUES,
-)
+plt.plot_gcode(plotter, gcode_filtered, "all", RHINO_LINE_TYPES)
 
 # ----------------KRL FORMATING OF G-CODE----------------
+# Set Start and End Code parts from Python values
+KRL_NAME = flnkr.set_filename_krl(OUTPUT_NAME)
+ROBOT_START_CODE_PY = scpkr.set_start_code_python(LAYER_MAX)
+ROBOT_END_CODE_PY = []
+
 # Formats G-Code to KRL and appends tool-head orientation
 krl_lines = mdfkr.krl_format(
     gcode_necessary,
-    type_mapping=TYPE_VALUES,
+    type_mapping=ROBOT_TYPE_NUMBER,
     a=ROBOT_TOOL_ORIENTATION["A"],
     b=ROBOT_TOOL_ORIENTATION["B"],
     c=ROBOT_TOOL_ORIENTATION["C"],
@@ -294,9 +312,18 @@ for line in krl_lines:
 
 # Export of KRL-File
 expkr.export_to_src(
-    krl_lines, ROBOT_START_CODE_JSON, ROBOT_END_CODE_JSON, OUTPUT_DIRECTORY, OUTPUT_NAME
+    krl_lines,
+    KRL_NAME,
+    ROBOT_START_CODE_JSON,
+    ROBOT_START_CODE_PY,
+    ROBOT_END_CODE_JSON,
+    ROBOT_END_CODE_PY,
+    OUTPUT_DIRECTORY,
+    OUTPUT_NAME,
 )
 
+gcode_filtered.insert(0, ROBOT_START_LINE)
+gcode_filtered.append(ROBOT_END_LINE)
 # ----------------ROBOT SIMULATION----------------
 
 # calculate Transformation matrix for point in $BASE (account for tool_offset) and return T for inverse kinematic
@@ -319,7 +346,6 @@ expkr.export_to_src(
 # for line in joint_angles:
 #     print(line)
 
-
 # ----------------RHINO FILE----------------
 # Process G-Code for Rhino file
 extended_gcode = prcrh.add_point_info(gcode_filtered)
@@ -328,15 +354,29 @@ print("Extended G-Code:\n")
 for line in extended_gcode:
     print(line)
 
-
 # Get filepath of generated Rhino file
 filepath = crtrh.initialize_rhino_file(
     OUTPUT_DIRECTORY_RHINO, OUTPUT_FILE_RHINO, LAYER_MAX
 )
 
 # Generate toolpath in Rhino
-drgrh.create_geometry(extended_gcode, filepath, TYPE_VALUES, LINE_WIDTHS)
+drgrh.create_geometry(
+    extended_gcode,
+    filepath,
+    RHINO_LINE_TYPES,
+    RHINO_LINE_WIDTHS,
+    RHINO_POINT_TYPES,
+    RHINO_POINT_PRINT,
+)
 # Generate printbed in Rhino
 drprh.add_print_bed(
-    filepath, X_MAX=BED_SIZE_X, Y_MAX=BED_SIZE_Y, parent_layer="printbed"
+    filepath, x_max=BED_SIZE_X, y_max=BED_SIZE_Y, parent_layer="printbed"
 )
+
+
+# if input_check:
+#     print("\n[INFO] Input as expected. \n[INFO] Ready to slice")
+# else:
+#     print(
+#         "\n[ERROR] Invalid input in setup.json. \n[INFO] Programm stopped; Please adjust input and retry"
+#     )

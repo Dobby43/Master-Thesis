@@ -72,12 +72,12 @@
             "rotation_limit": {
                 "description": "Limit angles of robot axis for each joint; valid rotation is between those angles",
                 "value": {"A1":[-185, 185], "A2":[-130, 20],"A3": [-100, 144], "A4": [-350, 350],"A5": [-120, 120],"A6": [-350, 350]},
-                "type": "dict [str,list[int]]"
+                "type": "dict[str,list[int]]"
             },
             "rotation_sign": {
                 "description": "value defining positiv rotation direction of axis; 1 along z-axis definition, -1 against z-axis definition",
                 "value": {"A1": -1, "A2": 1, "A3": 1, "A4": -1, "A5": 1, "A6": -1},
-                "type": "dict [str,int]"
+                "type": "dict[str,int]"
             },
             "rotation_offset": {
                 "description": "defines rotational offset along robot rotation definition to match 'Brandstötter'",
@@ -87,9 +87,8 @@
             "start_code": {
                 "description": "Robot start code; If new categories ar defined inside this .json file, with [category_name][value], they can be referenced with {category_name} and the corresponding value wil be inserted; only names with letters and numbers seperated by '_' are valid",
                 "value": [
-                    "DEF {output_name} ()",
                     "",
-                    ";Printer: {robot_id}",
+                    ";Printer: {id}",
                     "",
                     ";Declarations for RSI",
                     "DECL INT RET",
@@ -201,18 +200,23 @@
                 "description": "Printing speed of the robot in [m/s]",
                 "value": 0.35,
                 "type": "float"
+            },
+            "type_number":{
+                "description": "sets int for each type in the Rhino section to be displayed in the src file",
+                "value": {"retract": -1, "protract":-2, "travel": 0,"wall_outer": 1, "wall_inner": 2, "surface": 3, "infill": 4, "bridge": 5, "curb": 6, "support": 7, "unknown": 99},
+                "type": "dict[str|int]"
             }
         },
         "Pump": {
             "description": "Gives necessary information on Pump capability and technical data",
             "retract": {
                 "description": "States if pump is capable of retraction; This will include retract moves from generated G-Code",
-                "value": true,
+                "value": false,
                 "type": "bool"
             },
             "characteristic_curve": {
                 "description": "Gives the function of RPM to Flow of the Pump",
-                "value": "",
+                "value": {},
                 "type": "dict[list[float,float]]"
             }
         },
@@ -240,15 +244,14 @@
                         "layer_height_0": "15",
                         "layer_height": "15",
                         "infill_sparse_density": "20",
-                        "roofing_layer_count": "1",
-                        "machine_disallowed_areas":"[]"
+                        "roofing_layer_count": "1"
                     },
                     "type": "dict[str,str]"
                 },
                 "cura_scaling": {
                     "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                    "value": {"sX": 200, "sY": 2000, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
-                    "type": "dict [str,float|int]"
+                    "value": {"sX": 100, "sY": 100, "sZ": 25, "rX": 0, "rY": 0, "rZ": 0},
+                    "type": "dict[str,float|int]"
                 }
             },
             "orca": {
@@ -264,13 +267,13 @@
                 },
                 "orca_arguments": {
                     "description": "Additional arguments for ORCA slicing. These overwrite the values in the printer setup data",
-                    "value": null,
+                    "value": [],
                     "type": "list[str]"
                 },
                 "orca_scaling": {
                     "description": "Sets scaling and rotation values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
                     "value": {"sX": 100, "sY": 300, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
-                    "type": "dict [str,float|int]"
+                    "type": "dict[str,float|int]"
                 }
             },
             "open_slicer": {
@@ -286,20 +289,44 @@
                 },
                 "open_slicer_arguments": {
                     "description": "Additional arguments for Open Slicer slicing. These overwrite the values in the printer setup data",
-                    "value": null,
+                    "value": [],
                     "type": "list[str]"
                 }
             }
         },
         "Rhino": {
-            "description": "Defines TYPE_VALUES (ensures a clear assignment of printline-types from different slicers) , including colors and linetypes, for visualization in Rhino. Available line types: solid, dashed, dotted, dashdot",
-            "type_values": {
+            "description": "Settings regarding the Rhino file",
+            "point_print": {
+                "description": "defines if every individual point of the Gcode gets drawn in the Rhino file; false only draws start-, end-, protract- and retract-points ",
+                "value": false,
+                "type": "bool"
+            },
+            "point_types": {
+                "description": "Sets colour for each point in the Rhino file",
+                "start": {
+                    "description":"colour for start points of extrusion",
+                    "value": "#008000",
+                    "type": "str"
+                },
+                "stop":{
+                    "description": "colour for start points of extrusion",
+                    "value": "#ff0000",
+                    "type": "str"
+                },
+                "retract":{
+                    "description": "colour for retract points ",
+                    "value": "#0000CD",
+                    "type": "str"
+                },
+                "protract":{
+                    "description": "colour for anti retract points",
+                    "value": "#87CEEB",
+                    "type": "str"
+                }
+            },
+            "line_types": {
+                "description": "Defines Line Types (ensures a clear assignment of printline-types from different slicers), including colors and appearance, for visualization in Rhino. Available line types: solid, dashed, dotted, dashdot",
                 "travel": {
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 0,
-                        "type": "int"
-                    },
                     "color": {
                         "description": "Color for travel moves in hex format",
                         "value": "#808080",
@@ -312,18 +339,8 @@
                     }
                 },
                 "surface": {
-                    "cura": [
-                        "SKIN"
-                    ],
-                    "orca": [
-                        "Bottom surface",
-                        "Top surface"
-                    ],
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 1,
-                        "type": "int"
-                    },
+                    "cura": ["SKIN"],
+                    "orca": ["Bottom surface", "Top surface"],
                     "color": {
                         "description": "Color for surfaces in hex format",
                         "value": "#C680BB",
@@ -336,18 +353,8 @@
                     }
                 },
                 "wall_outer": {
-                    "cura": [
-                        "WALL-OUTER"
-                    ],
-                    "orca": [
-                        "Outer wall",
-                        "Overhang wall"
-                    ],
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 2,
-                        "type": "int"
-                    },
+                    "cura": ["WALL-OUTER"],
+                    "orca": ["Outer wall", "Overhang wall"],
                     "color": {
                         "description": "Color for outer walls in hex format",
                         "value": "#0065bd",
@@ -360,17 +367,8 @@
                     }
                 },
                 "wall_inner": {
-                    "cura": [
-                        "WALL-INNER"
-                    ],
-                    "orca": [
-                        "Inner wall"
-                    ],
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 3,
-                        "type": "int"
-                    },
+                    "cura": ["WALL-INNER"],
+                    "orca": ["Inner wall"],
                     "color": {
                         "description": "Color for inner walls in hex format",
                         "value": "#9FBA36",
@@ -383,18 +381,8 @@
                     }
                 },
                 "infill": {
-                    "cura": [
-                        "FILL"
-                    ],
-                    "orca": [
-                        "Internal solid infill",
-                        "Spars infill"
-                    ],
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 4,
-                        "type": "int"
-                    },
+                    "cura": ["FILL"],
+                    "orca": ["Internal solid infill", "Spars infill"],
                     "color": {
                         "description": "Color for infill in hex format",
                         "value": "#EA7237",
@@ -408,15 +396,7 @@
                 },
                 "bridge": {
                     "cura": [],
-                    "orca": [
-                        "Bridge",
-                        "Internal Bridge"
-                    ],
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 5,
-                        "type": "int"
-                    },
+                    "orca": ["Bridge", "Internal Bridge"],
                     "color": {
                         "description": "Color for bridges in hex format",
                         "value": "#5E94D4",
@@ -429,21 +409,8 @@
                     }
                 },
                 "curb": {
-                    "cura": [
-                        "SKIRT",
-                        "BRIM",
-                        "RAFT"
-                    ],
-                    "orca": [
-                        "Skirt",
-                        "Brim",
-                        "Raft"
-                    ],
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 7,
-                        "type": "int"
-                    },
+                    "cura": ["SKIRT", "BRIM", "RAFT"],
+                    "orca": ["Skirt", "Brim", "Raft"],
                     "color": {
                         "description": "Color for skirts, brims, and rafts in hex format",
                         "value": "#CBAB01",
@@ -456,19 +423,8 @@
                     }
                 },
                 "support": {
-                    "cura": [
-                        "SUPPORT",
-                        "SUPPORT-INTERFACE"
-                    ],
-                    "orca": [
-                        "Support",
-                        "Support interface"
-                    ],
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 8,
-                        "type": "int"
-                    },
+                    "cura": ["SUPPORT", "SUPPORT-INTERFACE"],
+                    "orca": ["Support", "Support interface"],
                     "color": {
                         "description": "Color for support structures in hex format",
                         "value": "#ABB5BE",
@@ -481,11 +437,6 @@
                     }
                 },
                 "unknown": {
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 10,
-                        "type": "int"
-                    },
                     "color": {
                         "description": "Color for unknown types in hex format",
                         "value": "#000000",
@@ -496,50 +447,12 @@
                         "value": "dash_dot",
                         "type": "str"
                     }
-                },
-                "retract": {
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": -1,
-                        "type": "int"
-                    },
-                    "color": {
-                        "description": "Color for retract moves in hex format",
-                        "value": "#808080",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for retract moves",
-                        "value": "dashed",
-                        "type": "str"
-                    }
-                },
-                "protract": {
-                    "type_number": {
-                        "description": "Identification number for KRL code",
-                        "value": 11,
-                        "type": "int"
-                    },
-                    "color": {
-                        "description": "Color for protract moves in hex format",
-                        "value": "#808080",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for protract moves",
-                        "value": "dashed",
-                        "type": "str"
-                    }
                 }
             },
             "line_widths": {
                 "description": "Sets linewidth of each linetype for print view (solid, dashed, dotted, dash_dot); gets overwritten by extrusion width if line is a printline",
-                "value": {
-                    "solid": 15,
-                    "dashed": 0.5,
-                    "dotted": 0.5,
-                    "dash_dot": 0.5
-                }
+                "value": {"solid": 15, "dashed": 1, "dotted": 1, "dash_dot": 1},
+                "type": "dict[str|float]"
             }
         }
     }

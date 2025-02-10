@@ -1,6 +1,6 @@
 from typing import List, Dict, Union
 import numpy as np
-from robot.pre_processing.mathematical_operators import Rotation, Transformation
+from robot.pre_process.mathematical_operators import Rotation, Transformation
 
 
 def calculate_frame_to_tcp(tool_orientation: Dict[str, float]) -> np.ndarray:

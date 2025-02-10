@@ -89,7 +89,7 @@ def plot_gcode(
     plotter: pv.Plotter,
     processed_gcode: List[Dict[str, Union[str, float, int, None]]],
     layers: str,
-    type_values: Dict[str, Dict[str, Union[List[str], str]]],
+    line_types: Dict[str, Dict[str, Union[List[str], str]]],
 ):
     """
     DESCRIPTION:
@@ -100,13 +100,15 @@ def plot_gcode(
     processed_gcode: List of dictionaries representing processed G-code lines.
     layers: Specify layers to visualize. Use "all" for all layers, a single layer number (e.g., "1"),
             or a range of layers (e.g., "1-5").
-    type_values: Dictionary defining type mappings and attributes (e.g., colors and linetypes).
+    line_types: Dictionary defining type mappings and attributes (e.g., colors and linetypes).
 
     RETURNS:
     None. Updates the PyVista plotter with the G-code visualization.
     """
-    # Extract color mapping from type_values
-    color_mapping = {key: value["color"] for key, value in type_values.items()}
+    # Extract color mapping from line_types, defaulting to travel for retract/protract
+    color_mapping = {key: value["color"] for key, value in line_types.items()}
+    color_mapping.setdefault("retract", color_mapping.get("travel", "grey"))
+    color_mapping.setdefault("protract", color_mapping.get("travel", "grey"))
 
     # Determine layer filter based on user input
     layer_range = None
@@ -120,7 +122,6 @@ def plot_gcode(
     # Initialize storage for line data grouped by type
     grouped_lines = {type_name: [] for type_name in color_mapping.keys()}
     previous_point = None
-    previous_type = None
 
     # Build lines grouped by type
     for entry in processed_gcode:
@@ -131,11 +132,14 @@ def plot_gcode(
             current_point = [entry["X"], entry["Y"], entry["Z"]]
             current_type = entry["Type"] or "unknown"
 
+            # Treat retract and protract as travel if they are not in the dictionary
+            if current_type in {"retract", "protract"}:
+                current_type = "travel"
+
             if previous_point is not None:
                 grouped_lines[current_type].append([previous_point, current_point])
 
             previous_point = current_point
-            previous_type = current_type
 
     # Plot each type in a single batch
     for type_name, line_segments in grouped_lines.items():

@@ -5,34 +5,32 @@ from typing import Any, Dict, Set
 
 def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
     """
-    DESCRIPTION:
-    Extracts placeholders from the 'Robot' start and end code sections in the JSON data.
+    Extracts placeholders from 'Robot' start_code[value] and end_code[value] in the JSON data.
 
     ARGUMENTS:
     json_data: The loaded JSON object (dictionary).
 
     RETURNS:
-    A set of placeholders found in the 'Robot' start and end code sections.
+    A set of placeholders found in 'Robot' start_code[value] and end_code[value].
     """
     placeholders = set()
 
-    def recursive_search(data: Any):
-        if isinstance(data, dict):
-            for value in data.values():
-                recursive_search(value)
-        elif isinstance(data, list):
-            for item in data:
-                recursive_search(item)
-        elif isinstance(data, str):
-            matches = re.findall(r"\{([a-zA-Z0-9_]+)}", data)
-            placeholders.update(matches)
+    def search_for_placeholders(code_list: list):
+        """Searches for placeholders inside a list of strings."""
+        if isinstance(code_list, list):
+            for line in code_list:
+                if isinstance(line, str):
+                    matches = re.findall(r"\{([a-zA-Z0-9_]+)}", line)
+                    placeholders.update(matches)
 
-    # Search only in the start and end code of the Robot section
+    # Access only 'start_code[value]' and 'end_code[value]'
     robot_section = json_data.get("settings", {}).get("Robot", {})
-    start_code = robot_section.get("start_code", [])
-    end_code = robot_section.get("end_code", [])
-    recursive_search(start_code)
-    recursive_search(end_code)
+    start_code = robot_section.get("start_code", {}).get("value", [])
+    end_code = robot_section.get("end_code", {}).get("value", [])
+
+    # Extract placeholders only from start_code[value] and end_code[value]
+    search_for_placeholders(start_code)
+    search_for_placeholders(end_code)
 
     return placeholders
 
@@ -41,8 +39,7 @@ def replace_placeholders(
     json_data: Dict[str, Any], placeholders: Set[str]
 ) -> Dict[str, Any]:
     """
-    DESCRIPTION:
-    Replaces placeholders in the 'Robot' start and end code with corresponding values from the JSON.
+    Replaces placeholders in 'Robot' start_code[value] and end_code[value] with JSON values.
 
     ARGUMENTS:
     json_data: Loaded JSON object (dictionary).
@@ -54,16 +51,7 @@ def replace_placeholders(
     replaced_values = {}
 
     def find_value_for_placeholder(placeholder: str, data: Any) -> Any:
-        """
-        Finds the value for a placeholder based on its name.
-
-        ARGUMENTS:
-        placeholder: Name of the placeholder.
-        data: Current JSON data fragment.
-
-        RETURNS:
-        The value for the placeholder, if found.
-        """
+        """Finds the value for a placeholder inside the JSON."""
         if isinstance(data, dict):
             for key, value in data.items():
                 if key == placeholder and isinstance(value, dict) and "value" in value:
@@ -81,10 +69,13 @@ def replace_placeholders(
     for placeholder in placeholders:
         value = find_value_for_placeholder(placeholder, json_data)
         if value is not None:
-            # Format dictionaries as "key value, key value"
             if isinstance(value, dict):
                 value = ", ".join(f"{key} {val}" for key, val in value.items())
             replaced_values[placeholder] = value
+        else:
+            print(
+                f"[WARNING] Placeholder '{{{placeholder}}}' has no matching value in the JSON!"
+            )
 
     return replaced_values
 
@@ -93,8 +84,7 @@ def apply_replacements_to_robot(
     json_data: Dict[str, Any], replacements: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    DESCRIPTION:
-    Applies placeholder replacements to 'start_code' and 'end_code' in the Robot section.
+    Applies placeholder replacements to 'start_code[value]' and 'end_code[value]' in the Robot section.
 
     ARGUMENTS:
     json_data: Loaded JSON object (dictionary).
@@ -105,15 +95,7 @@ def apply_replacements_to_robot(
     """
 
     def convert_value_to_string(value: Any) -> str:
-        """
-        Converts a value to a string based on its type.
-        - dict: "key value, key value"
-        - list: "[item1, item2, ...]"
-        - float: Rounded to 2 decimal places
-        - int: As-is
-        - bool: "TRUE"/"FALSE"
-        - str: Returns as-is
-        """
+        """Converts a value to a string based on its type."""
         if isinstance(value, dict):
             return ", ".join(
                 f"{key} {convert_value_to_string(val)}" for key, val in value.items()
@@ -129,35 +111,40 @@ def apply_replacements_to_robot(
         return value
 
     def replace_placeholders_in_list(code_list: list[str]) -> list[str]:
-        """
-        Replaces placeholders in a list of strings and returns the updated list.
-        """
+        """Replaces placeholders inside a list of strings."""
         updated_list = []
         for line in code_list:
-            if isinstance(line, str):  # Ensure it's a string
+            if isinstance(line, str):
                 for placeholder, replacement in replacements.items():
-                    # Replace the placeholder with its string representation
                     replacement_str = convert_value_to_string(replacement)
                     line = line.replace(f"{{{placeholder}}}", replacement_str)
+
+                # Warn if placeholders are still present in the line
+                remaining_placeholders = re.findall(r"\{([a-zA-Z0-9_]+)}", line)
+                if remaining_placeholders:
+                    for missing_placeholder in remaining_placeholders:
+                        print(
+                            f"[WARNING] Placeholder '{{{missing_placeholder}}}' was not replaced in line: {line}"
+                        )
+
             updated_list.append(line)
         return updated_list
 
-    # Extract 'start_code' and 'end_code' from the Robot section
     robot_section = json_data.get("settings", {}).get("Robot", {})
     start_code = robot_section.get("start_code", {}).get("value", [])
     end_code = robot_section.get("end_code", {}).get("value", [])
 
     # Ensure start_code and end_code remain lists of strings
-    robot_section["start_code"] = replace_placeholders_in_list(start_code)
-    robot_section["end_code"] = replace_placeholders_in_list(end_code)
+    robot_section["start_code"]["value"] = replace_placeholders_in_list(start_code)
+    robot_section["end_code"]["value"] = replace_placeholders_in_list(end_code)
 
     return robot_section
 
 
 def get_robot_settings(json_file: str) -> Dict[str, Any]:
     """
-    DESCRIPTION:
-    Extracts and replaces placeholders in the 'Robot' start and end code, and returns specific robot settings.
+    Extracts and replaces placeholders in 'Robot' start_code[value] and end_code[value],
+    and returns specific robot settings.
 
     ARGUMENTS:
     json_file: Path to the JSON file.
@@ -192,18 +179,12 @@ def get_robot_settings(json_file: str) -> Dict[str, Any]:
         "rotation_offset": updated_robot_section.get("rotation_offset", {}).get(
             "value"
         ),
-        "start_code": updated_robot_section.get("start_code", []),
-        "end_code": updated_robot_section.get("end_code", []),
+        "start_code": updated_robot_section.get("start_code", {}).get("value", []),
+        "end_code": updated_robot_section.get("end_code", {}).get("value", []),
         "bed_size": updated_robot_section.get("bed_size", {}).get("value"),
         "tool_coordinates": updated_robot_section.get("tool_coordinates", {}).get(
             "value"
         ),
         "print_speed": updated_robot_section.get("print_speed", {}).get("value"),
+        "type_number": updated_robot_section.get("type_number", {}).get("value"),
     }
-
-
-if __name__ == "__main__":
-    # Example usage
-    json_file_path = "setup.json"  # Replace with your JSON file path
-    robot_settings = get_robot_settings(json_file_path)
-    print(json.dumps(robot_settings, indent=4))

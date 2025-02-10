@@ -7,6 +7,7 @@ rhinoinside.load()
 import Rhino.Geometry as rg
 import Rhino.DocObjects as rdo
 import Rhino.FileIO as rfi
+
 from System.Drawing import Color
 from System.Collections.Generic import List as NetList
 
@@ -22,7 +23,9 @@ def color_name_to_rgb(color_name):
         return (0, 0, 0)
 
 
-def create_geometry(points_list, filepath, type_values, line_widths):
+def create_geometry(
+    points_list, filepath, type_values, line_widths, point_types, point_print
+):
     """
     Creates geometry in a Rhino file: polylines and colored points.
     """
@@ -36,7 +39,7 @@ def create_geometry(points_list, filepath, type_values, line_widths):
     create_polylines(points_list, rhino_file, type_values, line_widths)
 
     print("Creating points...")
-    create_points(points_list, rhino_file, include_all_points=False)
+    create_points(points_list, rhino_file, point_types, point_print)
 
     # Save the updated file
     rhino_file.Write(str(filepath), 8)
@@ -62,7 +65,7 @@ def create_polylines(points_list, rhino_file, type_values, line_widths):
         point = rg.Point3d(point_data["X"], point_data["Y"], point_data["Z"])
         move_command = point_data["Move"]
         point_info = point_data["Point_Info"]
-        line_type = str(point_data["Type"])  # Sicherstellen, dass es ein String ist
+        line_type = point_data["Type"]
 
         polyline_key = (layer_id, line_id)
 
@@ -106,7 +109,7 @@ def create_polylines(points_list, rhino_file, type_values, line_widths):
         # Rhino-Objektattribute setzen
         attributes = rdo.ObjectAttributes()
         attributes.LayerIndex = layer_index
-        attributes.Name = f"{layer_id}/{line_id}"
+        attributes.Name = f"Line {layer_id}/{line_id}"
         attributes.SetUserString("Layer", layer_id)
         attributes.SetUserString("Line", line_id)
         attributes.SetUserString("Type", line_type)
@@ -125,7 +128,7 @@ def create_polylines(points_list, rhino_file, type_values, line_widths):
         attributes.PlotColor = attributes.ObjectColor
 
         # Setze die Linienbreite basierend auf `line_widths`
-        plot_weight = line_widths.get("value", {}).get(linetype_name.lower(), 0.5)
+        plot_weight = line_widths.get(linetype_name.lower(), 0.5)
         attributes.PlotWeightSource = rdo.ObjectPlotWeightSource.PlotWeightFromObject
         attributes.PlotWeight = float(plot_weight)
 
@@ -154,13 +157,18 @@ def create_polylines(points_list, rhino_file, type_values, line_widths):
         )
 
 
-def create_points(points_list, rhino_file, include_all_points=False):
+def create_points(points_list, rhino_file, point_types, point_print):
     """
-    Internal function to create points in the Rhino file.
+    Creates points in the Rhino file with colors defined in `point_types`.
+
+    :param points_list: List of point data with attributes (X, Y, Z, Point_Info, etc.).
+    :param rhino_file: The Rhino file where points will be stored.
+    :param point_types: Dictionary mapping point types (start, stop, retract, etc.) to HEX color values.
+    :param point_print: If False, only points with specific types ('start', 'stop', 'retract', 'protract') are included.
     """
     for point_data in points_list:
-        # Skip points that are not "start" or "stop" if only start/stop points are to be included
-        if not include_all_points and point_data["Point_Info"] not in {
+        # Skip points that are not "start" or "stop" if only selective points are to be included
+        if not point_print and point_data["Point_Info"] not in {
             "start",
             "stop",
             "retract",
@@ -178,28 +186,20 @@ def create_points(points_list, rhino_file, include_all_points=False):
         # Create the point object
         point = rg.Point3d(x, y, z)
 
-        # Assign color based on point_info
-        color_mapping = {
-            "start": Color.FromArgb(0, 255, 0),  # Green for Start
-            "stop": Color.FromArgb(255, 0, 0),  # Red for Stop
-            "retract": Color.FromArgb(0, 0, 255),  # Blue for Retract
-            "protract": Color.FromArgb(173, 216, 230),  # Light Blue for Protract
-            "1": Color.FromArgb(128, 128, 128),  # Gray for Extrusion
-            "0": Color.FromArgb(0, 0, 0),  # Black for Travel
-        }
-        color = color_mapping.get(point_info, Color.FromArgb(0, 0, 0))
+        # Get color from `point_types` dictionary, default to black if not found
+        color_hex = point_types.get(point_info, "#000000")
+        color_rgb = Color.FromArgb(*color_name_to_rgb(color_hex))
 
         # Assign attributes
         attributes = rdo.ObjectAttributes()
         attributes.LayerIndex = next(
-            (l.Index for l in rhino_file.Layers if l.Name == layer),
-            None,
+            (l.Index for l in rhino_file.Layers if l.Name == layer), None
         )
-        attributes.ObjectColor = color
+        attributes.ObjectColor = color_rgb
         attributes.ColorSource = rdo.ObjectColorSource.ColorFromObject
         attributes.PlotColorSource = rdo.ObjectPlotColorSource.PlotColorFromObject
         attributes.PlotColor = attributes.ObjectColor
-        attributes.Name = f"{layer}/{line_num}/{point_num}"
+        attributes.Name = f"Point {layer}/{line_num}/{point_num}"
         attributes.SetUserString("Layer", layer)
         attributes.SetUserString("Line", line_num)
         attributes.SetUserString("Point", point_num)
@@ -207,4 +207,4 @@ def create_points(points_list, rhino_file, include_all_points=False):
 
         # Add the point to the Rhino file
         rhino_file.Objects.AddPoint(point, attributes)
-        print(f"Added point {attributes.Name} at {point} with color {color}.")
+        print(f"Added point {attributes.Name} at {point} with color {color_hex}.")
