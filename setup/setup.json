@@ -45,17 +45,17 @@
                 "type": "dict[str,float]"
             },
             "base_coordinates": {
-                "description": "Base coordinate frame ($ROBOTROOT) in the robot's workspace relative to $BASE (coordinate system of printbed); This leads to T($ROBOTROOT,$BASE) example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
+                "description": "Base coordinate frame ($ROBOTROOT) in the robot's workspace relative to $BASE (coordinate system of printbed); Delta given from $BASE to $ROBOTROOT; This leads to T($BASE,$ROBOTROOT) due to order of rotation beeing ZYX; example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
                 "value": {"X": -1460.9, "Y": 2237.66, "Z": -268.5, "A": 0.0, "B": 0.0, "C": 0.0},
                 "type": "dict[str,float]"
             },
             "tool_offset": {
-                "description": "Tool offset from $NULLFRAME (flange of robot hand) in direction of $NULLFRAME; This leads to T($NULLFRAME,$TCP)",
+                "description": "Tool offset from $NULLFRAME (flange of robot hand) in direction of $NULLFRAME; This leads to T($NULLFRAME,$TCP) as no rotation is involved",
                 "value": {"X": -10.99, "Y": -0.86, "Z": 917.61},
                 "type": "dict[str,float]"
             },
             "tool_orientation": {
-                "description": "Tool orientation relative to $BASE/$FRAME (coordinate system of printbed); This leads to T($FRAME,$TCP); A(angle related to Z), B(angle related to Y), C(angle related to Z)",
+                "description": "Tool orientation relative to $BASE/$FRAME (coordinate system of printbed); This leads to R($BASE/$FRAME,$TCP); A(angle related to Z), B(angle related to Y), C(angle related to Z)",
                 "value": {"A": 0, "B": 0, "C": 180},
                 "type": "dict[str,float]"
             },

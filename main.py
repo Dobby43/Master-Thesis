@@ -199,6 +199,18 @@ else:
     print("Choose valid Slicer")
 
 # ----------------INITIALIZING ROBOT----------------
+R_ROBOTROOT_BASE = Rotation.from_euler_angles(
+    aX=ROBOT_BASE["C"], aY=ROBOT_BASE["B"], aZ=ROBOT_BASE["A"]
+)
+R_BASE_TOOL = Rotation.from_euler_angles(
+    aX=ROBOT_TOOL_ORIENTATION["C"],
+    aY=ROBOT_TOOL_ORIENTATION["B"],
+    aZ=ROBOT_TOOL_ORIENTATION["A"],
+)
+
+R_ROBOTROOT_TOOL = R_ROBOTROOT_BASE @ R_BASE_TOOL
+
+print(R_ROBOTROOT_TOOL)
 
 # initialize robot
 robot = rokin.RobotOPW(
@@ -207,6 +219,8 @@ robot = rokin.RobotOPW(
     robot_rotation_sign=ROBOT_ROTATION_SIGN,
     robot_rotation_limit=ROBOT_ROTATION_LIMIT,
     robot_rotation_offset=ROBOT_ROTATION_OFFSET,
+    robot_tool_offset=ROBOT_TOOL_OFFSET,
+    robot_rotation_root_tool=R_ROBOTROOT_TOOL,
 )
 
 # ----------------G-CODE IMPORT AND EVALUATION----------------
@@ -236,17 +250,26 @@ for line in gcode_necessary:
     print(line)
 
 # Calculation of Start and End coordinates
+# Due to the order of rotation ZYX the offset from $BASE to $ROBOTROOT given relative to $BASE yields the Transformation Matrix T(BASE,ROBOTROOT)
 START_POS_ROBOTROOT = robot.forward_kinematics(ROBOT_START_POSITION, ROBOT_TOOL_OFFSET)
 END_POS_ROBOTROOT = robot.forward_kinematics(ROBOT_END_POSITION, ROBOT_TOOL_OFFSET)
 
-T_ROBOTROOT_BASE = Transformation.from_rotation_and_translation(
+T_BASE_ROBOTROOT = Transformation.from_rotation_and_translation(
     Rotation.from_euler_angles(ROBOT_BASE["C"], ROBOT_BASE["B"], ROBOT_BASE["A"]),
     [ROBOT_BASE["X"], ROBOT_BASE["Y"], ROBOT_BASE["Z"]],
 )
-T_BASE_ROBOTROOT = Transformation.invert(T_ROBOTROOT_BASE)
 
-START_POS_BASE = np.round(T_ROBOTROOT_BASE @ START_POS_ROBOTROOT, 2)
-END_POS_BASE = np.round(T_ROBOTROOT_BASE @ END_POS_ROBOTROOT, 2)
+T_ROBOTROOT_BASE = Transformation.invert(T_BASE_ROBOTROOT)
+
+START_POS_BASE = np.round(T_BASE_ROBOTROOT @ START_POS_ROBOTROOT, 2)
+END_POS_BASE = np.round(T_BASE_ROBOTROOT @ END_POS_ROBOTROOT, 2)
+
+print("T_BASE_ROBOTROOT")
+print(T_ROBOTROOT_BASE)
+print("START_POS_BASE")
+print(START_POS_BASE)
+print("END_POS_BASE")
+print(END_POS_BASE)
 
 ROBOT_START_LINE = {
     "Move": "G0",
@@ -324,9 +347,10 @@ expkr.export_to_src(
 
 gcode_filtered.insert(0, ROBOT_START_LINE)
 gcode_filtered.append(ROBOT_END_LINE)
-# ----------------ROBOT SIMULATION----------------
 
-# calculate Transformation matrix for point in $BASE (account for tool_offset) and return T for inverse kinematic
+
+# ----------------ROBOT SIMULATION----------------
+# # calculate Transformation matrix for point in $BASE (account for tool_offset) and return T for inverse kinematic
 # transf_matrix = []
 # joint_angles = []
 # for point in gcode_necessary:
