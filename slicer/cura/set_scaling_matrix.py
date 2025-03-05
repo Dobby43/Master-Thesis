@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Dict
+from robot.pre_process import mathematical_operators as math
 
 
 def compute_scaling_and_rotation_matrix(scaling_params: Dict[str, float]) -> str:
@@ -23,21 +24,8 @@ def compute_scaling_and_rotation_matrix(scaling_params: Dict[str, float]) -> str
     rY = np.radians(scaling_params.get("rY", 0.0))
     rZ = np.radians(scaling_params.get("rZ", 0.0))
 
-    # Rotation matrices
-    rotation_x = np.array(
-        [[1, 0, 0], [0, np.cos(rX), -np.sin(rX)], [0, np.sin(rX), np.cos(rX)]]
-    )
-
-    rotation_y = np.array(
-        [[np.cos(rY), 0, np.sin(rY)], [0, 1, 0], [-np.sin(rY), 0, np.cos(rY)]]
-    )
-
-    rotation_z = np.array(
-        [[np.cos(rZ), -np.sin(rZ), 0], [np.sin(rZ), np.cos(rZ), 0], [0, 0, 1]]
-    )
-
-    # Combined rotation matrix: Rz * Ry * Rx
-    rotation_matrix = rotation_z @ rotation_y @ rotation_x
+    # Rotation Matrix mit vorhandener Methode berechnen
+    rotation_matrix = math.Rotation.from_euler_angles(rX, rY, rZ, order="ZYX")
 
     # Scaling matrix
     scaling_matrix = np.diag([sX, sY, sZ])
@@ -50,8 +38,6 @@ def compute_scaling_and_rotation_matrix(scaling_params: Dict[str, float]) -> str
 
     return transformation_string
 
-
-# TODO: auf rotation class umschreiben
 
 # Example usage
 if __name__ == "__main__":

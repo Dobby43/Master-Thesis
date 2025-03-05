@@ -34,7 +34,7 @@ def get_max_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
             if z_val is not None:
                 z_max = z_val if z_max is None else max(z_max, z_val)
 
-    return {"x_max": x_max, "y_max": y_max, "z_max": z_max}
+    return {"x": x_max, "y": y_max, "z": z_max}
 
 
 def get_min_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
@@ -67,4 +67,4 @@ def get_min_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
             if z_val is not None:
                 z_min = z_val if z_min is None else min(z_min, z_val)
 
-    return {"x_min": x_min, "y_min": y_min, "z_min": z_min}
+    return {"x": x_min, "y": y_min, "z": z_min}

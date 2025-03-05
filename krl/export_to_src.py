@@ -48,6 +48,6 @@ def export_to_src(
         # Write the combined lines to the .src file
         with open(full_file_path, "w") as file:
             file.write("\n".join(combined_lines))
-        print(f"Successfully exported to {full_file_path}")
+        print(f"[INFO] .src file exported to {full_file_path}")
     except Exception as e:
         print(f"[ERROR] Failed to export .src file: {e}")

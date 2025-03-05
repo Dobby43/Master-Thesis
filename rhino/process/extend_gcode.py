@@ -6,7 +6,7 @@ def add_point_info(points: list[dict]) -> list[dict]:
 
     points_info = assign_extrusion_info(points_counted)
 
-    return points_counted
+    return points_info
 
 
 def process_points(data: list[dict]) -> list[dict]:
@@ -58,6 +58,7 @@ def process_points(data: list[dict]) -> list[dict]:
                 "Layer_Height": current_point[
                     "Layer_Height"
                 ],  # Layerhöhe vom aktuellen Punkt übernehmen
+                "Reachable": previous_point["Reachable"],
             }
             processed_points.append(transition_point)
 

@@ -32,13 +32,13 @@ def get_directory_setup(json_file: str) -> dict[str, str]:
 
     # Generate a time-based subfolder
     current_time = datetime.now().strftime("%H_%M_%S")
-    time_subfolder = f"Data_{current_time}"
+    time_subfolder = f"{output_name}_{current_time}"
     final_output_directory = os.path.join(output_directory, time_subfolder)
 
     # Create the output directory if it doesn't exist
     os.makedirs(final_output_directory, exist_ok=True)
 
-    print(f"Output directory prepared: {final_output_directory}")
+    print(f"[INFO] Output directory prepared: {final_output_directory}")
 
     # Return relevant paths
     return {

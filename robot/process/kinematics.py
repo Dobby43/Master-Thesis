@@ -116,79 +116,83 @@ class RobotOPW:
         :param joint_angles: Joint angles according to robot convention in degrees.
         :return: Transformation matrix including tool offset.
         """
-        reachable = self.validate_joint_limits_fk(joint_angles)
+        if not self.validate_joint_limits_fk(joint_angles):
+            reachable = False
+            print(f"[ERROR] Given joint angles {joint_angles} are out of joint limits")
+            return [], reachable
+        else:
+            reachable = True
+            A = np.deg2rad(
+                self.sub_correction(
+                    [
+                        joint_angles["A1"],
+                        joint_angles["A2"],
+                        joint_angles["A3"],
+                        joint_angles["A4"],
+                        joint_angles["A5"],
+                        joint_angles["A6"],
+                    ]
+                )
+            )
 
-        A = np.deg2rad(
-            self.sub_correction(
+            # forward kinematics (orientation part)
+            s, c = np.sin(A), np.cos(A)
+
+            psi3 = np.arctan(self.a2 / self.c3)
+            k = np.sqrt(self.a2**2 + self.c3**2)
+
+            cx1 = self.c2 * s[1] + k * np.sin(A[1] + A[2] + psi3) + self.a1
+            cy1 = self.b
+            cz1 = self.c2 * c[1] + k * np.cos(A[1] + A[2] + psi3)
+
+            cx0 = cx1 * c[0] - cy1 * s[0]
+            cy0 = cx1 * s[0] + cy1 * c[0]
+            cz0 = cz1 + self.c1
+
+            r_0c = np.array(
                 [
-                    joint_angles["A1"],
-                    joint_angles["A2"],
-                    joint_angles["A3"],
-                    joint_angles["A4"],
-                    joint_angles["A5"],
-                    joint_angles["A6"],
+                    [
+                        c[0] * c[1] * c[2] - c[0] * s[1] * s[2],
+                        -s[0],
+                        c[0] * c[1] * s[2] + c[0] * s[1] * c[2],
+                    ],
+                    [
+                        s[0] * c[1] * c[2] - s[0] * s[1] * s[2],
+                        c[0],
+                        s[0] * c[1] * s[2] + s[0] * s[1] * c[2],
+                    ],
+                    [-s[1] * c[2] - c[1] * s[2], 0, -s[1] * s[2] + c[1] * c[2]],
                 ]
             )
-        )
 
-        # forward kinematics (orientation part)
-        s, c = np.sin(A), np.cos(A)
-
-        psi3 = np.arctan(self.a2 / self.c3)
-        k = np.sqrt(self.a2**2 + self.c3**2)
-
-        cx1 = self.c2 * s[1] + k * np.sin(A[1] + A[2] + psi3) + self.a1
-        cy1 = self.b
-        cz1 = self.c2 * c[1] + k * np.cos(A[1] + A[2] + psi3)
-
-        cx0 = cx1 * c[0] - cy1 * s[0]
-        cy0 = cx1 * s[0] + cy1 * c[0]
-        cz0 = cz1 + self.c1
-
-        r_0c = np.array(
-            [
+            r_ce = np.array(
                 [
-                    c[0] * c[1] * c[2] - c[0] * s[1] * s[2],
-                    -s[0],
-                    c[0] * c[1] * s[2] + c[0] * s[1] * c[2],
-                ],
-                [
-                    s[0] * c[1] * c[2] - s[0] * s[1] * s[2],
-                    c[0],
-                    s[0] * c[1] * s[2] + s[0] * s[1] * c[2],
-                ],
-                [-s[1] * c[2] - c[1] * s[2], 0, -s[1] * s[2] + c[1] * c[2]],
-            ]
-        )
+                    [
+                        c[3] * c[4] * c[5] - s[3] * s[5],
+                        -c[3] * c[4] * s[5] - s[3] * c[5],
+                        c[3] * s[4],
+                    ],
+                    [
+                        s[3] * c[4] * c[5] + c[3] * s[5],
+                        -s[3] * c[4] * s[5] + c[3] * c[5],
+                        s[3] * s[4],
+                    ],
+                    [-s[4] * c[5], s[4] * s[5], c[4]],
+                ]
+            )
 
-        r_ce = np.array(
-            [
-                [
-                    c[3] * c[4] * c[5] - s[3] * s[5],
-                    -c[3] * c[4] * s[5] - s[3] * c[5],
-                    c[3] * s[4],
-                ],
-                [
-                    s[3] * c[4] * c[5] + c[3] * s[5],
-                    -s[3] * c[4] * s[5] + c[3] * c[5],
-                    s[3] * s[4],
-                ],
-                [-s[4] * c[5], s[4] * s[5], c[4]],
-            ]
-        )
+            r_0e = r_0c @ r_ce
 
-        r_0e = r_0c @ r_ce
+            u = np.array([cx0, cy0, cz0]) + self.c4 * (r_0e @ np.array([0, 0, 1]))
+            u += r_0e @ np.array(
+                [self.tool_offset_x, self.tool_offset_y, self.tool_offset_z]
+            )
 
-        u = np.array([cx0, cy0, cz0]) + self.c4 * (r_0e @ np.array([0, 0, 1]))
-        u += r_0e @ np.array(
-            [self.tool_offset_x, self.tool_offset_y, self.tool_offset_z]
-        )
+            t = np.eye(4)
+            t[:3, :3] = r_0e
+            t[:3, 3] = u
 
-        t = np.eye(4)
-        t[:3, :3] = r_0e
-        t[:3, 3] = u
-
-        return t, reachable
+            return t, reachable
 
     def inverse_kinematics(self, hom_trans):
         """
@@ -350,10 +354,15 @@ class RobotOPW:
                 [theta_1, theta_2, theta_3, theta_4_q, theta_5_q, theta_6_q]
             )
 
-        # D) Convert to deg
+        # D) Convert to degrees
         final_solutions_deg = np.rad2deg(final_solutions_rad).T
 
-        # E) adjust with offset for robot convention
+        # Abort if no solutions for given point exist
+        if final_solutions_deg.size == 0:
+            print(f"[ERROR] Point out of reachable domain of robot")
+            return []
+
+        # E) Adjust with offset for robot convention
         final_solutions_corrected = np.column_stack(
             [
                 self.add_correction(final_solutions_deg[:, i])
@@ -361,15 +370,19 @@ class RobotOPW:
             ]
         )
 
-        # F) check if angle within limits
+        # F) Check if angles are within limits
         valid_solutions = self.validate_joint_limits_ik(final_solutions_corrected)
 
-        # Returns empty list if no valid solutions
+        # Abort for no valid solutions within joint angle limits
         if valid_solutions.size == 0:
+            print(
+                f"[ERROR] All possible Joint angles for point exceed min/max joint angles"
+            )
             return []
 
-        # Converts solutions into dict of angles with rounding according to self.precision
+        # G) Convert solutions into dictionary format with rounding
         num_solutions = valid_solutions.shape[1]
+
         solutions_list = [
             {
                 f"A{i + 1}.{j + 1}": round(float(valid_solutions[i, j]), self.precision)

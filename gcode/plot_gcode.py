@@ -30,8 +30,8 @@ def plot_bed(
 
     # Create a gray XY-plane grid at Z = 0
     grid_x, grid_y = np.meshgrid(
-        np.arange(0, bed_size_x, 100, dtype=np.float32),  # Steps of 100 mm along X
-        np.arange(0, bed_size_y + 1, 100, dtype=np.float32),  # Steps of 100 mm along Y
+        np.arange(0, bed_size_x, 50, dtype=np.float32),  # Steps of 100 mm along X
+        np.arange(0, bed_size_y + 1, 50, dtype=np.float32),  # Steps of 100 mm along Y
     )
     grid_z = np.zeros_like(grid_x)  # XY plane at Z=0
     bed_surface = pv.StructuredGrid(grid_x, grid_y, grid_z)

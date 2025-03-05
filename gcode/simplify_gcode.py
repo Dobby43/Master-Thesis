@@ -102,6 +102,7 @@ def simplify_gcode(
             elif (
                 retract_value and abs(e_relative - abs(retract_value)) <= 0.1
             ):  # Protract
+                # tolerance for difference between retract and protract value
                 move = "G1"
                 type_ = "protract"
                 retract_value = None

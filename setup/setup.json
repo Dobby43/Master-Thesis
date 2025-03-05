@@ -13,7 +13,7 @@
             },
             "input_name": {
                 "description": "Name of the input STL file (without data type)",
-                "value": "L Shape 200x200x15",
+                "value": "Retraction_Test",
                 "type": "str"
             },
             "output_directory": {
@@ -23,7 +23,7 @@
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
-                "value": "L Shape 200x200x15",
+                "value": "Retraction_Test",
                 "type": "str"
             }
         },
@@ -249,13 +249,14 @@
                         "layer_height_0": "15",
                         "layer_height": "15",
                         "infill_sparse_density": "20",
-                        "roofing_layer_count": "1"
+                        "roofing_layer_count": "1",
+                        "mesh_position_x": "412.5"
                     },
                     "type": "dict[str,str]"
                 },
                 "cura_scaling": {
                     "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                    "value": {"sX": 100, "sY": 100, "sZ": 200, "rX": 0, "rY": 0, "rZ": 0},
+                    "value": {"sX": 100, "sY": 400, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
                     "type": "dict[str,float|int]"
                 }
             },
