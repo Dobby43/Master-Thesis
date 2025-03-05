@@ -41,7 +41,7 @@ def filter_retracts(
             filtered_gcode.append(travel_entry)
             skip_block = False  # Stop skipping lines
             continue
-
+        # TODO: Filter dublicats
         # Skip entries between retract and protract
         if skip_block:
             continue

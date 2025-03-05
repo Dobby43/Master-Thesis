@@ -13,7 +13,7 @@
             },
             "input_name": {
                 "description": "Name of the input STL file (without data type)",
-                "value": "Quader 200x200x60",
+                "value": "L Shape 200x200x15",
                 "type": "str"
             },
             "output_directory": {
@@ -23,7 +23,7 @@
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
-                "value": "Quader 200x200x60",
+                "value": "L Shape 200x200x15",
                 "type": "str"
             }
         },
@@ -34,19 +34,14 @@
                 "value": "KUKA KR340 R3330",
                 "type": "str"
             },
-            "nozzle_diameter": {
-                "description": "diameter of nozzle in [mm]",
-                "value": 25,
-                "type": "float"
-            },
             "geometry": {
                 "describtion": "measurement of robot arm & offset in accordance with to https://de.mathworks.com/matlabcentral/fileexchange/48468-inverse-kinematics-of-serial-robots-with-wrist?s%5C_tid=prof%5C_contriblnk",
                 "value": {"a1": 500, "a2": 55, "b": 0, "c1": 1045, "c2": 1300, "c3": 1525, "c4": 290},
                 "type": "dict[str,float]"
             },
             "base_coordinates": {
-                "description": "Base coordinate frame ($ROBOTROOT) in the robot's workspace relative to $BASE (coordinate system of printbed); Delta given from $BASE to $ROBOTROOT; This leads to T($BASE,$ROBOTROOT) due to order of rotation beeing ZYX; example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
-                "value": {"X": -1460.9, "Y": 2237.66, "Z": -268.5, "A": 0.0, "B": 0.0, "C": 0.0},
+                "description": "Base coordinate frame ($ROBOTROOT) in the robot's workspace relative to $BASE (coordinate system of printbed); Delta given from $BASE to $ROBOTROOT; This leads to T($BASE,$ROBOTROOT) due to order of rotation being ZYX; example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
+                "value": {"X": -1460.9, "Y": 2237.66, "Z": -268.5, "A": 0, "B": 0.0, "C": 0.0},
                 "type": "dict[str,float]"
             },
             "tool_offset": {
@@ -215,9 +210,19 @@
                 "type": "bool"
             },
             "characteristic_curve": {
-                "description": "Gives the function of RPM to Flow of the Pump",
-                "value": {},
+                "description": "Gives the function of RPM to Flow of the Pump in [QM/RPM]",
+                "value": {"100": 10, "1000": 20},
                 "type": "dict[list[float,float]]"
+            },
+            "filament_diameter": {
+                "description": "diameter of filament in [mm]",
+                "value": 25,
+                "type": "float"
+            },
+            "linetype_flow": {
+                "description": "Flow compensation for each linetype in [%]; 100 = flow within spec; 120 = account for under extrusion; 90 = account for over extrusion",
+                "value": {"wall_outer": 100, "wall_inner": 100, "surface": 100, "infill": 100, "bridge": 100, "curb": 100, "support": 100, "unknown": 100},
+                "type": "dict[str|float]"
             }
         },
         "Slicer": {
@@ -250,7 +255,7 @@
                 },
                 "cura_scaling": {
                     "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                    "value": {"sX": 100, "sY": 100, "sZ": 25, "rX": 0, "rY": 0, "rZ": 0},
+                    "value": {"sX": 100, "sY": 100, "sZ": 200, "rX": 0, "rY": 0, "rZ": 0},
                     "type": "dict[str,float|int]"
                 }
             },
@@ -272,7 +277,7 @@
                 },
                 "orca_scaling": {
                     "description": "Sets scaling and rotation values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                    "value": {"sX": 100, "sY": 300, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
+                    "value": {"sX": 100, "sY": 100, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
                     "type": "dict[str,float|int]"
                 }
             },
@@ -302,24 +307,24 @@
                 "type": "bool"
             },
             "point_types": {
-                "description": "Sets colour for each point in the Rhino file",
+                "description": "Sets color for each point in the Rhino file",
                 "start": {
-                    "description":"colour for start points of extrusion",
+                    "description":"color for start points of extrusion",
                     "value": "#008000",
                     "type": "str"
                 },
                 "stop":{
-                    "description": "colour for start points of extrusion",
+                    "description": "colo for start points of extrusion",
                     "value": "#ff0000",
                     "type": "str"
                 },
                 "retract":{
-                    "description": "colour for retract points ",
+                    "description": "color for retract points ",
                     "value": "#0000CD",
                     "type": "str"
                 },
                 "protract":{
-                    "description": "colour for anti retract points",
+                    "description": "color for anti retract points",
                     "value": "#87CEEB",
                     "type": "str"
                 }

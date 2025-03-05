@@ -34,28 +34,23 @@ from slicer.cura import set_scaling_matrix as smacu
 from gcode import get_gcode as getgc
 from gcode import min_max_values as mima
 from gcode import simplify_gcode as smplf
-from gcode import filter_gcode as filtr
+
 
 # PLOT
 from gcode import plot_gcode as plt
 
 # KRL
-from krl import filename as flnkr
-from krl import start_code_python as scpkr
-from krl import modify_to_krl as mdfkr
-from krl import export_to_src as expkr
 
 
 # ROBOT
 from robot.pre_process.mathematical_operators import Transformation
 from robot.pre_process.mathematical_operators import Rotation
-from robot.process import kinematiks_test as rokin
+from robot.process import kinematics as rokin
+
+# PUMP
+from pump import filter_gcode as filtr
 
 # RHINO
-from rhino.process import extend_gcode as prcrh
-from rhino.process import draw_gcode as drgrh
-from rhino.process import draw_printbed as drprh
-from rhino.pre_process import create_rhino as crtrh
 
 # ----------------GET SETUP PATH----------------
 setup_path = str(Path(__file__).parent / "setup" / "setup.json")
@@ -93,7 +88,6 @@ robot_settings = rosu.get_robot_settings(setup_path)
 
 # Robot
 ROBOT_ID = robot_settings["id"]
-ROBOT_NOZZLE_DIAMETER = robot_settings["nozzle_diameter"]
 ROBOT_GEOMETRY = robot_settings["geometry"]
 
 # Coordinate frames
@@ -128,6 +122,9 @@ ROBOT_TYPE_NUMBER = robot_settings["type_number"]
 pump_settings = pusu.get_pump_settings(setup_path)
 
 PUMP_RETRACT = pump_settings["retract"]
+PUMP_CHARACTERISTIC_CURVE = pump_settings["characteristic_curve"]
+PUMP_FILAMENT_DIAMETER = pump_settings["filament_diameter"]
+PUMP_LINETYPE_FLOW = pump_settings["linetype_flow"]
 
 
 # ----------------SLICER CONFIGURATION----------------
@@ -160,7 +157,6 @@ if SLICER == "cura":
         "machine_width": BED_SIZE_X,
         "machine_depth": BED_SIZE_Y,
         "machine_height": BED_SIZE_Z,
-        "machine_nozzle_size": ROBOT_NOZZLE_DIAMETER,
         "mesh_rotation_matrix": CURA_SCALING,
         "support_enable": "false",
         "prime_blob_enable": "false",
@@ -189,39 +185,15 @@ if SLICER == "cura":
         additional_args=selected_arguments_cura,
     )
     print(message)
-    print(f"Finished slicing {INPUT_FILE_STL}")
+    print(f"[INFO] Finished slicing {INPUT_FILE_STL}")
 
-elif SLICER == r"open slicer":  # TODO: typos ausgleichen
-    print("Slicer not yet implemented")
+elif SLICER == r"open slicer":
+    print("[WARNING] Slicer not yet implemented")
 elif SLICER == "orca":
-    print("Slicer not yet implemented")
+    print("[WARNING] Slicer not yet implemented")
 else:
-    print("Choose valid Slicer")
+    print("[WARNING] Choose valid Slicer")
 
-# ----------------INITIALIZING ROBOT----------------
-R_ROBOTROOT_BASE = Rotation.from_euler_angles(
-    aX=ROBOT_BASE["C"], aY=ROBOT_BASE["B"], aZ=ROBOT_BASE["A"]
-)
-R_BASE_TOOL = Rotation.from_euler_angles(
-    aX=ROBOT_TOOL_ORIENTATION["C"],
-    aY=ROBOT_TOOL_ORIENTATION["B"],
-    aZ=ROBOT_TOOL_ORIENTATION["A"],
-)
-
-R_ROBOTROOT_TOOL = R_ROBOTROOT_BASE @ R_BASE_TOOL
-
-print(R_ROBOTROOT_TOOL)
-
-# initialize robot
-robot = rokin.RobotOPW(
-    robot_id=ROBOT_ID,
-    robot_geometry=ROBOT_GEOMETRY,
-    robot_rotation_sign=ROBOT_ROTATION_SIGN,
-    robot_rotation_limit=ROBOT_ROTATION_LIMIT,
-    robot_rotation_offset=ROBOT_ROTATION_OFFSET,
-    robot_tool_offset=ROBOT_TOOL_OFFSET,
-    robot_rotation_root_tool=R_ROBOTROOT_TOOL,
-)
 
 # ----------------G-CODE IMPORT AND EVALUATION----------------
 # Read the G-Code lines
@@ -230,76 +202,31 @@ gcode_lines = getgc.get_gcode_lines(INPUT_DIRECTORY_GCODE, INPUT_FILE_GCODE)
 # Simplify_gcode
 # Gets min X, Y and Z values
 min_values = mima.get_min_values(gcode_lines)
-X_MIN = min_values["x_min"]
-Y_MIN = min_values["y_min"]
-Z_MIN = min_values["z_min"]
+x_min = min_values["x_min"]
+y_min = min_values["y_min"]
+z_min = min_values["z_min"]
 # Gets max X, Y and Z values
 max_values = mima.get_max_values(gcode_lines)
-X_MAX = max_values["x_max"]
-Y_MAX = max_values["y_max"]
-Z_MAX = max_values["z_max"]
+x_max = max_values["x_max"]
+y_max = max_values["y_max"]
+z_max = max_values["z_max"]
 
 # Gets necessary G-Code lines
 gcode_necessary = smplf.simplify_gcode(
-    gcode_lines, SLICER, RHINO_LINE_TYPES, X_MIN, Y_MIN, Z_MIN
+    gcode_lines, SLICER, RHINO_LINE_TYPES, x_min, y_min, z_min
 )
 # Gets maximum layer number
-LAYER_MAX = gcode_necessary[-1]["Layer"]
+layer_max = gcode_necessary[-1]["Layer"]
 
-for line in gcode_necessary:
-    print(line)
+# for line in gcode_necessary:
+#     print(line)
 
-# Calculation of Start and End coordinates
-# Due to the order of rotation ZYX the offset from $BASE to $ROBOTROOT given relative to $BASE yields the Transformation Matrix T(BASE,ROBOTROOT)
-START_POS_ROBOTROOT = robot.forward_kinematics(ROBOT_START_POSITION, ROBOT_TOOL_OFFSET)
-END_POS_ROBOTROOT = robot.forward_kinematics(ROBOT_END_POSITION, ROBOT_TOOL_OFFSET)
-
-T_BASE_ROBOTROOT = Transformation.from_rotation_and_translation(
-    Rotation.from_euler_angles(ROBOT_BASE["C"], ROBOT_BASE["B"], ROBOT_BASE["A"]),
-    [ROBOT_BASE["X"], ROBOT_BASE["Y"], ROBOT_BASE["Z"]],
-)
-
-T_ROBOTROOT_BASE = Transformation.invert(T_BASE_ROBOTROOT)
-
-START_POS_BASE = np.round(T_BASE_ROBOTROOT @ START_POS_ROBOTROOT, 2)
-END_POS_BASE = np.round(T_BASE_ROBOTROOT @ END_POS_ROBOTROOT, 2)
-
-print("T_BASE_ROBOTROOT")
-print(T_ROBOTROOT_BASE)
-print("START_POS_BASE")
-print(START_POS_BASE)
-print("END_POS_BASE")
-print(END_POS_BASE)
-
-ROBOT_START_LINE = {
-    "Move": "G0",
-    "X": float(START_POS_BASE[0, 3]),
-    "Y": float(START_POS_BASE[1, 3]),
-    "Z": float(START_POS_BASE[2, 3]),
-    "E_Rel": 0,
-    "Layer": 0,
-    "Type": "travel",
-    "Layer_Height": 0,
-}
-ROBOT_END_LINE = {
-    "Move": "G0",
-    "X": float(END_POS_BASE[0, 3]),
-    "Y": float(END_POS_BASE[1, 3]),
-    "Z": float(END_POS_BASE[2, 3]),
-    "E_Rel": 0,
-    "Layer": LAYER_MAX,
-    "Type": "travel",
-    "Layer_Height": 0,
-}
 
 # ----------------PUMP IMPLEMENTATION
 if PUMP_RETRACT is False:
     gcode_filtered = filtr.filter_retracts(gcode_necessary)
 else:
     gcode_filtered = gcode_necessary
-
-for line in gcode_filtered:
-    print(line)
 
 # ----------------PYVISTA PLOT----------------
 plotter = plt.plot_bed(
@@ -311,91 +238,170 @@ plotter = plt.plot_bed(
 # Füge den G-Code-Pfad dem vorhandenen Plotter hinzu
 plt.plot_gcode(plotter, gcode_filtered, "all", RHINO_LINE_TYPES)
 
-# ----------------KRL FORMATING OF G-CODE----------------
-# Set Start and End Code parts from Python values
-KRL_NAME = flnkr.set_filename_krl(OUTPUT_NAME)
-ROBOT_START_CODE_PY = scpkr.set_start_code_python(LAYER_MAX)
-ROBOT_END_CODE_PY = []
 
-# Formats G-Code to KRL and appends tool-head orientation
-krl_lines = mdfkr.krl_format(
-    gcode_necessary,
-    type_mapping=ROBOT_TYPE_NUMBER,
-    a=ROBOT_TOOL_ORIENTATION["A"],
-    b=ROBOT_TOOL_ORIENTATION["B"],
-    c=ROBOT_TOOL_ORIENTATION["C"],
-    vel=ROBOT_VEL_CP,
-    x_max=BED_SIZE_X,
-    y_max=BED_SIZE_Y,
-    z_max=BED_SIZE_Z,
+# ----------------INITIALIZING ROBOT----------------
+# Pre calculate fixed Rotation and Translation-matrices
+# ORIENTATION BASE TO ROBOTROOT
+# Due to the order of rotation ZYX the offset from $BASE to $ROBOTROOT given
+# relative to $BASE yields the Transformation Matrix T(BASE,ROBOTROOT)
+r_base_robotroot = Rotation.from_euler_angles(
+    ROBOT_BASE["C"], ROBOT_BASE["B"], ROBOT_BASE["A"]
+)
+t_base_robotroot = Transformation.from_rotation_and_translation(
+    r_base_robotroot,
+    [ROBOT_BASE["X"], ROBOT_BASE["Y"], ROBOT_BASE["Z"]],
 )
 
-for line in krl_lines:
-    print(line)
 
-# Export of KRL-File
-expkr.export_to_src(
-    krl_lines,
-    KRL_NAME,
-    ROBOT_START_CODE_JSON,
-    ROBOT_START_CODE_PY,
-    ROBOT_END_CODE_JSON,
-    ROBOT_END_CODE_PY,
-    OUTPUT_DIRECTORY,
-    OUTPUT_NAME,
+# ORIENTATION TOOL TO ROBOTROOT
+# Due to orthogonal matrix M^-1 = M.T
+r_robotroot_base = r_base_robotroot.T
+r_base_tool = Rotation.from_euler_angles(
+    aX=ROBOT_TOOL_ORIENTATION["C"],
+    aY=ROBOT_TOOL_ORIENTATION["B"],
+    aZ=ROBOT_TOOL_ORIENTATION["A"],
+)
+r_robotroot_tool = r_robotroot_base @ r_base_tool
+
+# INITIALIZE ROBOT CLASS
+robot = rokin.RobotOPW(
+    robot_id=ROBOT_ID,
+    robot_geometry=ROBOT_GEOMETRY,
+    robot_rotation_sign=ROBOT_ROTATION_SIGN,
+    robot_rotation_limit=ROBOT_ROTATION_LIMIT,
+    robot_rotation_offset=ROBOT_ROTATION_OFFSET,
+    robot_tool_offset=ROBOT_TOOL_OFFSET,
 )
 
-gcode_filtered.insert(0, ROBOT_START_LINE)
-gcode_filtered.append(ROBOT_END_LINE)
+# Calculation of Start and End coordinates as well as check if within limits
+start_pos_robotroot, start_pos_status = robot.forward_kinematics(ROBOT_START_POSITION)
+end_pos_robotroot, end_pos_status = robot.forward_kinematics(ROBOT_END_POSITION)
 
+if not start_pos_status:
+    print(f"[ERROR] Start position of robot {ROBOT_START_POSITION} is not reachable")
+elif not end_pos_status:
+    print(f"[ERROR] End position of robot {ROBOT_END_POSITION} is not reachable")
+
+start_pos_base = t_base_robotroot @ start_pos_robotroot
+end_pos_base = t_base_robotroot @ end_pos_robotroot
+
+robot_start_point = {
+    "Move": "G0",
+    "X": round(float(start_pos_base[0, 3]), 2),
+    "Y": round(float(start_pos_base[1, 3]), 2),
+    "Z": round(float(start_pos_base[2, 3]), 2),
+    "E_Rel": 0,
+    "Layer": 0,
+    "Type": "travel",
+    "Layer_Height": 0,
+    "Reachable": start_pos_status,
+}
+robot_end_point = {
+    "Move": "G0",
+    "X": round(float(end_pos_base[0, 3]), 2),
+    "Y": round(float(end_pos_base[1, 3]), 2),
+    "Z": round(float(end_pos_base[2, 3]), 2),
+    "E_Rel": 0,
+    "Layer": layer_max,
+    "Type": "travel",
+    "Layer_Height": 0,
+    "Reachable": end_pos_status,
+}
 
 # ----------------ROBOT SIMULATION----------------
-# # calculate Transformation matrix for point in $BASE (account for tool_offset) and return T for inverse kinematic
-# transf_matrix = []
-# joint_angles = []
-# for point in gcode_necessary:
-#     # calculate T for point in points
-#     point_transf_robotroot = trfgc.transform_gcode_point(
-#         point=point,
-#         tool_orientation=ROBOT_TOOL_ORIENTATION,
-#         tool_offset=ROBOT_TOOL_OFFSET,
-#         robot_base=ROBOT_BASE,
-#     )
-#     transf_matrix.append(point_transf_robotroot)
-#
-#     # calculate all joint angles for point in points
-#     robot_angles = robot.inverse_kinematics(point_transf_robotroot)
-#     joint_angles.append(robot_angles)
-#
-# for line in joint_angles:
-#     print(line)
+status = []
+for index, line in enumerate(gcode_filtered):
+    # Transform point in BASE to point in ROBOTROOT
+    point_base = [
+        line["X"],
+        line["Y"],
+        line["Z"],
+        1,
+    ]
+    point_robotroot = Transformation.invert(t_base_robotroot) @ point_base
+    # Set up homogeneous transformation Matrix
+    point_hom = np.eye(4)
+    point_hom[:3, :3] = r_robotroot_tool
+    point_hom[:3, 3] = point_robotroot[:3]
 
-# ----------------RHINO FILE----------------
-# Process G-Code for Rhino file
-extended_gcode = prcrh.add_point_info(gcode_filtered)
+    ik_point = robot.inverse_kinematics(point_hom)
 
-print("Extended G-Code:\n")
-for line in extended_gcode:
+    if not ik_point:
+        print(
+            f"[ERROR] Point {line['X']}, {line['Y']}, {line['Z']} on printbed is not reachable"
+        )
+        line.update({"Reachable": False})
+    else:
+        line.update({"Reachable": True})
+
+# insert start and end point into the list
+gcode_filtered.insert(0, robot_start_point)
+gcode_filtered.append(robot_end_point)
+
+for line in gcode_filtered:
     print(line)
 
-# Get filepath of generated Rhino file
-filepath = crtrh.initialize_rhino_file(
-    OUTPUT_DIRECTORY_RHINO, OUTPUT_FILE_RHINO, LAYER_MAX
-)
+# ----------------KRL FORMATING OF G-CODE----------------
+# # Set Start and End Code parts from Python values
+# KRL_NAME = flnkr.set_filename_krl(OUTPUT_NAME)
+# ROBOT_START_CODE_PY = scpkr.set_start_code_python(layer_max)
+# ROBOT_END_CODE_PY = []
+#
+# # Formats G-Code to KRL and appends tool-head orientation
+# krl_lines = mdfkr.krl_format(
+#     gcode_filtered[1:-1],
+#     type_mapping=ROBOT_TYPE_NUMBER,
+#     a=ROBOT_TOOL_ORIENTATION["A"],
+#     b=ROBOT_TOOL_ORIENTATION["B"],
+#     c=ROBOT_TOOL_ORIENTATION["C"],
+#     vel=ROBOT_VEL_CP,
+#     x_max=BED_SIZE_X,
+#     y_max=BED_SIZE_Y,
+#     z_max=BED_SIZE_Z,
+# )
+#
+# for line in krl_lines:
+#     print(line)
+#
+# # Export of KRL-File
+# expkr.export_to_src(
+#     krl_lines,
+#     KRL_NAME,
+#     ROBOT_START_CODE_JSON,
+#     ROBOT_START_CODE_PY,
+#     ROBOT_END_CODE_JSON,
+#     ROBOT_END_CODE_PY,
+#     OUTPUT_DIRECTORY,
+#     OUTPUT_NAME,
+# )
 
-# Generate toolpath in Rhino
-drgrh.create_geometry(
-    extended_gcode,
-    filepath,
-    RHINO_LINE_TYPES,
-    RHINO_LINE_WIDTHS,
-    RHINO_POINT_TYPES,
-    RHINO_POINT_PRINT,
-)
-# Generate printbed in Rhino
-drprh.add_print_bed(
-    filepath, x_max=BED_SIZE_X, y_max=BED_SIZE_Y, parent_layer="printbed"
-)
+
+# ----------------RHINO FILE----------------
+# # Process G-Code for Rhino file
+# extended_gcode = prcrh.add_point_info(gcode_filtered)
+#
+# print("Extended G-Code:\n")
+# for line in extended_gcode:
+#     print(line)
+#
+# # Get filepath of generated Rhino file
+# filepath = crtrh.initialize_rhino_file(
+#     OUTPUT_DIRECTORY_RHINO, OUTPUT_FILE_RHINO, layer_max
+# )
+#
+# # Generate toolpath in Rhino
+# drgrh.create_geometry(
+#     extended_gcode,
+#     filepath,
+#     RHINO_LINE_TYPES,
+#     RHINO_LINE_WIDTHS,
+#     RHINO_POINT_TYPES,
+#     RHINO_POINT_PRINT,
+# )
+# # Generate printbed in Rhino
+# drprh.add_print_bed(
+#     filepath, x_max=BED_SIZE_X, y_max=BED_SIZE_Y, parent_layer="printbed"
+# )
 
 
 # if input_check:

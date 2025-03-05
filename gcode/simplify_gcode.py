@@ -84,7 +84,7 @@ def simplify_gcode(
             # Update coordinates
             current_x, current_y, current_z = new_x, new_y, new_z
 
-            # **Layer-Erhöhung bei jeder Z-Änderung**
+            # Increase layer count if z-value changes
             if new_z > last_layer_height_z:
                 current_layer += 1
                 layer_height = abs(new_z - last_layer_height_z)

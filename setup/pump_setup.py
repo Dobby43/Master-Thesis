@@ -17,11 +17,17 @@ def get_pump_settings(json_file: str) -> dict[str, any]:
     with open(json_file, "r") as file:
         config = json.load(file)
 
-    # Access the "Rhino" section in "settings"
-    rhino_config = config["settings"]["Pump"]
-    retract = rhino_config["retract"]["value"]
+    # Access the "Pump" section in "settings"
+    pump_config = config["settings"]["Pump"]
+    retract = pump_config["retract"]["value"]
+    characteristic_curve = pump_config["characteristic_curve"]["value"]
+    filament_diameter = pump_config["filament_diameter"]["value"]
+    linetype_flow = pump_config["linetype_flow"]["value"]
 
     # Return a dictionary with all Pump settings
     return {
         "retract": retract,
+        "characteristic_curve": characteristic_curve,
+        "filament_diameter": filament_diameter,
+        "linetype_flow": linetype_flow,
     }

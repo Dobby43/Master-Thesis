@@ -3,6 +3,7 @@ import json
 from typing import Any, Dict, Set
 
 
+# TODO: use input data as f string
 def extract_placeholders_from_robot(json_data: Dict[str, Any]) -> Set[str]:
     """
     Extracts placeholders from 'Robot' start_code[value] and end_code[value] in the JSON data.
@@ -161,9 +162,6 @@ def get_robot_settings(json_file: str) -> Dict[str, Any]:
 
     return {
         "id": updated_robot_section.get("id", {}).get("value"),
-        "nozzle_diameter": updated_robot_section.get("nozzle_diameter", {}).get(
-            "value"
-        ),
         "geometry": updated_robot_section.get("geometry", {}).get("value"),
         "base_coordinates": updated_robot_section.get("base_coordinates", {}).get(
             "value"

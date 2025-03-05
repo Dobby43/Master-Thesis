@@ -51,6 +51,8 @@ def compute_scaling_and_rotation_matrix(scaling_params: Dict[str, float]) -> str
     return transformation_string
 
 
+# TODO: auf rotation class umschreiben
+
 # Example usage
 if __name__ == "__main__":
     scaling_params = {
