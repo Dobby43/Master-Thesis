@@ -79,6 +79,12 @@
                 "value": {"A1": 0,"A2": -90,"A3": 0,"A4": 0,"A5": 0,"A6": 0},
                 "type": "dict[str,float]"
             },
+            "base_radius": {
+                "description": "Radius [mm] around A1 axis of rotation; ensures the robot head never intersects with its own base (around joint axis A1)",
+                "value": 500,
+                "type": "float"
+
+            },
             "start_code": {
                 "description": "Robot start code; If new categories ar defined inside this .json file, with [category_name][value], they can be referenced with {category_name} and the corresponding value wil be inserted; only names with letters and numbers seperated by '_' are valid",
                 "value": [
@@ -206,13 +212,13 @@
             "description": "Gives necessary information on Pump capability and technical data",
             "retract": {
                 "description": "States if pump is capable of retraction; This will include retract moves from generated G-Code",
-                "value": false,
+                "value": true,
                 "type": "bool"
             },
             "characteristic_curve": {
-                "description": "Gives the function of RPM to Flow of the Pump in [QM/RPM]",
-                "value": {"100": 10, "1000": 20},
-                "type": "dict[list[float,float]]"
+                "description": "Gives the function of RPM to Flow of the Pump in [QM,RPM]",
+                "value": [[10,100],[20,220],[30,360]],
+                "type": "list[list[float,float]]"
             },
             "filament_diameter": {
                 "description": "diameter of filament in [mm]",
@@ -250,7 +256,8 @@
                         "layer_height": "15",
                         "infill_sparse_density": "20",
                         "roofing_layer_count": "1",
-                        "mesh_position_x": "412.5"
+                        "mesh_position_x": "412.5",
+                        "retraction_enable": "true"
                     },
                     "type": "dict[str,str]"
                 },

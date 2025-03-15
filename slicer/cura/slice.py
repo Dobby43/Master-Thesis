@@ -35,19 +35,19 @@ def slice(
     # Validate STL input file
     stl_path = Path(import_directory_stl) / stl_file
     if not stl_path.exists():
-        return False, f"Error: STL file not found at {stl_path}."
+        return False, f"[ERROR] STL file not found at {stl_path}."
     if stl_path.suffix.lower() != ".stl":
-        return False, f"Error: {stl_path} is not a valid STL file."
+        return False, f"[ERROR] {stl_path} is not a valid STL file."
 
     # Validate CuraEngine path
     cura_engine = Path(cura_engine_path)
     if not cura_engine.exists() or not cura_engine.is_file():
-        return False, f"Error: CuraEngine not found at {cura_engine_path}."
+        return False, f"[ERROR] CuraEngine not found at {cura_engine_path}."
 
     # Validate Cura definition file
     cura_def = Path(cura_def_file)
     if not cura_def.exists() or not cura_def.is_file():
-        return False, f"Error: Cura definition file not found at {cura_def_file}."
+        return False, f"[ERROR] Cura definition file not found at {cura_def_file}."
 
     # Prepare G-code output directory and file
     gcode_path = Path(export_directory_gcode)
@@ -78,20 +78,20 @@ def slice(
     )
 
     # Debugging: Print the constructed command
-    print("Generated Command:", " ".join(command))
+    print("[INFO] Generated Command:\n", ",\n".join(command))
 
     try:
         # Execute the slicing command
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         return (
             True,
-            f"G-code getting generated at {gcode_file}\nOutput:\n{result.stdout}",
+            f"[INFO] G-Code getting generated at {gcode_file}\nOutput:\n{result.stdout}",
         )
 
     except subprocess.CalledProcessError as error:
         # Handle Cura slicing errors
         error_message = error.stderr if error.stderr else error.stdout
-        return False, f"Error during slicing:\n{error_message}"
+        return False, f"[ERROR] Error during slicing:\n{error_message}"
 
     except Exception as e:
         # Catch unexpected errors

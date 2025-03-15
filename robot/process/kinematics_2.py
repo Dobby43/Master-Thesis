@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.constants import precision
+import math
 
 from robot.pre_process.mathematical_operators import Rotation
 
@@ -46,7 +47,7 @@ class RobotOPW:
         )
         self.lim = robot_rotation_limit
 
-        self.precision = 15
+        self.precision = 5
 
     def __str__(self):
         geometry = f"a1={self.a1}, a2={self.a2}, b={self.b}, c1={self.c1}, c2={self.c2}, c3={self.c3}, c4={self.c4}"
@@ -292,7 +293,7 @@ class RobotOPW:
             # theta1_1 = np.atan2(cy0, cx0) - np.atan2(self.b, n_x1 + self.a1)
             # theta1_2 = np.atan2(cy0, cx0) + np.atan2(self.b, n_x1 + self.a1) - np.pi
 
-            # adjusted version (to work within +-180°)
+            # adjusted version to work within (+-180°)
             # theta1_1 = (np.atan2(cy0, cx0) - np.atan2(self.b, n_x1 + self.a1) + np.pi) % (2 * np.pi) - np.pi
             # theta1_2 = (np.atan2(cy0, cx0) + np.atan2(self.b, n_x1 + self.a1) - np.pi + np.pi) % (2 * np.pi) - np.pi
 
@@ -386,7 +387,21 @@ class RobotOPW:
         for j in range(filtered_pos_solution_rad.shape[1]):
             theta_1, theta_2, theta_3 = filtered_pos_solution_rad[:, j]
 
-            # Precompute sines and cosines
+            # Calculate the rotational matrix from base to wrist center
+            s1, c1 = np.sin(theta_1), np.cos(theta_1)
+            s23, c23 = np.sin(theta_2 + theta_3), np.cos(theta_2 + theta_3)
+
+            r0c = np.array(
+                [[c1 * c23, -c1 * s23, s1], [s1 * c23, -s1 * s23, -c1], [s23, c23, 0]]
+            )
+
+            # Calculate the rotational matrix from wrist center to nullframe / endefector
+            rce = r0c.T @ r0e
+
+            # Calculate the angels from this rotation matrix
+            angles = Rotation.to_euler_angles(rce)
+
+            # Precompute sinus and cosinus
             s_1 = np.sin(theta_1)
             c_1 = np.cos(theta_1)
             s_23 = np.sin(theta_2 + theta_3)
@@ -394,24 +409,42 @@ class RobotOPW:
 
             # Calculate m_i
             m = e13 * s_23 * c_1 + e23 * s_23 * s_1 + e33 * c_23
-
-            # Calculate theta_4
-            theta_4_i = np.atan2(
-                e23 * c_1 - e13 * s_1, e13 * c_23 * c_1 + e23 * c_23 * s_1 - e33 * s_23
-            )
-            theta_4_q = theta_4_i + np.pi
-
             # Calculate theta_5
-            theta_5_i = np.atan2(np.sqrt(1 - m**2), m)
+            # max() to filter for numerical inaccuracies that would yield to a negativ value inside sqrt
+            theta_5_i = np.atan2(math.sqrt(max(1 - m**2, 0)), m)
             theta_5_q = -theta_5_i
 
-            # Calculate theta_6
-            theta_6_i = np.atan2(
-                e12 * s_23 * c_1 + e22 * s_23 * s_1 + e32 * c_23,
-                -e11 * s_23 * c_1 - e21 * s_23 * s_1 - e31 * c_23,
-            )
+            # Check if one of the values of Theta 5 is a singularity (theta_5 = 0)
+            # 3. Mistake (no valid solution for singularity)
+            if np.isclose(theta_5_i, 0, atol=1e-6) or np.isclose(
+                theta_5_q, 0, atol=1e-6
+            ):
 
-            theta_6_q = theta_6_i - np.pi
+                # If Theta 5 = 0 choose alternative way of calculating Theta 4 and 6
+                # Fix Theta 4 = 0 as Axis 4 and 6 are co-linear (gimbal-lock)
+                theta_4_i = 0
+                theta_4_q = 0
+                # Calculate Theta 6 from the rotational matrix rce
+                theta_6_i = np.deg2rad(angles[1])
+
+                theta_6_q = theta_6_i - 2 * np.pi
+
+            else:
+                # Following Brandstötter convention
+                # Calculate theta_4
+                theta_4_i = np.atan2(
+                    e23 * c_1 - e13 * s_1,
+                    e13 * c_23 * c_1 + e23 * c_23 * s_1 - e33 * s_23,
+                )
+                theta_4_q = theta_4_i + np.pi
+
+                # Calculate theta_6
+                theta_6_i = np.atan2(
+                    e12 * s_23 * c_1 + e22 * s_23 * s_1 + e32 * c_23,
+                    -e11 * s_23 * c_1 - e21 * s_23 * s_1 - e31 * c_23,
+                )
+
+                theta_6_q = theta_6_i - np.pi
 
             # C) Combine all solutions into the final matrix in radians
             final_solutions_rad.append(
@@ -436,6 +469,7 @@ class RobotOPW:
                 for i in range(final_solutions_deg.shape[1])
             ]
         )
+
         # print("final solution corrected")
         # for line in final_solutions_corrected:
         #     print(line)
@@ -460,9 +494,6 @@ class RobotOPW:
             }
             for j in range(num_solutions)
         ]
-        # print("solutions list")
-        # for line in solutions_list:
-        #     print(line)
 
         return solutions_list
 

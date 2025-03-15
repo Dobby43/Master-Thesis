@@ -177,6 +177,7 @@ def get_robot_settings(json_file: str) -> Dict[str, Any]:
         "rotation_offset": updated_robot_section.get("rotation_offset", {}).get(
             "value"
         ),
+        "base_radius": updated_robot_section.get("base_radius", {}).get("value"),
         "start_code": updated_robot_section.get("start_code", {}).get("value", []),
         "end_code": updated_robot_section.get("end_code", {}).get("value", []),
         "bed_size": updated_robot_section.get("bed_size", {}).get("value"),

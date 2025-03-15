@@ -92,6 +92,7 @@ robot_settings = rosu.get_robot_settings(setup_path)
 # Robot
 ROBOT_ID = robot_settings["id"]
 ROBOT_GEOMETRY = robot_settings["geometry"]
+ROBOT_BASE_RADIUS = robot_settings["base_radius"]
 
 # Coordinate frames
 ROBOT_BASE = robot_settings["base_coordinates"]
@@ -118,6 +119,8 @@ BED_SIZE = {
 
 # Print speed
 ROBOT_VEL_CP = robot_settings["print_speed"]
+
+# TODO: Travel speed einführen
 
 # Line_type translation to int value
 ROBOT_TYPE_NUMBER = robot_settings["type_number"]
@@ -163,6 +166,7 @@ if SLICER == "cura":
         "machine_depth": BED_SIZE["Y"],
         "machine_height": BED_SIZE["Z"],
         "mesh_rotation_matrix": CURA_SCALING,
+        "filament_diameter": PUMP_FILAMENT_DIAMETER,
         "support_enable": "false",
         "prime_blob_enable": "false",
         "adhesion_type": "none",
@@ -241,11 +245,13 @@ layer_max = gcode_necessary[-1]["Layer"]
 
 
 # ----------------PUMP IMPLEMENTATION----------------
-print("[INFO] Adjusting G-Code to Pump settings")
-if PUMP_RETRACT is False:
-    gcode_filtered = filtr.filter_retracts(gcode_necessary)
-else:
-    gcode_filtered = gcode_necessary
+
+# TODO: retract can be set via slicer
+# print("[INFO] Adjusting G-Code to Pump settings")
+# if PUMP_RETRACT is False:
+#     gcode_filtered = filtr.filter_retracts(gcode_necessary)
+# else:
+gcode_filtered = gcode_necessary
 
 # ----------------PYVISTA PLOT----------------
 plotter = plt.plot_bed(
@@ -287,6 +293,7 @@ print(f"[INFO] Initialising class for {ROBOT_ID}")
 robot = rokin.RobotOPW(
     robot_id=ROBOT_ID,
     robot_geometry=ROBOT_GEOMETRY,
+    robot_base_radius=ROBOT_BASE_RADIUS,
     robot_rotation_sign=ROBOT_ROTATION_SIGN,
     robot_rotation_limit=ROBOT_ROTATION_LIMIT,
     robot_rotation_offset=ROBOT_ROTATION_OFFSET,
