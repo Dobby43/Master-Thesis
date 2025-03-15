@@ -42,9 +42,7 @@ def test_inverse_kinematics(robot, test_data):
         assert (
             len(ik_solutions_raw) == 0
         ), "Erwartet KEINE IK-Lösungen, aber Daten gefunden!"
-        print(
-            "Test bestanden: Keine erwarteten Lösungen – keine berechneten Lösungen."
-        )
+        print("Test bestanden: Keine erwarteten Lösungen – keine berechneten Lösungen.")
         return
 
     # Erwartete Lösungen umwandeln: [{ "A1": val, "A2": val, ..., "A6": val }, ...]
@@ -96,6 +94,4 @@ def test_inverse_kinematics(robot, test_data):
         len(validated_solutions) <= num_expected_solutions
     ), f"Zu viele Lösungen gefunden ({len(validated_solutions)} > {num_expected_solutions})!"
 
-    print(
-        f"Test erfolgreich: {len(validated_solutions)} passende Lösungen gefunden."
-    )
+    print(f"Test erfolgreich: {len(validated_solutions)} passende Lösungen gefunden.")
