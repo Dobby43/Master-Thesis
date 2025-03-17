@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.constants import precision
+from scipy.spatial.transform import Rotation as R
 import math
 
 from robot.pre_process.mathematical_operators import Rotation
@@ -389,17 +390,24 @@ class RobotOPW:
 
             # Calculate the rotational matrix from base to wrist center
             s1, c1 = np.sin(theta_1), np.cos(theta_1)
+            s2, c2 = np.sin(theta_2), np.cos(theta_2)
+            s3, c3 = np.sin(theta_3), np.cos(theta_3)
             s23, c23 = np.sin(theta_2 + theta_3), np.cos(theta_2 + theta_3)
 
             r0c = np.array(
-                [[c1 * c23, -c1 * s23, s1], [s1 * c23, -s1 * s23, -c1], [s23, c23, 0]]
+                [
+                    [c1 * c2 * c3 - c1 * s2 * s3, -s1, c1 * c2 * s3 + c1 * s2 * c3],
+                    [s1 * c2 * c3 - s1 * s2 * s3, c1, s1 * c2 * s3 + s1 * s2 * c3],
+                    [-s2 * c3 - c2 * s3, 0, -s2 * s3 + c2 * c3],
+                ]
             )
 
-            # Calculate the rotational matrix from wrist center to nullframe / endefector
+            # Calculate the rotational matrix from wrist center to nullframe / endeffector
             rce = r0c.T @ r0e
 
             # Calculate the angels from this rotation matrix
-            angles = Rotation.to_euler_angles(rce)
+            # angles = Rotation.to_euler_angles(rce)
+            angles = R.from_matrix(rce).as_euler("ZYZ", degrees=True)
 
             # Precompute sinus and cosinus
             s_1 = np.sin(theta_1)
@@ -422,10 +430,12 @@ class RobotOPW:
 
                 # If Theta 5 = 0 choose alternative way of calculating Theta 4 and 6
                 # Fix Theta 4 = 0 as Axis 4 and 6 are co-linear (gimbal-lock)
+
                 theta_4_i = 0
                 theta_4_q = 0
                 # Calculate Theta 6 from the rotational matrix rce
-                theta_6_i = np.deg2rad(angles[1])
+                theta_6_i = np.deg2rad(angles[0])
+                # alternative: theta_6_i = np.arctan2(rce[1, 0], rce[0, 0])
 
                 theta_6_q = theta_6_i - 2 * np.pi
 
