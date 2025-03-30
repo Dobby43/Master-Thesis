@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Union
 
 
 def get_max_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
@@ -7,11 +7,9 @@ def get_max_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
     DESCRIPTION:
     Searches G-code lines to determine the maximum X, Y, and Z coordinate values.
 
-    ARGUMENTS:
-    gcode: A list of G-code lines as strings.
+    :param gcode: A list of G-code lines.
 
-    RETURNS:
-    A dictionary containing the maximum X, Y, and Z coordinate values. Returns None if no values are found.
+    :return: A dictionary containing the maximum X, Y, and Z coordinate values. Returns None if no values found.
     """
     x_max, y_max, z_max = None, None, None
 
@@ -42,13 +40,13 @@ def get_min_values(gcode: List[str]) -> Dict[str, Union[float, None]]:
     DESCRIPTION:
     Searches G-code lines to determine the minimum X, Y, and Z coordinate values.
 
-    ARGUMENTS:
-    gcode: A list of G-code lines as strings.
+    :param gcode: A list of G-code lines as strings.
 
-    RETURNS:
-    A dictionary containing the minimum X, Y, and Z coordinate values. Returns None if no values are found.
+    :return: A dictionary containing the minimum X, Y, and Z coordinate values. Returns None if no values found.
     """
     x_min, y_min, z_min = None, None, None
+
+    # Pattern to match optional blocks in G-code lines
     pattern = r"(G[01])?(?:\s*F\d+)?(?:\s*X([-?\d\.]+))?(?:\s*Y([-?\d\.]+))?(?:\s*Z([-?\d\.]+))?(?:\s*E[-?\d\.]+)?"
 
     for line in gcode:

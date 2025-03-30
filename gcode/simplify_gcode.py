@@ -2,27 +2,52 @@ import re
 from typing import List, Dict, Union
 
 
-def translate_type(type_name: str, slicer: str, type_values: Dict) -> str:
+def translate_type(
+    line_type_name: str, slicer: str, line_type_dict: Dict[str, list[str]]
+) -> str:
     """
-    Translates a raw type name from the slicer into a unified category.
+    DESCRIPTION:
+    Translates a raw type name into a unified category using a flat type_dict.
+
+    :param line_type_name: The raw type string found in the G-code.
+    :param slicer: name of the used slicer defined in setup.Slicer.slicer_name.json
+    :param line_type_dict: A dictionary containing the raw type names and unified names.
+
+    :return:  The matching category (lowercase) or "unknown" if not found.
     """
-    for category, slicers in type_values.items():
-        if type_name in slicers.get(slicer, []):
+    for category, raw_types in line_type_dict.items():
+        if line_type_name in raw_types:
             return category.lower()
+
+    print(f"[WARNING] Type '{line_type_name}' not recognized.")
+    print(f"[INFO] Check setup.{slicer}.line_types_dict.json for linetypes.")
+    print(f"[INFO] Type '{line_type_name}' named as 'unknown'.")
     return "unknown"
 
 
 def simplify_gcode(
     gcode: List[str],
     slicer: str,
-    type_values: Dict,
+    type_dict: Dict,
     x_min: float,
     y_min: float,
     z_min: float,
 ) -> List[Dict[str, Union[str, float, int, None]]]:
     """
+    DESCRIPTION:
     Processes G-code and extracts relevant attributes, including layer height.
-    Determines layers dynamically based on Z changes, including for travel moves.
+    Determines layers dynamically based on Z changes, excluding z-height changes for travel moves.
+
+    :param gcode: The raw G-code.
+    :param slicer: name of the used slicer defined in setup.Slicer.slicer_name.json
+    :param type_dict: A dictionary containing the raw type names and unified names.
+    :param x_min: The minimum x-coordinate of the gcode (as start value)
+    :param y_min: The minimum y-coordinate of the gcode (as start value)
+    :param z_min: The minimum z-coordinate of the gcode (as start value)
+
+    :return: A list of dictionaries containing the extracted attributes.
+    [{"Move":,"X":,"Y":,"Z":, "E_Rel":, "Layer":, "Type":, "Layer_Height":},]
+
     """
 
     # Step 1: Determine extrusion mode (M82/M83)
@@ -35,7 +60,6 @@ def simplify_gcode(
     g92_pattern = r"G92\s+E0"  # Matches "G92 E0"
 
     # Step 3: Initialize state variables
-    precision = 3
     current_x, current_y, current_z = x_min, y_min, z_min
     last_extrusion = 0.0
     retract_value = None
@@ -64,12 +88,11 @@ def simplify_gcode(
         # Match type and translate to unified category
         if type_match := re.match(type_pattern, line):
             raw_type = type_match.group(1)
-            current_type = translate_type(raw_type, slicer, type_values)
+            current_type = translate_type(raw_type, slicer, type_dict)
             continue
 
         # Match G-code coordinates
         if gcode_match := re.match(gcode_pattern, line):
-            move_type = gcode_match.group(1) or "G0"
             new_x = float(gcode_match.group(2)) if gcode_match.group(2) else current_x
             new_y = float(gcode_match.group(3)) if gcode_match.group(3) else current_y
             new_z = float(gcode_match.group(4)) if gcode_match.group(4) else current_z
@@ -85,7 +108,7 @@ def simplify_gcode(
             current_x, current_y, current_z = new_x, new_y, new_z
 
             # Increase layer count if z-value changes
-            if new_z > last_layer_height_z:
+            if e_relative > 0 and new_z > last_layer_height_z:
                 current_layer += 1
                 layer_height = abs(new_z - last_layer_height_z)
                 last_layer_height_z = new_z
@@ -123,10 +146,10 @@ def simplify_gcode(
             # Build the processed G-code entry
             gcode_entry = {
                 "Move": move,
-                "X": round(current_x, precision),
-                "Y": round(current_y, precision),
-                "Z": round(current_z, precision),
-                "E_Rel": round(e_relative, precision) if move == "G1" else 0,
+                "X": current_x,
+                "Y": current_y,
+                "Z": current_z,
+                "E_Rel": e_relative if move == "G1" else 0,
                 "Layer": current_layer,
                 "Type": type_,
                 "Layer_Height": layer_height,

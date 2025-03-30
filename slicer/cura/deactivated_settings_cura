@@ -1,8 +1,0 @@
--s support_enable="false"
--s prime_blob_enable="false"
--s adhesion_type="none" #Disables Raft, Skirt and Brim
--s ironing_enabled="false"
--s interlocking_enable="false" #Only interesting for Multy Material Printing
--s prime_tower_enable="false" #Only interesting for Multy Material Printing
--s machine_use_extruder_offset_to_offset_coords #No dual Head setup
--s mold_enabled="false"

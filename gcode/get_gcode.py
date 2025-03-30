@@ -6,12 +6,10 @@ def get_gcode_lines(directory: str, file_name: str) -> list[str]:
     DESCRIPTION:
     Reads a G-code file from the specified directory and returns its lines as a list.
 
-    ARGUMENTS:
-    directory: The directory where the G-code file is located.
-    file_name: The name of the G-code file.
+    :param directory: The directory to search for G-code files.
+    :param file_name: The name of the G-code file.
 
-    RETURNS:
-    A list of lines from the G-code file, where each line is a string containing one line of G-code.
+    :return: A list of lines from the G-code file.
     """
     # Combine the directory and file name using Path
     file_path = Path(directory) / file_name
@@ -22,5 +20,5 @@ def get_gcode_lines(directory: str, file_name: str) -> list[str]:
             gcode_lines = file.readlines()
             return gcode_lines
     except FileNotFoundError:
-        print(f"File '{file_path}' not found.")
+        print(f"[ERROR] File '{file_path}' not found.")
         return []

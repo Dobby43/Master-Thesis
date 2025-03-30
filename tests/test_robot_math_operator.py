@@ -1,5 +1,5 @@
 import numpy as np
-from robot.pre_process.mathematical_operators import (
+from robot.mathematical_operators import (
     Transformation,
     Rotation,
     Translation,

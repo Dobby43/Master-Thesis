@@ -1,105 +1,274 @@
+def format_value(value: float, width: int, precision: int = 2) -> str:
+    """
+    DESCRIPTION:
+    Formats a float with a sign, a space, and right-aligned number.
+    Ensures decimal points align across all formatted numbers.
+    Example: '+   90.00', '-  900.00'
+
+    :param value: The value to format
+    :param width: The width of the formatted number
+    :param precision: The number of significant digits after the decimal point.
+
+    :return: The formatted value as a sting
+    """
+    sign = "+" if value >= 0 else "-"
+    abs_number = f"{abs(value):.{precision}f}"
+    return f"{sign} {abs_number.rjust(width - 2)}"  # 2 Zeichen für sign + space
+
+
+def calc_field_width(min_val: float, max_val: float, precision: int) -> int:
+    """
+    DESCRIPTION:
+    Calculates the total width required for the numeric part,
+    including sign and space, to ensure aligned formatting.
+
+    :param min_val: minimum value in a given direction (x,y,z) from G-Code
+    :param max_val: maximum value in a given direction (x,y,z) from G-Code
+    :param precision: number of decimal places to round up
+
+    :return: space needed to fit the maximum length of characters including sign and space
+    """
+    abs_vals = [abs(min_val), abs(max_val)]
+    number_width = max(len(f"{v:.{precision}f}") for v in abs_vals)
+    return number_width + 2  # 1 for sign, 1 for space
+
+
 def krl_format(
     gcode: list[dict[str, str | float | int | None]],
     type_mapping: dict[str, int],
     a: int,
     b: int,
     c: int,
-    vel: float,
-    x_max: float,
-    y_max: float,
-    z_max: float,
-) -> list[str]:
+    vel_cp: float,
+    vel_tvl: float,
+    pump_control: bool,
+    precision: int,
+    axis_min: dict[str, float],
+    axis_max: dict[str, float],
+    timer: int,
+    mlt: int,
+    split_layers: bool,
+    project_name: str,
+) -> list[list[str]] | list[str]:
     """
-    DESCRIPTION:
-    Converts processed G-code into a properly formatted KRL program.
+    DESCRIPTION
+    Formatting given values from a list of dictionaries into strings matching krl format
 
-    ARGUMENTS:
-    gcode: A list of dictionaries containing processed G-code entries.
-    type_mapping: A dictionary mapping types directly to integers (type numbers).
-    a, b, c: Rotational axis angles (A, B, C) in degrees.
-    vel: The velocity of the robot during printing.
-    x_max, y_max, z_max: Maximum print bed dimensions used for field width calculation.
+    :param gcode: list of necessary information on coordinates Nullframe orientation and flow (for external axis E1)
+    :param type_mapping: dictionary mapping written types to integers specified in setup.Robot.type_number.json
+    :param a: orientation of Nullframe around z-axis in robot convention
+    :param b: orientation of Nullframe around y-axis in robot convention
+    :param c: orientation of Nullframe around x-axis in robot convention
+    :param vel_cp: printing velocity annotated in krl before each extrusion move (ready to be updated to linetype specific velocity in the future)
+    :param vel_tvl: travel velocity annotated in krl before each non-extrusion move
+    :param pump_control: specifies if the pump is controlled on the external axis via rpm or voltage
+    :param precision: specifies the amount of digits exported
+    :param axis_min: to determine the amount of space needed for each coordinate X,Y,Z such that the decimal placed match in columns
+    :param axis_max: to determine the amount of space needed for each coordinate X,Y,Z such that the decimal placed match in columns
+    :param timer: specifies which timer is used to track minimum layer time
+    :param mlt: minimum layer time in ms (robot waits till timer > mlt before starting new layer)
+    :param split_layers: specifies if .src file is split into multiple layers
+    :param project_name: project name with a maximum length of 25 characters in total
 
-    RETURNS:
-    A list of KRL-formatted lines with properly aligned decimal places and signs.
+    :return: list or nested list of .src lines depending on if file is split or not
     """
 
-    krl_lines = []
+    # Setup of initial values
     previous_layer = None
     previous_type = None
-    first_position = True  # First movement should be a PTP movement
+    position = -1
 
-    # Calculate the required field width for alignment based on max values
-    def calc_field_width(max_value: float, decimal_places: int) -> int:
-        return (
-            len(str(int(max_value))) + decimal_places + 3
-        )  # +3 for sign, space, and dot
+    krl_lines = []
+    layer_blocks = []
+    current_block = []
 
-    field_width_x = calc_field_width(x_max, 2)
-    field_width_y = calc_field_width(y_max, 2)
-    field_width_z = calc_field_width(z_max, 2)
-    field_width_rot = 4  # Fixed width for A, B, C
-    field_width_extra = 2  # Fixed width for E1 - E4
-
-    # Formatting functions
-    def format_float(value: float, width: int) -> str:
-        """Formats float values with a fixed number of decimal places and sign."""
-        return f"{'+' if value >= 0 else '-'} {abs(value):>{width - 2}.2f}"
-
-    def format_int(value: int, width: int) -> str:
-        """Formats integer values with a fixed width and sign."""
-        return f"{'+' if value >= 0 else '-'} {abs(value):>{width - 2}}"
+    max_lengths = {
+        "X": calc_field_width(axis_min["x"], axis_max["x"], precision),
+        "Y": calc_field_width(axis_min["y"], axis_max["y"], precision),
+        "Z": calc_field_width(axis_min["z"], axis_max["z"], precision),
+        "Flow": calc_field_width(
+            min(entry["Flow"] for entry in gcode),
+            max(entry["Flow"] for entry in gcode),
+            precision,
+        ),
+        "Voltage": calc_field_width(
+            min(entry["Voltage"] for entry in gcode),
+            max(entry["Voltage"] for entry in gcode),
+            precision,
+        ),
+        "A": calc_field_width(a, a, precision),
+        "B": calc_field_width(b, b, precision),
+        "C": calc_field_width(c, c, precision),
+    }
 
     for entry in gcode:
-        # Extract values from G-code entry
-        x = entry.get("X", 0)
-        y = entry.get("Y", 0)
-        z = entry.get("Z", 0)
-        current_layer = entry.get("Layer")
-        move_type = entry.get("Move")
-        current_type = entry.get("Type", "unknown").lower()
+        current_layer = entry["Layer"]
+        current_type = entry["Type"]
+        type_number = type_mapping.get(current_type, 0)
 
-        # Determine type number from mapping
-        type_number = type_mapping.get(current_type, 99)  # Default to 99 if not found
+        # Saves all code lines of a layer into a temporary list to prepare for splitting of .src file
+        line_buffer = []
 
-        # Insert layer change if needed
-        if current_layer != previous_layer:
-            krl_lines.append(f"\nLAYER = {current_layer}")
+        # Layer und Timer Handling
+        if current_layer == 0 and previous_layer is None:
+            line_buffer.append(f"\nLAYER = {current_layer}")
+            previous_layer = current_layer
+        # Insert wait for mlt and stop as well as reset timer
+        elif current_layer != previous_layer:
+            line_buffer.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
+            line_buffer.append(f"\nLAYER = {current_layer}")
+            line_buffer.append(f"\n$TIMER_STOP[{timer}] = TRUE")
+            line_buffer.append(f"$TIMER[{timer}] = 0")
+            line_buffer.append(f"$TIMER_STOP[{timer}] = FALSE\n")
             previous_layer = current_layer
 
-        # Insert type change if needed
+            # append "END" to current block for a layer change if split layers is active and current block has values
+            if split_layers and current_block:
+                current_block.append("END")
+                layer_blocks.append(current_block)
+                current_block = []
+
+        # Path Type & Velocity Handling
+        # translate current type to type_numer from setup.json and append velocity (vel_cp for print moves; vel_tvl for travel moves)
         if current_type != previous_type:
-            krl_lines.append(f"\nPATH_TYPE = {type_number}")
+            line_buffer.append(f"\nPATH_TYPE = {type_number}")
+            velocity = vel_tvl if current_type == "travel" else vel_cp
+            line_buffer.append(f"$VEL.CP={velocity:.{precision}f}")
             previous_type = current_type
 
-        # Format the movement commands
-        if move_type in ["G1", "G0"]:  # Only process G0 (Travel) or G1 (Print)
-            formatted_x = format_float(x, field_width_x)
-            formatted_y = format_float(y, field_width_y)
-            formatted_z = format_float(z, field_width_z)
-            formatted_a = format_float(a, field_width_rot)
-            formatted_b = format_int(b, field_width_rot)
-            formatted_c = format_int(c, field_width_rot)
-            formatted_e1 = format_int(0, field_width_extra)
-            formatted_e2 = format_int(0, field_width_extra)
-            formatted_e3 = format_int(0, field_width_extra)
-            formatted_e4 = format_int(0, field_width_extra)
+        x = format_value(entry["X"], max_lengths["X"])
+        y = format_value(entry["Y"], max_lengths["Y"])
+        z = format_value(entry["Z"], max_lengths["Z"])
 
-            # First movement as PTP
-            if first_position:
-                krl_lines.append(
-                    f"PTP {{X {formatted_x}, Y {formatted_y}, Z {formatted_z}, "
-                    f"A {formatted_a}, B {formatted_b}, C {formatted_c}, "
-                    f"E1 {formatted_e1}, E2 {formatted_e2}, E3 {formatted_e3}, E4 {formatted_e4}}} C_PTP"
-                )
-                krl_lines.append(f"\n$VEL.CP={vel:.2f}")
-                first_position = False
-            else:
-                # Subsequent movements as LIN
-                krl_lines.append(
-                    f"LIN {{X {formatted_x}, Y {formatted_y}, Z {formatted_z}, "
-                    f"A {formatted_a}, B {formatted_b}, C {formatted_c}, "
-                    f"E1 {formatted_e1}, E2 {formatted_e2}, E3 {formatted_e3}, E4 {formatted_e4}}} C_DIS"
-                )
+        # Set flow values depending on given Type
+        if current_type == "retract":  # Set E1 to -1
+            e1 = format_value(
+                -1, max_lengths["Flow"] if pump_control else max_lengths["Voltage"]
+            )
+        elif current_type == "protract":  # Set E1 to 0
+            e1 = format_value(
+                0, max_lengths["Flow"] if pump_control else max_lengths["Voltage"]
+            )
+        elif (
+            entry["Move"] == "G1"
+        ):  # Set E1 to "Flow" or "RPM" depending on pump control
+            e1 = format_value(
+                entry["Flow"] if pump_control else entry["Voltage"],
+                max_lengths["Flow"] if pump_control else max_lengths["Voltage"],
+            )
+        else:  # Set anything else to 0
+            e1 = format_value(
+                0, max_lengths["Flow"] if pump_control else max_lengths["Voltage"]
+            )
 
-    return krl_lines
+        a_str = format_value(a, max_lengths["A"])
+        b_str = format_value(b, max_lengths["B"])
+        c_str = format_value(c, max_lengths["C"])
+
+        # Compose position string
+        position_string = (
+            f"X {x}, Y {y}, Z {z}, "
+            f"A {a_str}, B {b_str}, C {c_str}, "
+            f"E1 {e1}, E2 + 0, E3 + 0, E4 + 0"
+        )
+
+        # keep track of position (lines)
+        position += 1
+
+        # First move as PTP
+        if position == 0:
+            line_buffer.append(f"PTP {{{position_string}}} C_PTP")
+        # Last move as C_DIS with mlt timer
+        elif position == len(gcode) - 1:
+            line_buffer.append(f"PTP {{{position_string}}} C_DIS")
+            line_buffer.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
+        # Everything else as C_DIS
+        else:
+            line_buffer.append(f"LIN {{{position_string}}} C_DIS")
+
+        # Append only line_buffer to block if split layers
+        if split_layers:
+            current_block.extend(line_buffer)
+        # Append everything to krl_lines if not split_layers
+        else:
+            krl_lines.extend(line_buffer)
+
+    if split_layers:
+        # Append END to block if last block
+        if current_block:
+            current_block.append("END")
+            layer_blocks.append(current_block)
+        # Set filename in the first line of the block
+        return [
+            [f"DEF {project_name}_{i+1:03d} ()"] + block
+            for i, block in enumerate(layer_blocks)
+        ]
+    else:
+        return krl_lines
+
+
+if __name__ == "__main__":
+    sample_gcode = [
+        {
+            "Move": "G1",
+            "X": 1150.0,
+            "Y": 2250.0,
+            "Z": 105.0,
+            "E_Rel": 57.29578,
+            "Layer": 0,
+            "Type": "wall_outer",
+            "Layer_Height": 15.0,
+            "Reachable": True,
+            "Linewidth": 25.0,
+            "Flow": 131250.0,
+            "RPM": 78.75,
+            "Voltage": 0.7875,
+            "Vel_CP_Max": 0.35,
+        },
+        {
+            "Move": "G0",
+            "X": -934.78,
+            "Y": 270.82,
+            "Z": 813.89,
+            "E_Rel": 0,
+            "Layer": 0,
+            "Type": "travel",
+            "Layer_Height": 0,
+            "Reachable": True,
+            "Linewidth": 0,
+            "Flow": 0.0,
+            "RPM": 0.0,
+            "Voltage": 0.0,
+            "Vel_CP_Max": 0.35,
+        },
+    ]
+    type_map = {"wall_outer": 1, "travel": 0}
+    a_min = {"x": -1000, "y": -500, "z": 0}
+    a_max = {"x": 1200, "y": 2500, "z": 1000}
+
+    split = True
+    result = krl_format(
+        sample_gcode,
+        type_map,
+        0,
+        0,
+        180,
+        0.35,
+        1.0,
+        True,
+        2,
+        a_min,
+        a_max,
+        timer=4,
+        mlt=10000,
+        split_layers=split,
+        project_name="DEMO",
+    )
+
+    if split:
+        for p, blocks in enumerate(result):
+            print(f"\n--- File {p:03d} ---")
+            print("\n".join(blocks))
+
+    else:
+        print(result)

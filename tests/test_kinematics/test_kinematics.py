@@ -1,19 +1,22 @@
 import pytest
 import os
-import numpy as np
+from pathlib import Path
 from tests.test_kinematics import setup_kinematics_test as roset
-from robot.pre_process import mathematical_operators as math
 
-# Verzeichnis mit allen JSON-Dateien
-BASE_DIR = r"C:\Users\daves\OneDrive\Bauingenieurwesen\Masterarbeit\Daniel\inversekinematic_testcases_2"
 
-tolerance_ik_deg = 0.02  # Toleranz für den Vergleich ganzer Zeilen
-tolerance_fk_mm = 0.02
+# Directory with all test data
+BASE_DIR = str(Path(__file__).parent / "kinematics_test_cases")
+
+tolerance_ik_deg = 0.02  # tolerance for ik
+tolerance_fk_mm = 0.00  # tolerance for fk
 
 
 @pytest.fixture(scope="session")
 def robot():
-    """Fixture zur Initialisierung der Roboterklasse (einmalig für alle Tests)."""
+    """
+    DESCRIPTION:
+    Fixture for initialisation of robot class (done once for all tests in this session)
+    """
     return roset.load_robot()
 
 
@@ -23,80 +26,82 @@ def robot():
     ]
 )
 def test_data(request):
-    """Fixture zum Laden einer einzelnen JSON-Datei als Testfall."""
+    """
+    DESCRIPTION:
+    Loads a single test case
+    """
     return roset.load_json_file(request.param)
 
 
 def test_forward_kinematics(robot, test_data):
-    """Testet, ob die Forward-Kinematics-Funktion des Roboters die erwartete Position erreicht."""
+    """
+    DESCRIPTION:
+    tests, if the forward kinematics function is working and calculates the expected position
+    """
 
-    # Gelenkwinkel aus JSON extrahieren (erste Lösung)
+    # Extracts the joint angles from .json
     if "J" not in test_data or len(test_data["J"]) < 6:
-        raise ValueError(
-            "Fehler: Keine gültigen Gelenkwinkel in den Testdaten gefunden!"
-        )
+        raise ValueError("[ERROR] No joint angles given in .json data")
 
-    # Konvertiere die erste Gelenkwinkellösung in ein Dictionary
+    # converts the first solution inside the .json file into a dictionary
     joint_angles = {f"A{i+1}": test_data["J"][i][0] for i in range(6)}
 
-    # Erwartete Position aus JSON extrahieren
+    # Extracts the expected position for given joint angles from json
     expected_x = test_data["X"]
     expected_y = test_data["Y"]
     expected_z = test_data["Z"]
 
-    # Forward Kinematics berechnen
-    fk_matrix, reachable = robot.forward_kinematics(joint_angles)  # Entpacke das Tuple
+    # Calculating the forward kinematik for robot setup
+    fk_matrix, reachable = robot.forward_kinematics(joint_angles)  # unpacks tuple
 
     if not reachable:
         print(
-            "⚠ Warnung: Position ist außerhalb des Arbeitsbereichs oder führt zu Selbstkollision."
+            "[WARNING] Given position is outside of working radius or leads to self-collision"
         )
         return
 
-    # Falls fk_matrix nicht die erwartete Größe hat, Fehlermeldung ausgeben
-    if not isinstance(fk_matrix, np.ndarray) or fk_matrix.shape != (4, 4):
-        raise ValueError(
-            f"Fehler: Forward Kinematics hat keine gültige 4x4-Matrix zurückgegeben: {fk_matrix}"
-        )
-
-    # Berechnete Position extrahieren
+    # Extracting calculated position
     calculated_position = fk_matrix[:3, 3]
 
-    # Vergleich der berechneten Position mit der erwarteten
+    # Comparrison between calculated and expected position
     diff_x = abs(calculated_position[0] - expected_x)
     diff_y = abs(calculated_position[1] - expected_y)
     diff_z = abs(calculated_position[2] - expected_z)
 
-    # Prüfen, ob die Differenzen innerhalb der Toleranz liegen
+    # Check if difference is within tolerance
     assert diff_x < tolerance_fk_mm, f"X-Fehler zu groß: {diff_x} mm"
     assert diff_y < tolerance_fk_mm, f"Y-Fehler zu groß: {diff_y} mm"
     assert diff_z < tolerance_fk_mm, f"Z-Fehler zu groß: {diff_z} mm"
 
     print(
-        f"✅ Forward Kinematics Test bestanden! | ΔX: {diff_x:.3f} mm, ΔY: {diff_y:.3f} mm, ΔZ: {diff_z:.3f} mm"
+        f"Forward Kinematics Test successfully! | ΔX: {diff_x:.3f} mm, ΔY: {diff_y:.3f} mm, ΔZ: {diff_z:.3f} mm"
     )
 
 
 def test_inverse_kinematics(robot, test_data):
-    """Testet, ob eine berechnete Lösungsmenge eine Zeile enthält, die mit einer Zeile der erwarteten Lösungen übereinstimmt."""
+    """
+    DESCRIPTION:
+    Checks if the calculated solution has a line matching with the expected solutions from .json
+    """
 
-    # Homogene Transformationsmatrix aus JSON laden
+    # Load homogeneous transformation matrix from json
     fk_matrix = roset.extract_fk_matrix(test_data)
-    angles = math.Rotation.to_euler_angles(fk_matrix[:3, :3], "ZYX")
 
-    # Erwartete IK-Lösungen aus JSON extrahieren
-    ik_solutions_raw = test_data.get("J", [])  # Liste von Listen
-    num_expected_solutions = test_data.get("n")  # Anzahl der erwarteten Lösungen
+    # Extracting the expected solutions from .json
+    ik_solutions_raw = test_data.get("J", [])
+    num_expected_solutions = test_data.get("n")  # number of expected solutions
 
-    # Falls keine erwarteten Lösungen vorhanden sind
+    # Check if no solutions are expected, no solutions are found
     if num_expected_solutions == 0:
         assert (
             len(ik_solutions_raw) == 0
-        ), "Erwartet KEINE IK-Lösungen, aber Daten gefunden!"
-        print("Test bestanden: Keine erwarteten Lösungen – keine berechneten Lösungen.")
+        ), f"No solution expected, but {len(ik_solutions_raw)} solutions found"
+        print(
+            f"Test successfully! No solutions expected and {len(ik_solutions_raw)} solutions found"
+        )
         return
 
-    # Erwartete Lösungen umwandeln: [{ "A1": val, "A2": val, ..., "A6": val }, ...]
+    # Rearrange expected solutions to match shape of calculated solutions
     ik_solutions_expected = [
         {f"A{i + 1}": ik_solutions_raw[i][j] for i in range(6)}
         for j in range(num_expected_solutions)
@@ -106,22 +111,22 @@ def test_inverse_kinematics(robot, test_data):
     for line in ik_solutions_expected:
         print(line)
 
-    # Berechnete IK-Lösungen
+    # Calculate solutions for given homogeneous transformation matrix
     ik_solutions_calculated = robot.inverse_kinematics(fk_matrix)
     num_calculated_solutions = len(
         ik_solutions_calculated
-    )  # Anzahl der berechneten Lösungen
+    )  # Get number of calculated solutions
 
     print("solutions calculated\n")
     for line in ik_solutions_calculated:
         print(line)
 
-    # Falls keine Lösungen berechnet wurden, obwohl welche erwartet wurden
+    # If no solution was calculated, but solutions are expected
     assert (
         num_calculated_solutions > 0
-    ), f"Berechnete IK hat keine Lösungen gefunden, obwohl {num_expected_solutions} erwartet wurden!"
+    ), f"Calculation of IK for given point ({fk_matrix[0,3]}, {fk_matrix[1,3]}, {fk_matrix[2,3]}) lead to no solution, but {num_expected_solutions} solutions are expected"
 
-    # Validierte Lösungsmenge bestimmen
+    # Keep track of validated solutions
     validated_solutions = []
 
     for i, calculated_solution in enumerate(ik_solutions_calculated, start=1):
@@ -131,18 +136,20 @@ def test_inverse_kinematics(robot, test_data):
                     calculated_solution[f"A{k + 1}.{i}"]
                     - expected_solution[f"A{k + 1}"]
                 )
-                < TOLERANCE
+                < tolerance_ik_deg
                 for k in range(6)
             ):
                 validated_solutions.append(calculated_solution)
-                break  # Sobald eine Übereinstimmung gefunden wurde, zur nächsten berechneten Lösung übergehen
+                break  # Interrupt if valid solution is found in expected solution
 
-    # Prüfen, ob die validierte Lösungsmenge gültig ist
+    # Checks if number of validated solutions matches expected
     assert (
         len(validated_solutions) > 0
-    ), f"Keine Lösung hat die Toleranzanforderung erfüllt, obwohl Lösungen erwartet wurden!"
+    ), f"No calculated solution within given tolerance, allthough solutions are expected"
     assert (
         len(validated_solutions) <= num_expected_solutions
-    ), f"Zu viele Lösungen gefunden ({len(validated_solutions)} > {num_expected_solutions})!"
+    ), f"Number of calculated solutions ({len(validated_solutions)} > {num_expected_solutions})!"
 
-    print(f"Test erfolgreich: {len(validated_solutions)} passende Lösungen gefunden.")
+    print(
+        f"Test successfully! Number of validated solutions: {len(validated_solutions)}"
+    )

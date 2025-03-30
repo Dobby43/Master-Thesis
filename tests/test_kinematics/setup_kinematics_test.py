@@ -1,11 +1,15 @@
 import json
 import os
 import numpy as np
-from robot.process import kinematics_2 as rokin  # Importiere die Roboterklasse
+from robot import kinematics as rokin
 
 
 def load_robot():
-    """Erstellt eine Roboterinstanz mit festen Parametern."""
+    """
+    DESCRIPTION:
+    Builds robot matching the robot used for generating teh test cases under tests.test_kinematics.kinematics_test_cases
+    See robot.kinematics for necessary input
+    """
     robot_geometry = {
         "a1": 500,
         "a2": 55,
@@ -39,10 +43,12 @@ def load_robot():
     )
 
 
-def load_json_file(file_path):
-    """Liest die JSON-Datei und gibt die enthaltenen Daten zurück."""
+def load_json_file(file_path: json) -> dict:
+    """
+    loads a json file and returns it as a dictionary
+    """
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"❌ Datei {file_path} nicht gefunden!")
+        raise FileNotFoundError(f"[ERROR] File not found in {file_path}")
 
     with open(file_path, "r") as f:
         data = json.load(f)
@@ -51,17 +57,19 @@ def load_json_file(file_path):
     return data
 
 
-def extract_ik_solutions(data):
-    """Extrahiert die IK-Lösungen aus der JSON-Datei."""
+def extract_ik_solutions(data: dict) -> list[dict]:
+    """
+    DESCRIPTION:
+    Extracts solution for inverse kinematic (saved under key "J") from dictionary
+    """
     if "J" not in data or not isinstance(data["J"], list) or len(data["J"]) == 0:
-        print(f"⚠ Warnung: Datei enthält keine gültigen IK-Lösungen!")
+        print(f"[ERROR] file has no solutions for inverse kinematics")
         return []
 
-    # Stelle sicher, dass mindestens eine Lösung existiert
     num_solutions = data.get("n", 0)
 
     if num_solutions == 0 or len(data["J"]) == 0 or len(data["J"][0]) == 0:
-        print(f"⚠ Warnung: Keine gültigen IK-Lösungen (`n=0`).")
+        print(f"[WARNING] Inverse kinematic solution for given point has length == 0")
         return []
 
     ik_solutions = [{} for _ in range(num_solutions)]
@@ -69,7 +77,7 @@ def extract_ik_solutions(data):
     for joint_idx, joint_values in enumerate(data["J"]):
         if len(joint_values) != num_solutions:
             print(
-                f"⚠ Warnung: Gelenkwinkelanzahl für A{joint_idx + 1} stimmt nicht überein!"
+                f"[WARNING] Number of solutions fro inverse kinematic {joint_idx + 1} doesn't match test case"
             )
             return []
 
@@ -82,5 +90,8 @@ def extract_ik_solutions(data):
 
 
 def extract_fk_matrix(data):
-    """Lädt die homogene Transformationsmatrix aus der JSON-Datei."""
+    """
+    DESCRIPTION:
+    Extracts solution for forward kinematic (saved under key "F") from dictionary
+    """
     return np.array(data["F"])

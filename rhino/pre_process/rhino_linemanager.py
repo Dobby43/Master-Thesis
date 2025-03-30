@@ -1,6 +1,10 @@
 def linetype_patterns():
     """
-    Returns a dictionary of linetype patterns.
+    DESCRIPTION:
+    Function to store custom linetypes
+
+    :return: Dictionary of custom linetypes;
+    line defined as list of segments (float [mm] defining the length of segment, bool defining if visible [True] or not [False]),
     """
     return {
         "solid": [(10.0, True)],

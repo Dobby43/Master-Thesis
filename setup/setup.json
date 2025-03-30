@@ -17,7 +17,7 @@
                 "type": "str"
             },
             "output_directory": {
-                "description": "Base directory for storing output files",
+                "description": "Base directory for storing output files (will be created if not already available)",
                 "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\V1.6",
                 "type": "str"
             },
@@ -25,6 +25,11 @@
                 "description": "Name of the output folder and files as well as .src top line",
                 "value": "Retraction_Test",
                 "type": "str"
+            },
+            "split_src": {
+                "description": "Defines if the krl file is split into multiple files; file_name_000 contains main file, file_name_00n-nnn contain each layer (up to 999 layers) ",
+                "value": false,
+                "type": "bool"
             }
         },
         "Robot": {
@@ -35,22 +40,22 @@
                 "type": "str"
             },
             "geometry": {
-                "describtion": "measurement of robot arm & offset in accordance with to https://de.mathworks.com/matlabcentral/fileexchange/48468-inverse-kinematics-of-serial-robots-with-wrist?s%5C_tid=prof%5C_contriblnk",
+                "description": "measurement of robot arm & offset [mm] in accordance with to Brandstötter et. al [https://de.mathworks.com/matlabcentral/fileexchange/48468-inverse-kinematics-of-serial-robots-with-wrist?s%5C_tid=prof%5C_contriblnk]",
                 "value": {"a1": 500, "a2": 55, "b": 0, "c1": 1045, "c2": 1300, "c3": 1525, "c4": 290},
                 "type": "dict[str,float]"
             },
             "base_coordinates": {
-                "description": "Base coordinate frame ($ROBOTROOT) in the robot's workspace relative to $BASE (coordinate system of printbed); Delta given from $BASE to $ROBOTROOT; This leads to T($BASE,$ROBOTROOT) due to order of rotation being ZYX; example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
+                "description": "Coordinate frame ($ROBOTROOT) in the robot's workspace relative to $BASE (coordinate system of printbed) in [mm]; Delta given from $BASE to $ROBOTROOT; This leads to T($BASE,$ROBOTROOT) due to order of rotation being ZYX; example: '{\"X\": 1460.9, \"Y\": -2237.66, \"Z\": 268.5, \"A\": 0.0, \"B\": 0.0, \"C\": 0.0}'",
                 "value": {"X": -1460.9, "Y": 2237.66, "Z": -268.5, "A": 0, "B": 0.0, "C": 0.0},
                 "type": "dict[str,float]"
             },
             "tool_offset": {
-                "description": "Tool offset from $NULLFRAME (flange of robot hand) in direction of $NULLFRAME; This leads to T($NULLFRAME,$TCP) as no rotation is involved",
+                "description": "Tool offset from $NULLFRAME (flange of robot hand) in direction of $NULLFRAME in [mm]; This leads to T($NULLFRAME,$TCP) as no rotation is involved",
                 "value": {"X": -10.99, "Y": -0.86, "Z": 917.61},
                 "type": "dict[str,float]"
             },
             "tool_orientation": {
-                "description": "Tool orientation relative to $BASE/$FRAME (coordinate system of printbed); This leads to R($BASE/$FRAME,$TCP); A(angle related to Z), B(angle related to Y), C(angle related to Z)",
+                "description": "Tool orientation relative to $BASE/$FRAME (coordinate system of printbed) in [deg]; This leads to R($BASE/$FRAME,$TCP); A(angle related to Z), B(angle related to Y), C(angle related to Z)",
                 "value": {"A": 0, "B": 0, "C": 180},
                 "type": "dict[str,float]"
             },
@@ -61,11 +66,11 @@
             },
             "end_position": {
                 "description": "End position of the robot (joint angles in [deg]);Outside of printbed; example: '{\"A1\": 75.0, \"A2\": -90.0, \"A3\": 90.0, \"A4\": 0.0, \"A5\": 90.0, \"A6\": 0.0}'",
-                "value": {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
+                "value": {"A1": 475.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
                 "type": "dict[str,float]"
             },
             "rotation_limit": {
-                "description": "Limit angles of robot axis for each joint; valid rotation is between those angles",
+                "description": "Limit angles of robot axis for each joint in [deg]; valid rotation is between those angles",
                 "value": {"A1":[-185, 185], "A2":[-130, 20],"A3": [-100, 144], "A4": [-350, 350],"A5": [-120, 120],"A6": [-350, 350]},
                 "type": "dict[str,list[int]]"
             },
@@ -75,13 +80,13 @@
                 "type": "dict[str,int]"
             },
             "rotation_offset": {
-                "description": "defines rotational offset along robot rotation definition to match 'Brandstötter'",
+                "description": "defines rotational in [deg] offset along robot rotation definition to match 'Brandstötter et al.'",
                 "value": {"A1": 0,"A2": -90,"A3": 0,"A4": 0,"A5": 0,"A6": 0},
                 "type": "dict[str,float]"
             },
             "base_radius": {
                 "description": "Radius [mm] around A1 axis of rotation; ensures the robot head never intersects with its own base (around joint axis A1)",
-                "value": 500,
+                "value": 400,
                 "type": "float"
 
             },
@@ -89,7 +94,7 @@
                 "description": "Robot start code; If new categories ar defined inside this .json file, with [category_name][value], they can be referenced with {category_name} and the corresponding value wil be inserted; only names with letters and numbers seperated by '_' are valid",
                 "value": [
                     "",
-                    ";Printer: {id}",
+                    ";Printer: ?id?",
                     "",
                     ";Declarations for RSI",
                     "DECL INT RET",
@@ -136,8 +141,8 @@
                     ";ENDFOLD 3DCP",
                     "",
                     ";FOLD    BCO",
-                    "  TOOL_DATA[1] = {{tool_offset}, {tool_orientation}}",
-                    "  BASE_DATA[1] = {{base_coordinates}}",
+                    "  TOOL_DATA[1] = {?tool_offset?, ?tool_orientation?}",
+                    "  BASE_DATA[1] = {?base_coordinates?}",
                     "  $BWDSTART = FALSE",
                     "",
                     "  SWITCH $MODE_OP",
@@ -157,11 +162,11 @@
                     "",
                     "   FDAT_ACT = {TOOL_NO 1,BASE_NO 1,IPO_FRAME #BASE}",
                     "",
-                    "   PTP  {{start_position}}",
+                    "   PTP  {?start_position?}",
                     ";ENDFOLD BCO",
                     "",
                     ";FOLD    MOTION",
-                    "   $VEL.CP   = {print_speed} ;m/sec",
+                    "   $VEL.CP   = ?print_speed? ;m/sec",
                     "   $VEL.ORI1 = 100  ;deg/sec",
                     "   $VEL.ORI2 = 100  ;deg/sec",
                     "   $ADVANCE = 3",
@@ -173,7 +178,7 @@
                 "description": "Robot end code;If new categories ar defined inside this .json file, with [category_name][value], they can be referenced with {category_name}; only names with letters and numbers seperated by '_' are valid",
                 "value": [
                     "PATH_TYPE = 0",
-                    "PTP {{end_position}} C_PTP",
+                    "PTP {?end_position?} C_PTP",
                     "",
                     "",
                     ";FOLD    3DCP",
@@ -202,10 +207,25 @@
                 "value": 0.35,
                 "type": "float"
             },
+            "travel_speed": {
+                "description": "Travel speed of the robot in [m/s]",
+                "value": 0.5,
+                "type": "float"
+            },
             "type_number":{
                 "description": "sets int for each type in the Rhino section to be displayed in the src file",
                 "value": {"retract": -1, "protract":-2, "travel": 0,"wall_outer": 1, "wall_inner": 2, "surface": 3, "infill": 4, "bridge": 5, "curb": 6, "support": 7, "unknown": 99},
-                "type": "dict[str|int]"
+                "type": "dict[str,int]"
+            },
+            "3dm_file": {
+                "description": "path to the 3dm file (native Rhino file) of the robot or whole robot cell; The 3dm file will be imported according to the given position in accordance to $BASE; Make sure that the robot is placed on the origin of the file with the global x,y,z axis co-linear to the orientation of joint A1",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Dateien_Beispiele\\Roboter\\KR340_R3330_KR240_R3330.dm",
+                "type": "str"
+            },
+            "min_layer_time": {
+                "description": "minimum layer time in [ms]; .src file includes timer block for each layer and robot has to wait till timer > min_layer-time; set to 0 to deactivate",
+                "value": 10000,
+                "type": "int"
             }
         },
         "Pump": {
@@ -216,9 +236,14 @@
                 "type": "bool"
             },
             "characteristic_curve": {
-                "description": "Gives the function of RPM to Flow of the Pump in [QM,RPM]",
-                "value": [[10,100],[20,220],[30,360]],
-                "type": "list[list[float,float]]"
+                "description": "Gives the function of RPM to Flow[liters/min] of the Pump in [Flow,RPM,Voltage]",
+                "value": [[10,100,2],[20,220,3],[30,360,5]],
+                "type": "list[list[float,float,float]]"
+            },
+            "pump_control": {
+                "description": "Setup if the signal from the external axis of robot should be RPM (true) or Voltage (false)",
+                "value": false,
+                "type": "bool"
             },
             "filament_diameter": {
                 "description": "diameter of filament in [mm]",
@@ -228,244 +253,176 @@
             "linetype_flow": {
                 "description": "Flow compensation for each linetype in [%]; 100 = flow within spec; 120 = account for under extrusion; 90 = account for over extrusion",
                 "value": {"wall_outer": 100, "wall_inner": 100, "surface": 100, "infill": 100, "bridge": 100, "curb": 100, "support": 100, "unknown": 100},
-                "type": "dict[str|float]"
+                "type": "dict[str,float]"
             }
         },
         "Slicer": {
-            "description": "Settings for the slicing software, including the slicer type and configuration.",
             "slicer_name": {
-                "description": "The type of slicer used (CURA, ORCA, OPEN SLICER)",
-                "value": "Cura",
+                "description": "define the slicer used (necessary to decode G-Code); Available options: Cura, Orca, Open Slicer",
+                "value": "cura",
+                "type": "str"
+            }
+        },
+        "Cura": {
+            "cura_cmd_path": {
+                "description": "Path to CURA's executable file; Example: C:\\...\\CuraEngine.exe",
+                "value": "C:\\Program Files\\UltiMaker Cura 5.8.1\\CuraEngine.exe",
                 "type": "str"
             },
-            "cura": {
-                "cura_cmd_path": {
-                    "description": "Path to CURA's executable file",
-                    "value": "C:\\Program Files\\UltiMaker Cura 5.8.1\\CuraEngine.exe",
-                    "type": "str"
-                },
-                "cura_config_file_path": {
-                    "description": "Path to CURA's configuration file; https://github.com/Ultimaker/Cura/wiki/Definition-Files-Explained",
-                    "value": "C:\\Program Files\\UltiMaker Cura 5.8.1\\share\\cura\\resources\\definitions\\test_KUKA_fdmprinter.def.json",
-                    "type": "str"
-                },
-                "cura_arguments": {
-                    "description": "Additional arguments as str for CURA slicing. These overwrite the values in the printer setup data",
-                    "value": {
-                        "layer_height_0": "15",
-                        "layer_height": "15",
-                        "infill_sparse_density": "20",
-                        "roofing_layer_count": "1",
-                        "mesh_position_x": "412.5",
-                        "retraction_enable": "true"
-                    },
-                    "type": "dict[str,str]"
-                },
-                "cura_scaling": {
-                    "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                    "value": {"sX": 100, "sY": 400, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
-                    "type": "dict[str,float|int]"
-                }
+            "cura_printer_config_file_path": {
+                "description": "Path to CURA's printer configuration file; https://github.com/Ultimaker/Cura/wiki/Definition-Files-Explained; store the extruder.def.json file in the same folder; Example: C:\\...\\TUM_C3DP_fdmprinter.def.json",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Python\\Slicer\\Cura\\Iteration 2\\TUM_C3DP_fdmprinter.def.json",
+                "type": "str"
             },
-            "orca": {
-                "orca_cmd_path": {
-                    "description": "Path to ORCA's executable file",
-                    "value": "C:\\path\\to\\orca\\executable",
-                    "type": "str"
+            "cura_arguments": {
+                "description": "Additional arguments to quickly change the settings for CURA slicing. These overwrite the values in the printer and extruder config data",
+                "value": {
+                    "layer_height_0": "15",
+                    "layer_height": "15",
+                    "infill_sparse_density": "20",
+                    "roofing_layer_count": "0",
+                    "mesh_position_x": "0",
+                    "min_wall_line_width": "25"
                 },
-                "orca_config_file_path": {
-                    "description": "Path to ORCA's configuration file",
-                    "value": "C:\\path\\to\\orca\\config",
-                    "type": "str"
-                },
-                "orca_arguments": {
-                    "description": "Additional arguments for ORCA slicing. These overwrite the values in the printer setup data",
-                    "value": [],
-                    "type": "list[str]"
-                },
-                "orca_scaling": {
-                    "description": "Sets scaling and rotation values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                    "value": {"sX": 100, "sY": 100, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
-                    "type": "dict[str,float|int]"
-                }
+                "type": "dict[str,str]"
             },
-            "open_slicer": {
-                "open_slicer_cmd_path": {
-                    "description": "Path to Open Slicer's executable file",
-                    "value": "C:\\path\\to\\open_slicer\\executable",
-                    "type": "str"
+            "cura_scaling": {
+                "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
+                "value": {"sX": 100, "sY": 100, "sZ": 50, "rX": 0, "rY": 0, "rZ": 0},
+                "type": "dict[str,float]"
+            },
+            "cura_line_types_dict": {
+                "description": "Defines Line Types (ensures a clear assignment of printline-types from different slicers)",
+                "value": {
+                    "surface": [
+                        "SKIN"
+                    ],
+                    "wall_outer": [
+                        "WALL-OUTER"
+                    ],
+                    "wall_inner": [
+                        "WALL-INNER"
+                    ],
+                    "infill": [
+                        "FILL"
+                    ],
+                    "bridge": [],
+                    "curb": [
+                        "SKIRT",
+                        "BRIM",
+                        "RAFT"
+                    ],
+                    "support": [
+                        "SUPPORT",
+                        "SUPPORT-INTERFACE"
+                    ]
                 },
-                "open_slicer_config_file_path": {
-                    "description": "Path to Open Slicer's configuration file",
-                    "value": "C:\\path\\to\\open_slicer\\config",
-                    "type": "str"
+                "type": "dict[str,list[str]]"
+            }
+        },
+
+        "Orca": {
+            "orca_cmd_path": {
+                "description": "Path to ORCA's executable file",
+                "value": "",
+                "type": "str"
+            },
+            "orca_printer_config_file_path": {
+                "description": "Path to ORCA's printer configuration file; https://github.com/Ultimaker/Cura/wiki/Definition-Files-Explained; store the extruder.def.json file in the same folder",
+                "value": "",
+                "type": "str"
+            },
+            "orca_arguments": {
+                "description": "Additional arguments to quickly change the settings for ORCA slicing. These overwrite the values in the printer and extruder config data",
+                "value": {"": ""},
+                "type": "dict[str,str]"
+            },
+            "orca_scaling": {
+                "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
+                "value": {"sX": 100, "sY": 400, "sZ": 300, "rX": 0, "rY": 0, "rZ": 0},
+                "type": "dict[str,float]"
+            },
+            "orca_line_types_dict": {
+                "description": "Defines Line Types (ensures a clear assignment of printline-types from different slicers)",
+                "value": {
+                    "surface": [
+                        "Bottom surface",
+                        "Top surface"
+                    ],
+                    "wall_outer": [
+                        "Outer wall",
+                        "Overhang wall"
+                    ],
+                    "wall_inner": [
+                        "Inner wall"
+                    ],
+                    "infill": [
+                        "Internal solid infill",
+                        "Spars infill"
+                    ],
+                    "bridge": [
+                        "Bridge",
+                        "Internal Bridge"
+                    ],
+                    "curb": [
+                        "Skirt",
+                        "Brim",
+                        "Raft"
+                    ],
+                    "support": [
+                        "Support",
+                        "Support interface"
+                    ]
                 },
-                "open_slicer_arguments": {
-                    "description": "Additional arguments for Open Slicer slicing. These overwrite the values in the printer setup data",
-                    "value": [],
-                    "type": "list[str]"
-                }
+                "type": "dict[str,list[str]]"
             }
         },
         "Rhino": {
             "description": "Settings regarding the Rhino file",
             "point_print": {
                 "description": "defines if every individual point of the Gcode gets drawn in the Rhino file; false only draws start-, end-, protract- and retract-points ",
-                "value": false,
+                "value": true,
                 "type": "bool"
             },
-            "point_types": {
+            "point_color": {
                 "description": "Sets color for each point in the Rhino file",
-                "start": {
-                    "description":"color for start points of extrusion",
-                    "value": "#008000",
-                    "type": "str"
-                },
-                "stop":{
-                    "description": "colo for start points of extrusion",
-                    "value": "#ff0000",
-                    "type": "str"
-                },
-                "retract":{
-                    "description": "color for retract points ",
-                    "value": "#0000CD",
-                    "type": "str"
-                },
-                "protract":{
-                    "description": "color for anti retract points",
-                    "value": "#87CEEB",
-                    "type": "str"
-                }
+                "value": {"start": "#008000", "stop": "#ff0000","protract": "#0000CD", "retract": "#87CEEB", "beginning":"#FED702", "end": "#D99208"},
+                "type": "dict[str,str]"
             },
-            "line_types": {
-                "description": "Defines Line Types (ensures a clear assignment of printline-types from different slicers), including colors and appearance, for visualization in Rhino. Available line types: solid, dashed, dotted, dashdot",
-                "travel": {
-                    "color": {
-                        "description": "Color for travel moves in hex format",
-                        "value": "#808080",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for travel moves",
-                        "value": "dotted",
-                        "type": "str"
-                    }
+            "line_style_line": {
+                "description": "defines displayed linetype in Rhino for available types of printed line. Available display types: solid, dashed, dotted, dashdot",
+                "value": {
+                    "travel": "dotted",
+                    "surface": "solid",
+                    "wall_outer": "solid",
+                    "wall_inner": "solid",
+                    "infill": "solid",
+                    "bridge": "solid",
+                    "curb": "solid",
+                    "support": "solid",
+                    "unknown": "dash_dot"
                 },
-                "surface": {
-                    "cura": ["SKIN"],
-                    "orca": ["Bottom surface", "Top surface"],
-                    "color": {
-                        "description": "Color for surfaces in hex format",
-                        "value": "#C680BB",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for surfaces",
-                        "value": "solid",
-                        "type": "str"
-                    }
-                },
-                "wall_outer": {
-                    "cura": ["WALL-OUTER"],
-                    "orca": ["Outer wall", "Overhang wall"],
-                    "color": {
-                        "description": "Color for outer walls in hex format",
-                        "value": "#0065bd",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for outer walls",
-                        "value": "solid",
-                        "type": "str"
-                    }
-                },
-                "wall_inner": {
-                    "cura": ["WALL-INNER"],
-                    "orca": ["Inner wall"],
-                    "color": {
-                        "description": "Color for inner walls in hex format",
-                        "value": "#9FBA36",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for inner walls",
-                        "value": "solid",
-                        "type": "str"
-                    }
-                },
-                "infill": {
-                    "cura": ["FILL"],
-                    "orca": ["Internal solid infill", "Spars infill"],
-                    "color": {
-                        "description": "Color for infill in hex format",
-                        "value": "#EA7237",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for infill",
-                        "value": "solid",
-                        "type": "str"
-                    }
-                },
-                "bridge": {
-                    "cura": [],
-                    "orca": ["Bridge", "Internal Bridge"],
-                    "color": {
-                        "description": "Color for bridges in hex format",
-                        "value": "#5E94D4",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for bridges",
-                        "value": "solid",
-                        "type": "str"
-                    }
-                },
-                "curb": {
-                    "cura": ["SKIRT", "BRIM", "RAFT"],
-                    "orca": ["Skirt", "Brim", "Raft"],
-                    "color": {
-                        "description": "Color for skirts, brims, and rafts in hex format",
-                        "value": "#CBAB01",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for skirts, brims, and rafts",
-                        "value": "solid",
-                        "type": "str"
-                    }
-                },
-                "support": {
-                    "cura": ["SUPPORT", "SUPPORT-INTERFACE"],
-                    "orca": ["Support", "Support interface"],
-                    "color": {
-                        "description": "Color for support structures in hex format",
-                        "value": "#ABB5BE",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for support structures",
-                        "value": "solid",
-                        "type": "str"
-                    }
-                },
-                "unknown": {
-                    "color": {
-                        "description": "Color for unknown types in hex format",
-                        "value": "#000000",
-                        "type": "str"
-                    },
-                    "linetype": {
-                        "description": "Linetype in Rhino for unknown types",
-                        "value": "dash_dot",
-                        "type": "str"
-                    }
-                }
+                "type": "dict[str,str]"
             },
-            "line_widths": {
-                "description": "Sets linewidth of each linetype for print view (solid, dashed, dotted, dash_dot); gets overwritten by extrusion width if line is a printline",
-                "value": {"solid": 15, "dashed": 1, "dotted": 1, "dash_dot": 1},
-                "type": "dict[str|float]"
+            "line_types_color": {
+                "description": "Defines the color in #hex code of the printed line in the Rhino file; ",
+                "value": {
+                    "travel": "#808080",
+                    "surface": "#C680BB",
+                    "wall_outer": "#0065bd",
+                    "wall_inner": "#9FBA36",
+                    "infill": "#EA7237",
+                    "bridge": "#5E94D4",
+                    "curb": "#CBAB01",
+                    "support": "#ABB5BE",
+                    "unknown": "#000000"
+                },
+                "type": "dict[str,str]"
+            },
+            "line_width": {
+                "description": "Sets linewidth [mm] of each linetype for Print Preview (solid, dashed, dotted, dash_dot); gets overwritten by extrusion width if line is a printline",
+                "value": {"solid": 2, "dashed": 2, "dotted": 2, "dash_dot": 2},
+                "type": "dict[str,float]"
             }
         }
     }

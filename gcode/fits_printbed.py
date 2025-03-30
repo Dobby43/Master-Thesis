@@ -1,15 +1,21 @@
-def check_fit_and_shift(bed_size, min_values, max_values, margin=0):
+def check_fit_and_shift(
+    bed_size: dict[str, float],
+    min_values: dict[str, float],
+    max_values: dict[str, float],
+    margin=0,
+) -> tuple[bool, bool, dict]:
     """
-    Überprüft, ob das Objekt auf das Druckbett passt und berechnet ggf. die minimale Verschiebung.
+    DESCRIPTION:
+    Determines if the object fits on printbed and if it is located on the printbed
 
-    :param bed_size: Dict {"X": bed_x, "Y": bed_y, "Z": bed_z} - Druckbettgröße
-    :param min_values: Dict {"X": obj_min_x, "Y": obj_min_y, "Z": obj_min_z} - Minimale Koordinaten des Objekts
-    :param max_values: Dict {"X": obj_max_x, "Y": obj_max_y, "Z": obj_max_z} - Maximale Koordinaten des Objekts
-    :param margin: Abstand zum Rand des Druckbetts in mm (default: 50mm)
-    :return: Tuple (fits_printbed, shift_dict)
-             - fits_printbed: True/False, ob das Objekt passt
-             - needs_offset: True/False, ob das Object verschoben werden muss um auf dem Druckbett zu liegen
-             - shift_dict: {"dx": ..., "dy": ..., "dz": ...} falls True, sonst {}
+    :param bed_size: Dict {"x": bed_x, "y": bed_y, "z": bed_z} - printbed size
+    :param min_values: Dict {"x": obj_min_x, "y": obj_min_y, "z": obj_min_z} - minimum coordinates of object
+    :param max_values: Dict {"x": obj_max_x, "y": obj_max_y, "z": obj_max_z} - maximum coordinates of object
+    :param margin: safety distance from edge of printbed to the object
+    :return: Tuple (fits_printbed, needs_offset, shift_dict)
+             - fits_printbed: True/False, if the object fits the printbed
+             - needs_offset: True/False, if the object needs to be shifted to locate fully on the printbed
+             - shift_dict: {"dx": ..., "dy": ..., "dz": ...} if True, else {}
     """
 
     # determine size printbed
@@ -37,6 +43,22 @@ def check_fit_and_shift(bed_size, min_values, max_values, margin=0):
     shift_y = min(shift_y, bed_y - margin - max_values["y"])
 
     # Shift in z-direction
-    shift_z = max(0, -min_values["z"])
+    shift_z = max(-min_values["z"], 0)
+    if shift_x or shift_y or shift_z != 0:
+        return (
+            True,
+            False,
+            {"dx": shift_x, "dy": shift_y, "dz": shift_z},
+        )  # Fits, but needs to be shifted
+    else:
+        return True, True, {}
 
-    return True, True, {"dx": shift_x, "dy": shift_y, "dz": shift_z}
+
+if __name__ == "__main__":
+    bedsize = {"X": 1200, "Y": 4500, "Z": 2000}
+    min_val = {"x": 400, "y": 0, "z": 0}
+    max_val = {"x": 500, "y": 4500, "z": 2000}
+
+    fit = check_fit_and_shift(bedsize, min_val, max_val)
+
+    print(fit)

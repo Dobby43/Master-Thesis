@@ -1,6 +1,9 @@
+import os
+
+
 def export_to_src(
     krl_lines: list[str],
-    krl_name: list[str],
+    krl_name: str,
     start_code_json: list[str],
     start_code_python: list[str],
     end_code_json: list[str],
@@ -10,25 +13,22 @@ def export_to_src(
 ) -> None:
     """
     DESCRIPTION:
-    Combines the robot start code, KRL lines, and end code into a single .src file.
+    Combines robot start/end code and KRL lines into a single .src file.
 
-    ARGUMENTS:
-    krl_lines: A list of KRL-formatted lines (main G-code converted to KRL).
-    start_code: A list of robot start code lines.
-    end_code: A list of robot end code lines.
-    output_path: The directory where the .src file will be saved.
-    file_name: The name of the output .src file (without extension).
-
-    RETURNS:
-    None
+    :param krl_lines: list of str formatted in KRL
+    :param krl_name: str formatted in KRL (used inside file)
+    :param start_code_json: list of str from setup.Robot.start_code.json formatted in KRL
+    :param start_code_python: list of str from krl.start_code_python.py formatted in KRL
+    :param end_code_json: list of str from setup.Robot.end_code.json formatted in KRL
+    :param end_code_python: list of str from krl.start_code_python.py formatted in KRL (currently not used)
+    :param output_path: path to the output file
+    :param file_name: name of the output file
     """
-    # Ensure the output path ends with a separator
-    if not output_path.endswith(("\\", "/")):
+    if not output_path.endswith(("/", "\\")):
         output_path += "/"
 
-    # Combine all lines into a single list
     combined_lines = (
-        krl_name
+        [f"DEF {krl_name} ()"]
         + [""]
         + start_code_json
         + [""]
@@ -41,13 +41,99 @@ def export_to_src(
         + end_code_json
     )
 
-    # Construct the full file path
     full_file_path = f"{output_path}{file_name}.src"
 
     try:
-        # Write the combined lines to the .src file
         with open(full_file_path, "w") as file:
             file.write("\n".join(combined_lines))
         print(f"[INFO] .src file exported to {full_file_path}")
     except Exception as e:
         print(f"[ERROR] Failed to export .src file: {e}")
+
+
+def split_and_export_to_src(
+    krl_lines: list[str],
+    krl_name: str,  # used as base name for subprograms
+    start_code_json: list[str],
+    start_code_python: list[str],
+    end_code_json: list[str],
+    end_code_python: list[str],
+    output_path: str,
+    output_name: str,  # used for the folder and the main file name
+) -> None:
+    """
+    Exports KRL code split by LAYER = lines into subfiles and a master .src file.
+
+    :param krl_lines: list of str formatted in KRL
+    :param krl_name: str formatted in KRL (used as base name for subprograms)
+    :param start_code_json: list of str from setup.Robot.start_code.json formatted in KRL
+    :param start_code_python: list of str from krl.start_code_python.py formatted in KRL
+    :param end_code_json: list of str from setup.Robot.end_code.json formatted in KRL
+    :param end_code_python: list of str from krl.start_code_python.py formatted in KRL (currently not used)
+    :param output_path: path to the output file
+    :param output_name: name of the output file (used for the folder and the main file name)
+    """
+
+    individual_start_line = ""
+    individual_end_line = "END"
+
+    # Create subdirectory
+    folder_name = f"{output_name}_SRC"
+    folder_path = os.path.join(output_path, folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Split krl_lines by "LAYER = " entries
+    blocks = []
+    current_block = []
+    for line in krl_lines:
+        if line.strip().startswith("LAYER ="):
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
+        current_block.append(line)
+    if current_block:
+        blocks.append(current_block)
+
+    # Create list of subprogram call names
+    sub_names = [f"{krl_name.upper()}_{i:03d} ()" for i in range(len(blocks))]
+
+    # Combine main file with program calls only
+    combined_main = (
+        [f"DEF {output_name} ()"]
+        + [""]
+        + start_code_json
+        + [""]
+        + start_code_python
+        + [""]
+        + sub_names
+        + [""]
+        + end_code_python
+        + [""]
+        + end_code_json
+    )
+
+    # Write main file
+    main_file_path = os.path.join(folder_path, f"{output_name}.src")
+    try:
+        with open(main_file_path, "w") as file:
+            file.write("\n".join(combined_main))
+        print(f"[INFO] Main .src file written to {main_file_path}")
+    except Exception as e:
+        print(f"[ERROR] Could not write main .src file: {e}")
+
+    # Write subfiles
+    for i, block in enumerate(blocks):
+        sub_name = f"{krl_name}_{i:03d}.src"
+        sub_path = os.path.join(folder_path, sub_name)
+        sub_content = (
+            [f"DEF {krl_name.upper()}_{i:03d} ()"]
+            + [individual_start_line]
+            + block
+            + [individual_end_line]
+        )
+        try:
+            with open(sub_path, "w") as subfile:
+                subfile.write("\n".join(sub_content))
+            print(f"[INFO] Subfile written: {sub_path}")
+        except Exception as e:
+            print(f"[ERROR] Could not write subfile {sub_name}: {e}")

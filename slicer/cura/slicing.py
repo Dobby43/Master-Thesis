@@ -2,8 +2,6 @@ import subprocess
 from pathlib import Path
 from typing import Tuple, List
 
-# TODO: roofing_layer_count lösen
-
 
 def slice(
     stl_file: str,
@@ -12,20 +10,19 @@ def slice(
     export_file_gcode: str,
     cura_engine_path: str,
     cura_def_file: str,
-    additional_args: List[str],
+    additional_args: dict[str, str],
 ) -> Tuple[bool, str]:
     """
     DESCRIPTION:
     Slices an STL file using CuraEngine and generates G-code.
 
-    ARGUMENTS:
-    stl_file (str): Name of the STL file to be sliced.
-    import_directory_stl (str): Directory containing the STL file.
-    export_directory_gcode (str): Directory to save the generated G-code.
-    export_file_gcode (str): Name of the output G-code file (without extension).
-    cura_engine_path (str): Path to the CuraEngine executable.
-    cura_def_file (str): Path to the Cura printer definition file.
-    additional_args (List[str]): Additional slicing arguments in the format ["key=value"].
+    :param stl_file: Name of the STL file to be sliced.
+    :param import_directory_stl: Directory containing the STL file.
+    :param export_directory_gcode: Directory to save the generated G-code to.
+    :param export_file_gcode: Name of the output G-code file [without extension (.gcode)]
+    :param cura_engine_path: Path to the Cura Engine executable.
+    :param cura_def_file: Path to the Cura printer definition file.
+    :param additional_args: Additional slicing arguments in the format ["key=value"].
 
     RETURNS:
     tuple[bool, str]: A tuple containing:
@@ -63,9 +60,8 @@ def slice(
     ]
 
     # Add additional arguments immediately after the definition file
-    if additional_args:
-        for arg in additional_args:
-            command.extend(["-s", arg])
+    for key, value in additional_args.items():
+        command.extend(["-s", f"{key}={value}"])
 
     # Append STL and output G-code file paths
     command.extend(
@@ -77,15 +73,13 @@ def slice(
         ]
     )
 
-    # Debugging: Print the constructed command
-    print("[INFO] Generated Command:\n", ",\n".join(command))
+    print(command)
 
     try:
-        # Execute the slicing command
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         return (
             True,
-            f"[INFO] G-Code getting generated at {gcode_file}\nOutput:\n{result.stdout}",
+            f"[INFO] G-Code generated at {gcode_file}\n{result.stdout}",
         )
 
     except subprocess.CalledProcessError as error:
@@ -95,4 +89,4 @@ def slice(
 
     except Exception as e:
         # Catch unexpected errors
-        return False, f"Unexpected error: {str(e)}"
+        return False, f"[ERROR] Unexpected error: {str(e)}"
