@@ -194,7 +194,9 @@ class RobotOPW:
         """
         if not self.validate_joint_limits_fk(joint_angles):
             reachable = False
-            print(f"[ERROR] Given joint angles {joint_angles} are out of joint limits")
+            print(
+                f"[ERROR] Given joint angles {joint_angles} are not within joint limits"
+            )
             return np.ndarray([]), reachable
         else:
             reachable = True
@@ -518,7 +520,9 @@ class RobotOPW:
 
         # Abort if no solutions for given point exist
         if final_solutions_deg.size == 0:
-            print(f"[ERROR] Point [{x},{y},{z}] out of reachable domain of robot")
+            print(
+                f"[ERROR] Point ({x:.2f},{y:.2f},{z:.2f}) out of reachable domain of robot"
+            )
             return []
 
         # E) Adjust with offset for robot convention

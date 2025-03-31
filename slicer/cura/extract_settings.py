@@ -19,7 +19,7 @@ def load_json(filepath):
 def extract_settings(data):
     """
     DESCRIPTION:
-    Extracts all settings from the JSON structure under "settings," not just the deepest ones.
+    Extracts all settings from the JSON structure under "settings," from default printer.def.json and extruder.def.json not just the deepest ones.
     - Stores 'Key', 'Type', and 'Default Value'.
     - If 'enum', also stores the available 'options'.
 
@@ -54,7 +54,7 @@ def validate_user_arguments(
 ) -> dict[str, str]:
     """
     DESCRIPTION:
-    Validates user arguments against the default printer and extruder settings.
+    Validates user arguments from setup.json against the default printer and extruder settings.
     Returns a dictionary of validated arguments.
 
     :param user_arguments: input from loaded setup.json file
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     extruder_basic_values = extract_settings(base_data_extruder.get("settings", {}))
 
     # User-Argumente direkt als Dictionary
-    user_arguments = {
+    usr_arguments = {
         "layer_height_0": "15",
         "layer_height": "15",
         "infill_sparse_density": "20",
@@ -199,7 +199,7 @@ if __name__ == "__main__":
 
     print("[INFO] Validating and updating user arguments...")
     validated_user_arguments = validate_user_arguments(
-        user_arguments, printer_basic_values, extruder_basic_values
+        usr_arguments, printer_basic_values, extruder_basic_values
     )
 
     preset_argument = def_preset_arguments(

@@ -50,7 +50,8 @@ def get_rpm(
 
     for point in points:
         move = point["Move"]
-        flow_lpm = point["Flow"] * 6e-5  # Calculated flow in l/min (already ideal)
+        flow_lpm = point["Flow"] * 6e-5  # Calculated flow in l/min
+        coordinates = round(point["X"], 2), round(point["Y"], 2), round(point["Z"], 2)
 
         interpolated_values = [
             f(flow_lpm) for f in interpolators
@@ -62,6 +63,11 @@ def get_rpm(
             if flow_lpm > max_possible_flow and flow_lpm > 0
             else vel_cp
         )
+        if final_vel < vel_cp:
+            print(f"[ERROR] Pump capacity limited to {max_possible_flow} l/min")
+            print(
+                f"[WARNING] Printing velocity reduced to {round(final_vel,2)} m/s for movement to point {coordinates}"
+            )
 
         results.append(
             {

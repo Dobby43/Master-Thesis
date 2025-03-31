@@ -13,7 +13,7 @@ def format_value(value: float, width: int, precision: int = 2) -> str:
     """
     sign = "+" if value >= 0 else "-"
     abs_number = f"{abs(value):.{precision}f}"
-    return f"{sign} {abs_number.rjust(width - 2)}"  # 2 Zeichen für sign + space
+    return f"{sign} {abs_number.rjust(width - 2)}"  # 2 spaces for sign + space
 
 
 def calc_field_width(min_val: float, max_val: float, precision: int) -> int:
@@ -114,15 +114,20 @@ def krl_format(
             previous_layer = current_layer
         # Insert wait for mlt and stop as well as reset timer
         elif current_layer != previous_layer:
-            line_buffer.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
-            line_buffer.append(f"\nLAYER = {current_layer}")
+            (
+                line_buffer.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
+                if not split_layers
+                else ""
+            )
             line_buffer.append(f"\n$TIMER_STOP[{timer}] = TRUE")
             line_buffer.append(f"$TIMER[{timer}] = 0")
+            line_buffer.append(f"\nLAYER = {current_layer}")
             line_buffer.append(f"$TIMER_STOP[{timer}] = FALSE\n")
             previous_layer = current_layer
 
-            # append "END" to current block for a layer change if split layers is active and current block has values
+            # append "Wait for Timer" and "END" to current block for a layer change if split layers is active and current block has values
             if split_layers and current_block:
+                current_block.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
                 current_block.append("END")
                 layer_blocks.append(current_block)
                 current_block = []
@@ -199,7 +204,7 @@ def krl_format(
             layer_blocks.append(current_block)
         # Set filename in the first line of the block
         return [
-            [f"DEF {project_name}_{i+1:03d} ()"] + block
+            [f"DEF {project_name}_{i:03d} ()"] + block
             for i, block in enumerate(layer_blocks)
         ]
     else:

@@ -10,8 +10,11 @@ Technical University Munich
 
 [comment]:<> (Description)
 # Description
-This code is designed to connect Polymer Slicer such as [Cura](https://ultimaker.com/de/), [Orca](https://orca-slicer.com/) or [Simplify3D](https://www.simplify3d.com/) with state of the art 6 DOF [KUKA](https://www.kuka.com/de-de) robotics and visualisation using [Rhino](https://www.rhino3d.com/de/).
-Therefor the Program automatically generates G-Code, evaluates the given code filtering for attributes (which get visualized in dedicated Rhino file), performes safety checks regarding Robot reachability and pump capability and finally outputs .src files, that can be interpreted by KUKA robots using KRL.  
+This code is designed to connect Polymer Slicer such as [Ultimaker Cura](https://ultimaker.com/de/), [Orca Slicer](https://orca-slicer.com/) 
+or [Simplify3D](https://www.simplify3d.com/) with state of the art 6 DOF [KUKA](https://www.kuka.com/de-de) robotics and visualisation 
+using [Rhinoceros 3D](https://www.rhino3d.com/de/).
+Therefor the Program automatically generates G-Code, evaluates the given code filtering for attributes (which get visualized in dedicated Rhino file), 
+performes safety checks regarding Robot reachability and pump capability and finally outputs .src files, that can be interpreted by KUKA robots using KRL.  
 In its current state it is limited to using [Cura](https://ultimaker.com/de/), but could be easily adapted for other Slicers as mentioned above.
 
 [comment]:<> (Overview)
@@ -22,7 +25,6 @@ main.py
 │   # Executes slicing, kinematics, pump control, Rhino export, and report generation.
 │
 ├── setup/                  # Centralized configuration handling
-│   ├── setup.json             # All user inputs and parameters in one JSON file
 │   ├── load_settings.py       # Loads the JSON config file
 │   ├── replace_strings.py     # Replaces placeholders in robot start/end code
 │   ├── validate_value.py      # Validates config values based on expected types from slicer.cura.default
@@ -96,6 +98,11 @@ main.py
 │   ├── test_robot_math_operator.py   # Tests transformation logic from robot.mathmatical_operators
 │   └── __init__.py
 │
+├──user_input/                         # Unit tests for robot and kinematic logic
+│   ├── setup.json         # setup file to configure robot, pump, rhino and overwrite def.json input
+│   ├── printer.def.json   # arguments regarding printer used in cura
+│   ├── extruder.def.json  # arguments regarding extruder used in cura
+│
 ├── requirements.txt         # Project dependencies
 └── README.md                # Project description (this file)
 ```
@@ -112,18 +119,20 @@ This project depends on the following third-party tools:
 > ⚠️ Make sure that CuraEngine.exe is properly installed and the paths is configured correctly in `setup.json`.
 ### CuraEngine.exe
 To install the CuraEngine.exe download [Cura 5.8](https://ultimaker.com/de/software/ultimaker-cura/) or higher.
-Within the installed folder you will find a _.exe_ file named _CuraEngine.exe_  
-Copy the link to this file (e.g.: _C:\Program Files\UltiMaker Cura 5.8.1\CuraEngine.exe_) into the _setup.json_ file under Cura.cura_cmd_path as a value. 
-You find the setup.json file under _\setup\setup.json_ in my repository.
+Within the installed folder you will find a `.exe` file named _CuraEngine.exe_  
+Copy the link to this file (e.g.: _C:\Program Files\UltiMaker Cura 5.8.1\CuraEngine.exe_) into the `setup.json` 
+file under Cura.cura_cmd_path as a value. 
+You find the `setup.json` file under _\user_input\setup.json_ in my repository.
 Your slicing engine is now set up for remote slicing.
 
 ### Rhinoceros 3D
-To execute the code and visualize the sliced G-Code as well as the printbed and Robot [Rhinoceros 8](https://www.rhino3d.com/download/) or higher is required.  
-It might be possible to open the generated _.3dm_ files with an older version, although this has not been tested.
+To execute the code and visualize the sliced G-Code as well as the printbed and Robot [Rhinoceros 8](https://www.rhino3d.com/download/) 
+or higher is required.  
+It might be possible to open the generated `.3dm` files with an older version, although this has not been tested.
 
-### Word
+### Microsoft Word
 From the program a report in .docx format is written to the Output folder. To view this file I used [Microsoft Word](https://www.microsoft.com/de-de/microsoft-365/word).
-It should be possible to access the _.docx_ file using [Google Docs](https://workspace.google.com/intl/de/products/docs/) or [LibreOffice](https://de.libreoffice.org/). 
+It should be possible to access the `.docx` file using [Google Docs](https://workspace.google.com/intl/de/products/docs/) or [LibreOffice](https://de.libreoffice.org/). 
 This was not tested so formatting issues might occur.
 
 
@@ -147,9 +156,58 @@ To run this project locally, follow these steps:
 > ⚠️ Make sure that Rhino 8 is installed to use the dependency _rhinoinside_
 
 # Usage
+The program is structured such, that the user input is only given and edited via `.json` files which all lie under \user_input. 
+To fully customize the code to your needs three essential `.json` files need to be edited:
 
-5. Usage (Description)
-6. Configuration
-7. Example usage
-8. Trouble shooting
+| filename            | Purpose                                                               | Notes                                                              |
+|---------------------|-----------------------------------------------------------------------|--------------------------------------------------------------------|
+| `setup.json`        | Custom input beyond Polymer slicer specific data                      | Input overwrites the input of the other two `.json` files          |
+| `printer.def.json`  | Base Input data for Cura (considers only the deepest nested arguments) | <br/>To access parent arguments use Cura.cura_arguments in `setup.json` |
+| `extruder.def.json` | Base Input data on extruder for Cura (considers only the deepest nested arguments)| To access parent arguments use Cura.cura_arguments in `setup.json` |
+
+If every path is specified correctly in `setup.json` you can execute the main function.   
+To execute the main function you can use the following CMD command in the folder that you saved the repository to:
+```bash
+.venv\Scripts\python.exe c3dp_main.py
+```
+After a successfully finished execution you will find a folder named with _{output_name}_hh_mm_ss_ in the specified _output_directory_ from `setup.json`.  
+This folder holds three files and an additional folder or four files depending on the user input.
+
+1. Example output (`.src` file not split)
+   ![example_output_non_split.png](images\output_folder_example.png)  
+
+2. Example output (`.src` file split)
+   ![example_output_split.png](images\output_folder_split_example.png)
+
+# Trouble shooting
+In this section I will go through some of the most common mistakes regarding the use of this program.
+In general three types of information output is given while running this code:
+
+| output    | meaning                                                                                                     | comment                                                                                           |
+|-----------|-------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| [INFO]    | Basic user information regarding progress or updates during the execution of the code                       | Can occur as well after crucial [ERROR] messages to inform about the source of [ERROR]            |
+| [WARNING] | Non crucial error messages; The program will finish as normal, although some restrictions have been applied | Can occure for example if `.stl` does not fit buildplate of printer                               |
+| [ERROR]   | Crucial Error suggesting wrong or invalid input                                                             | Can occure for example if start position of robot or any given point on printbed is not reachable |
+
+## Common errors
+
+| problem                                                                                     | possible reason                                                                                                      | solution                                                                                                          |
+|---------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| [ERROR] No Object was found; Object must be bigger than minimal line-width and layer-height | Object in `.stl` file is to small to be printed                                                                      | rescale the object using Cura.cura_scaling in `setup.json`                                                        |
+| [ERROR] Input Directory does not exist                                                      | typo in the input filepath for the directory of the `.stl` in `setup.json`                                           | Check given filepath under Directory.input_directory                                                              |
+| [ERROR] Input .stl file inside input directory does not exist                               | `.stl` file does not exist under given name in `setup.json`                                                          | Check given filename under Directory.input_name                                                                   |
+| [ERROR] CuraEngine-Path not found                                                           | Wrong filepath to CuraEngine.exe given                                                                               | Filepath should look similar to this: _C:\Program Files\UltiMaker Cura 5.8.1\CuraEngine.exe_                      |
+| [ERROR] Configuration file for printer not found                                            | Missing .json ending for the printer.def.json file in `setup.settings.json` under Cura.cura_printer_config_file_path | Copy filename and directory and append `.json`                                                                    |
+| [ERROR] Slicer not yet implemented"                                                         | Currently only Cura is available as an option to choose; Other slicer was specified in `setup.json`                  | Change Slicer.slicer_name to Cura                                                                                 |
+| [ERROR] Object doesn't fit printbed in given orientation                                    | Object is to big for the specified build volume                                                                      | Scale or rotate object to fit inside boundaries                                                                   |
+| [ERROR] Object not located fully on the printbed                                            | Object fits buildplate, but is not located properly                                                                  | Check Rhino output and move object using (e.g.: "mesh_position_x": "-200") in Cura.cura_arguments to shift object |
+| [ERROR] Start / End position is not within Robot reach                                      | Specified start or end position violates given joint limitations                                                     | Change Start/End position to be within joint limits                                                               |
+| [ERROR] Point (X ,Y, Z) on printbed is not reachable                                        | Object is partially or fully located outside the reach of the robot                                                  | Rearrange object on build-plate                                                                                   |
+| [ERROR] .3dm file for Robot does not exist under given filepath or has the wrong format     | file for robot cell geometry has the wrong file format or is located in a different directory                        | Check if the given file exists and has the annotation `.3dm` inside `setup.json`                                  |
+| [ERROR] Pump capacity limited to l/min                                                      | Pump not capable of producing enougth flow, therfor printing velocity is reded to match maximum capacity of pump     | Reduce printing velocity or use higher flow pump                                                                  |
+| [ERROR] Could not open the Rhino file                                                       | Rhino file was opend during the execution of the code                                                                | Rerun code and don't open Rhino file, while code is running                                                       |
+| [ERROR] Self-collision: coordinates (X,Y,Z) are inside given base of robot                  | Object or Start/End position is inside given Robot base round joint axis A1                                          | Change Start/End position or location of print or printbed                                                        |
+| [ERROR] Point (X,Y,Z) out of reachable domain of robot                                      | Object is not within reach of robot                                                                                  | Rearrange object on build-plate                                                                                   |
+| [ERROR] All possible joint angles for point (X,Y,Z) exceed min/max joint angles             | Object is within reach, but all joint configurations violate joint limits                                            | Rearrange object on build-plate                                                                                   |
+| [ERROR] Key inside robot start or end code not found                                        | The given key in start_code or end_code has no match inside `setup.Robot.json`                                       | Check if matching key exists                                                                                      |
 

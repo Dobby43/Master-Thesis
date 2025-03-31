@@ -52,7 +52,7 @@ def export_to_src(
 
 
 def split_and_export_to_src(
-    krl_lines: list[str],
+    krl_lines: list[list[str]],
     file_name_krl: str,  # used as base name for subprograms
     start_code_json: list[str],
     start_code_python: list[str],
@@ -82,17 +82,7 @@ def split_and_export_to_src(
     folder_path = os.path.join(output_path, folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
-    # Split krl_lines by "LAYER = " entries
-    blocks = []
-    current_block = []
-    for line in krl_lines:
-        if line.strip().startswith("LAYER ="):
-            if current_block:
-                blocks.append(current_block)
-                current_block = []
-        current_block.append(line)
-    if current_block:
-        blocks.append(current_block)
+    blocks = krl_lines
 
     # Create list of subprogram call names
     sub_names = [f"{file_name_krl.upper()}_{i:03d} ()" for i in range(len(blocks))]
@@ -125,12 +115,7 @@ def split_and_export_to_src(
     for i, block in enumerate(blocks):
         sub_name = f"{file_name_krl}_{i:03d}.src"
         sub_path = os.path.join(folder_path, sub_name)
-        sub_content = (
-            [f"DEF {file_name_krl.upper()}_{i:03d} ()"]
-            + [individual_start_line]
-            + block
-            + [individual_end_line]
-        )
+        sub_content = block
         try:
             with open(sub_path, "w") as subfile:
                 subfile.write("\n".join(sub_content))

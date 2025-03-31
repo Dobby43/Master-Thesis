@@ -20,15 +20,13 @@ def import_step_file_to_rhino_file(
     :param target_3dm_path: Path to the .3dm file.
     :param target_layer_name: layer in which the robot file is imported to
     """
-    step_path = Path(file_path)
-    target_path = Path(target_3dm_path)
 
     # Load data from .3dm file
-    robot_model = Rfi.File3dm.Read(str(step_path))
-    rhino_file = Rfi.File3dm.Read(str(target_path))
+    robot_model = Rfi.File3dm.Read(str(file_path))
+    rhino_file = Rfi.File3dm.Read(str(target_3dm_path))
 
     if not robot_model:
-        print(f"[ERROR] File for Robot '{step_path}' can't be read")
+        print(f"[ERROR] File for Robot '{str(file_path)}' can't be read")
         return
 
     # Find target layer
@@ -69,7 +67,7 @@ def import_step_file_to_rhino_file(
                 )
 
     # Save file
-    rhino_file.Write(str(target_path), 8)
+    rhino_file.Write(str(target_3dm_path), 8)
     print(
-        f"[INFO] Robot from '{step_path.name}' imported in '{target_path.name}' onto layer '{target_layer_name}' at position {tp}."
+        f"[INFO] Robot from '{file_path}' imported in '{target_3dm_path}' onto layer '{target_layer_name}' at position {tp}."
     )

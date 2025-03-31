@@ -12,6 +12,7 @@ from datetime import datetime
 import time
 import os
 import sys
+import re
 
 
 # SETUP
@@ -68,7 +69,7 @@ def main():
     start_time = time.time()
 
     # ----------------GET SETUP PATH----------------
-    setup_path = str(Path(__file__).parent / "setup" / "setup.json")
+    setup_path = str(Path(__file__).parent / "user_input" / "setup.json")
 
     # ----------------PRECISION----------------
     # Define the Precision of each value that gets displayed in Rhino and .src
@@ -295,6 +296,18 @@ def main():
     gcode_lines = gcget.get_gcode_lines(
         directory=OUTPUT_DIRECTORY_GCODE, file_name=OUTPUT_FILE_GCODE
     )
+    for line in gcode_lines:
+        print(line)
+
+    # Check if object was sliced
+    marker = re.compile(r"G[1]\s+.*[XYZ][-+]?\d+", re.IGNORECASE)
+    has_extrusion = any(marker.search(line) for line in gcode_lines)
+
+    if not has_extrusion:
+        print(
+            "[ERROR] No Object was found; Object must be bigger than minimal line-width and layer-height"
+        )
+        sys.exit(1)
 
     # Gets min X, Y and Z values
     min_values = gcmim.get_min_values(gcode=gcode_lines)
@@ -383,10 +396,12 @@ def main():
         reachable = False
         start_pos_base = np.eye(4)
         start_pos_base[:, 3] = [0, 0, 0, 1]
-        print(f"[WARNING] Start position {ROBOT_START_POSITION} is not valid")
-        print("[INFO] No .src file will be created")
         print(
-            f"[INFO] Rhino file created with alternative end point [{start_pos_base[0,3]}, {start_pos_base[1,3]}, {start_pos_base[2,3]}]"
+            f"[ERROR] Start position {ROBOT_START_POSITION} is not within Robot reach"
+        )
+        print("[WARNING] No .src file will be created")
+        print(
+            f"[WARNING] Rhino file created with alternative end point [{start_pos_base[0,3]}, {start_pos_base[1,3]}, {start_pos_base[2,3]}]"
         )
 
     else:
@@ -402,10 +417,10 @@ def main():
         reachable = False
         end_pos_base = np.eye(4)
         end_pos_base[:, 3] = [0, 0, 0, 1]
-        print(f"[WARNING] End position {ROBOT_END_POSITION} is not valid")
-        print("[INFO] No .src file will be created")
+        print(f"[ERROR] End position {ROBOT_END_POSITION} is not within Robot reach")
+        print("[WARNING] No .src file will be created")
         print(
-            f"[INFO] Rhino file created with alternative end point [{end_pos_base[0,3]}, {end_pos_base[1,3]}, {end_pos_base[2,3]}] "
+            f"[WARNING] Rhino file created with alternative end point [{end_pos_base[0,3]}, {end_pos_base[1,3]}, {end_pos_base[2,3]}] "
         )
     else:
         print(f"[INFO] End position {ROBOT_END_POSITION} is valid")
@@ -548,10 +563,10 @@ def main():
             )
     else:
         if not reachable:
-            print("[ERROR] .src file not generated due unreachable point")
+            print("[WARNING] .src file not generated due unreachable point")
         if not location:
             print(
-                "[ERROR] .src file not generated due to invalid location or of object or object not fitting on printbed"
+                "[WARNING] .src file not generated due to invalid location or of object or object not fitting on printbed"
             )
 
     # ---------------- REPORT ----------------
@@ -670,9 +685,9 @@ def main():
         )
     else:
         print(
-            f"[WARNING] .3dm file for Robot does not exist under given filepath {ROBOT_3DM_FILE} or has the wrong format"
+            f"[ERROR] .3dm file for Robot does not exist under given filepath {ROBOT_3DM_FILE} or has the wrong format"
         )
-        print("[INFO] Skipping robot.3dm_file import from setup.json to Rhino file")
+        print("[WARNING] Skipping robot.3dm_file import from setup.json to Rhino file")
 
     # Generate printbed in Rhino
     printbed = rhdrp.add_print_bed(

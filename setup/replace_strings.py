@@ -45,7 +45,8 @@ def replace_placeholders(text: str, settings: dict, precision: int = 2) -> str:
         if entry is not None:
             return format_value(entry["value"], precision)
         else:
-            print(f"[WARNING] Key {key} inside robot start or end code not found")
+            print(f"[ERROR] Key {key} inside robot start or end code not found")
+            print(f"[WARNING] Key {key} not replaced; Check start code")
             return f"?{key}?"  # Unknown key stays visible
 
     return pattern.sub(replacer, text)

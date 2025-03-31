@@ -13,7 +13,7 @@
             },
             "input_name": {
                 "description": "Name of the input STL file (without data type)",
-                "value": "Retraction_Test",
+                "value": "L Shape 200x200x15",
                 "type": "str"
             },
             "output_directory": {
@@ -23,7 +23,7 @@
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
-                "value": "Retraction_Test",
+                "value": "L Shape 200x200x15",
                 "type": "str"
             }
         },
@@ -219,7 +219,7 @@
             },
             "3dm_file": {
                 "description": "path to the 3dm file (native Rhino file) of the robot or whole robot cell; The 3dm file will be imported according to the given position in accordance to $BASE; Make sure that the robot is placed on the origin of the file with the global x,y,z axis co-linear to the orientation of joint A1",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Dateien_Beispiele\\Roboter\\KR340_R3330_KR240_R3330.dm",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Dateien_Beispiele\\Roboter\\KR340_R3330_KR240_R3330.3dm",
                 "type": "str"
             },
             "min_layer_time": {
@@ -259,7 +259,7 @@
         "Slicer": {
             "slicer_name": {
                 "description": "define the slicer used (necessary to decode G-Code); Available options: Cura, Orca, Open Slicer",
-                "value": "cura",
+                "value": "Cura",
                 "type": "str"
             }
         },
@@ -288,7 +288,7 @@
             },
             "cura_scaling": {
                 "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                "value": {"sX": 100, "sY": 100, "sZ": 50, "rX": 0, "rY": 0, "rZ": 0},
+                "value": {"sX": 101, "sY": 100, "sZ": 100, "rX": 0, "rY": 0, "rZ": 0},
                 "type": "dict[str,float]"
             },
             "cura_line_types_dict": {
@@ -339,7 +339,7 @@
             },
             "orca_scaling": {
                 "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                "value": {"sX": 100, "sY": 400, "sZ": 300, "rX": 0, "rY": 0, "rZ": 0},
+                "value": {"sX": 101, "sY": 400, "sZ": 300, "rX": 0, "rY": 0, "rZ": 0},
                 "type": "dict[str,float]"
             },
             "orca_line_types_dict": {

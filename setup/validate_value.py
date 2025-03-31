@@ -86,7 +86,7 @@ def validate_settings(user_settings: Dict[str, Dict[str, Dict[str, Any]]]) -> No
 
             if not validate_value(value, type_str):
                 errors.append(
-                    f"[INFO] settings.{section}.{key}: Invalid value '{value}' for type '{type_str}'\n"
+                    f"[WARNING] settings.{section}.{key}: Invalid value '{value}' for type '{type_str}'\n"
                 )
 
     if errors:

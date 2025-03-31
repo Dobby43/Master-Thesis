@@ -25,7 +25,7 @@ def color_name_to_rgb(color_name: str) -> tuple:
     if color_name.startswith("#") and len(color_name) in {7, 9}:  # #RRGGBB or #RRGGBBAA
         return tuple(int(c * 255) for c in to_rgb(color_name))
     else:
-        print(f"Invalid HEX color: {color_name}. Defaulting to black.")
+        print(f"[ERROR] Invalid HEX color: {color_name}. Defaulting to black.")
         return 0, 0, 0
 
 
