@@ -4,6 +4,7 @@ from setup.load_settings import load_settings
 
 def validate_value(value: Any, expected_type: str) -> bool:
     """
+    DESCRIPTION:
     Validates values for given type in setup.json file '(float', 'list[str]', 'dict[str, int|float]', etc.)
 
     :param value: value to validate
@@ -75,7 +76,6 @@ def validate_settings(user_settings: Dict[str, Dict[str, Dict[str, Any]]]) -> No
     If an entry is invalid, a ValueError is thrown with a summary of all errors.
 
     :param user_settings: settings dict (nested dict of settings from setup.json)
-
     """
     errors = []
 

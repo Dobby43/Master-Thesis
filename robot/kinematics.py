@@ -1,11 +1,9 @@
 import numpy as np
 import math
-
+from typing import Any
 from numpy import ndarray, dtype
 
 from robot.mathematical_operators import Rotation
-
-from typing import Any
 
 
 class RobotOPW:

@@ -40,13 +40,13 @@ def plot_bed(
     plotter.add_mesh(bed_surface, color="lightgrey", opacity=0.5)
 
     # Function to add 3-dimensional borders to the plot
-    def add_tube_line(start, end, color="grey", radius=line_thickness):
-        line = pv.Line(start, end)
+    def add_tube_line(start, stop, color="grey", radius=line_thickness):
+        line = pv.Line(start, stop)
         tube = line.tube(radius=radius)
         plotter.add_mesh(tube, color=color)
 
     # Add Corner lines surrounding build volume
-    for start, end in [
+    for beginning, end in [
         ([0, 0, 0], [0, 0, bed_size_z]),
         ([bed_size_x, 0, 0], [bed_size_x, 0, bed_size_z]),
         ([0, bed_size_y, 0], [0, bed_size_y, bed_size_z]),
@@ -56,7 +56,7 @@ def plot_bed(
         ([bed_size_x, 0, bed_size_z], [bed_size_x, bed_size_y, bed_size_z]),
         ([0, bed_size_y, bed_size_z], [bed_size_x, bed_size_y, bed_size_z]),
     ]:
-        add_tube_line(start, end)
+        add_tube_line(beginning, end)
 
     plotter.set_background("white")
     # align picture such, that the longest axis is always in cross direction (to fit .docx file)
@@ -102,7 +102,7 @@ def plot_bed(
 
 def plot_gcode(
     plotter: pv.Plotter,
-    processed_gcode: List[Dict[str, Union[str, float, int, None]]],
+    points: List[Dict[str, Union[str, float, int, None]]],
     layers: str,
     line_types_color: Dict[str, str],
 ):
@@ -111,7 +111,7 @@ def plot_gcode(
     Adds a G-code path visualization to an existing PyVista plotter instance with color-coded types.
 
     :param plotter: A PyVista plotter object where the G-code visualization will be added.
-    :param processed_gcode: List of dictionaries representing processed G-code lines.
+    :param points: List of dictionaries representing processed G-code lines.
     :param layers: Specify layers to visualize. Use "all" for all layers, a single layer number (e.g., "1"),
             or a range of layers (e.g., "1-5").
     :param line_types_color: Dictionary of colors to use for each line type.
@@ -139,7 +139,7 @@ def plot_gcode(
     previous_point = None
 
     # Iterate over the G-code data and group line segments by type
-    for entry in processed_gcode:
+    for entry in points:
         if layer_range and entry["Layer"] not in layer_range:
             continue
         if None not in (entry["X"], entry["Y"], entry["Z"]):

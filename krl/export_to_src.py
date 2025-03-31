@@ -3,7 +3,7 @@ import os
 
 def export_to_src(
     krl_lines: list[str],
-    krl_name: str,
+    file_name_krl: str,
     start_code_json: list[str],
     start_code_python: list[str],
     end_code_json: list[str],
@@ -16,7 +16,7 @@ def export_to_src(
     Combines robot start/end code and KRL lines into a single .src file.
 
     :param krl_lines: list of str formatted in KRL
-    :param krl_name: str formatted in KRL (used inside file)
+    :param file_name_krl: str formatted in KRL (used inside file)
     :param start_code_json: list of str from setup.Robot.start_code.json formatted in KRL
     :param start_code_python: list of str from krl.start_code_python.py formatted in KRL
     :param end_code_json: list of str from setup.Robot.end_code.json formatted in KRL
@@ -28,7 +28,7 @@ def export_to_src(
         output_path += "/"
 
     combined_lines = (
-        [f"DEF {krl_name} ()"]
+        [f"DEF {file_name_krl} ()"]
         + [""]
         + start_code_json
         + [""]
@@ -53,32 +53,32 @@ def export_to_src(
 
 def split_and_export_to_src(
     krl_lines: list[str],
-    krl_name: str,  # used as base name for subprograms
+    file_name_krl: str,  # used as base name for subprograms
     start_code_json: list[str],
     start_code_python: list[str],
     end_code_json: list[str],
     end_code_python: list[str],
     output_path: str,
-    output_name: str,  # used for the folder and the main file name
+    file_name: str,  # used for the folder and the main file name
 ) -> None:
     """
     Exports KRL code split by LAYER = lines into subfiles and a master .src file.
 
     :param krl_lines: list of str formatted in KRL
-    :param krl_name: str formatted in KRL (used as base name for subprograms)
+    :param file_name_krl: str formatted in KRL (used as base name for subprograms)
     :param start_code_json: list of str from setup.Robot.start_code.json formatted in KRL
     :param start_code_python: list of str from krl.start_code_python.py formatted in KRL
     :param end_code_json: list of str from setup.Robot.end_code.json formatted in KRL
     :param end_code_python: list of str from krl.start_code_python.py formatted in KRL (currently not used)
     :param output_path: path to the output file
-    :param output_name: name of the output file (used for the folder and the main file name)
+    :param file_name: name of the output file (used for the folder and the main file name)
     """
 
     individual_start_line = ""
     individual_end_line = "END"
 
     # Create subdirectory
-    folder_name = f"{output_name}_SRC"
+    folder_name = f"{file_name}_SRC"
     folder_path = os.path.join(output_path, folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
@@ -95,11 +95,11 @@ def split_and_export_to_src(
         blocks.append(current_block)
 
     # Create list of subprogram call names
-    sub_names = [f"{krl_name.upper()}_{i:03d} ()" for i in range(len(blocks))]
+    sub_names = [f"{file_name_krl.upper()}_{i:03d} ()" for i in range(len(blocks))]
 
     # Combine main file with program calls only
     combined_main = (
-        [f"DEF {output_name} ()"]
+        [f"DEF {file_name[:25]} ()"]
         + [""]
         + start_code_json
         + [""]
@@ -113,7 +113,7 @@ def split_and_export_to_src(
     )
 
     # Write main file
-    main_file_path = os.path.join(folder_path, f"{output_name}.src")
+    main_file_path = os.path.join(folder_path, f"{file_name}.src")
     try:
         with open(main_file_path, "w") as file:
             file.write("\n".join(combined_main))
@@ -123,10 +123,10 @@ def split_and_export_to_src(
 
     # Write subfiles
     for i, block in enumerate(blocks):
-        sub_name = f"{krl_name}_{i:03d}.src"
+        sub_name = f"{file_name_krl}_{i:03d}.src"
         sub_path = os.path.join(folder_path, sub_name)
         sub_content = (
-            [f"DEF {krl_name.upper()}_{i:03d} ()"]
+            [f"DEF {file_name_krl.upper()}_{i:03d} ()"]
             + [individual_start_line]
             + block
             + [individual_end_line]

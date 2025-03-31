@@ -18,18 +18,13 @@
             },
             "output_directory": {
                 "description": "Base directory for storing output files (will be created if not already available)",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\V1.6",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\V1.7",
                 "type": "str"
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
                 "value": "Retraction_Test",
                 "type": "str"
-            },
-            "split_src": {
-                "description": "Defines if the krl file is split into multiple files; file_name_000 contains main file, file_name_00n-nnn contain each layer (up to 999 layers) ",
-                "value": false,
-                "type": "bool"
             }
         },
         "Robot": {
@@ -66,7 +61,7 @@
             },
             "end_position": {
                 "description": "End position of the robot (joint angles in [deg]);Outside of printbed; example: '{\"A1\": 75.0, \"A2\": -90.0, \"A3\": 90.0, \"A4\": 0.0, \"A5\": 90.0, \"A6\": 0.0}'",
-                "value": {"A1": 475.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
+                "value": {"A1": 75.0, "A2": -90.0, "A3": 90.0, "A4": 0.0, "A5": 90.0, "A6": 0.0},
                 "type": "dict[str,float]"
             },
             "rotation_limit": {
@@ -90,8 +85,13 @@
                 "type": "float"
 
             },
+            "split_src": {
+                "description": "Defines if the krl file is split into multiple files; file_name_000 contains main file, file_name_00n-nnn contain each layer (up to 999 layers) ",
+                "value": false,
+                "type": "bool"
+            },
             "start_code": {
-                "description": "Robot start code; If new categories ar defined inside this .json file, with [category_name][value], they can be referenced with {category_name} and the corresponding value wil be inserted; only names with letters and numbers seperated by '_' are valid",
+                "description": "Robot start code;keys inside 'Robot' section  referenced with ?category_name? and the corresponding value wil formatted and inserted; only names with letters and numbers seperated by '_' are valid",
                 "value": [
                     "",
                     ";Printer: ?id?",
@@ -237,7 +237,7 @@
             },
             "characteristic_curve": {
                 "description": "Gives the function of RPM to Flow[liters/min] of the Pump in [Flow,RPM,Voltage]",
-                "value": [[10,100,2],[20,220,3],[30,360,5]],
+                "value": [[1,100,2],[2,220,3],[3,360,5]],
                 "type": "list[list[float,float,float]]"
             },
             "pump_control": {

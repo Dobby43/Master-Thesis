@@ -39,7 +39,6 @@ def krl_format(
     a: int,
     b: int,
     c: int,
-    vel_cp: float,
     vel_tvl: float,
     pump_control: bool,
     precision: int,
@@ -59,7 +58,6 @@ def krl_format(
     :param a: orientation of Nullframe around z-axis in robot convention
     :param b: orientation of Nullframe around y-axis in robot convention
     :param c: orientation of Nullframe around x-axis in robot convention
-    :param vel_cp: printing velocity annotated in krl before each extrusion move (ready to be updated to linetype specific velocity in the future)
     :param vel_tvl: travel velocity annotated in krl before each non-extrusion move
     :param pump_control: specifies if the pump is controlled on the external axis via rpm or voltage
     :param precision: specifies the amount of digits exported
@@ -104,6 +102,7 @@ def krl_format(
     for entry in gcode:
         current_layer = entry["Layer"]
         current_type = entry["Type"]
+        current_velocity = entry["Vel_CP_Max"]
         type_number = type_mapping.get(current_type, 0)
 
         # Saves all code lines of a layer into a temporary list to prepare for splitting of .src file
@@ -132,7 +131,7 @@ def krl_format(
         # translate current type to type_numer from setup.json and append velocity (vel_cp for print moves; vel_tvl for travel moves)
         if current_type != previous_type:
             line_buffer.append(f"\nPATH_TYPE = {type_number}")
-            velocity = vel_tvl if current_type == "travel" else vel_cp
+            velocity = vel_tvl if current_type == "travel" else current_velocity
             line_buffer.append(f"$VEL.CP={velocity:.{precision}f}")
             previous_type = current_type
 
@@ -248,17 +247,16 @@ if __name__ == "__main__":
 
     split = True
     result = krl_format(
-        sample_gcode,
-        type_map,
-        0,
-        0,
-        180,
-        0.35,
-        1.0,
-        True,
-        2,
-        a_min,
-        a_max,
+        gcode=sample_gcode,
+        type_mapping=type_map,
+        a=0,
+        b=0,
+        c=180,
+        vel_tvl=0.35,
+        pump_control=True,
+        precision=2,
+        axis_min=a_min,
+        axis_max=a_max,
         timer=4,
         mlt=10000,
         split_layers=split,

@@ -27,7 +27,7 @@ def format_value(value: Any, precision: int = 2) -> str:
 def replace_placeholders(text: str, settings: dict, precision: int = 2) -> str:
     """
     DESCRIPTION:
-    Replaces all ?key? placeholders in the given text with values ?key? from settings["Robot"][key]["value"].
+    Replaces all ?key? placeholders in the given text with values ?key? from settings ["settings"]["Robot"][key]["value"].
     Returns the replaced text as a string.
 
     :param text: The text with the placeholders (Robot.start_code, Robot.end_code)
@@ -45,6 +45,7 @@ def replace_placeholders(text: str, settings: dict, precision: int = 2) -> str:
         if entry is not None:
             return format_value(entry["value"], precision)
         else:
-            return f"?{key}?"  # unbekannter Key bleibt sichtbar
+            print(f"[WARNING] Key {key} inside robot start or end code not found")
+            return f"?{key}?"  # Unknown key stays visible
 
     return pattern.sub(replacer, text)

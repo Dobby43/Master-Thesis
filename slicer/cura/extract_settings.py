@@ -1,7 +1,6 @@
 import json
-
-from slicer.cura.preset_arguments import def_preset_arguments
 from pathlib import Path
+from slicer.cura.preset_arguments import def_preset_arguments
 
 
 def load_json(filepath):
@@ -49,7 +48,7 @@ def extract_settings(data):
 
 
 def validate_user_arguments(
-    user_input: dict[str, str],
+    user_arguments: dict[str, str],
     printer_default: dict[str, dict],
     extruder_default: dict[str, dict],
 ) -> dict[str, str]:
@@ -58,7 +57,7 @@ def validate_user_arguments(
     Validates user arguments against the default printer and extruder settings.
     Returns a dictionary of validated arguments.
 
-    :param user_input: input from loaded setup.json file
+    :param user_arguments: input from loaded setup.json file
     :param printer_default: default printer settings
     :param extruder_default: default extruder settings
 
@@ -67,7 +66,7 @@ def validate_user_arguments(
 
     validated_arguments = {}
 
-    for key, user_value in user_input.items():
+    for key, user_value in user_arguments.items():
         base_entries = []
 
         # Searches in both the extruder and the printer settings for comparable key
@@ -107,7 +106,7 @@ def validate_user_arguments(
                             f"[WARNING] Key '{key}' from setup.json has an invalid value ('{user_value}')."
                         )
                         print(f"[INFO] Choose a valid option: {options}.")
-                        continue  # Ungültiger Wert → Nicht übernehmen
+                        continue  # Invalid value not taken into account
                     validated_value = user_value
                 elif expected_type == "str":
                     validated_value = str(user_value)
@@ -156,7 +155,6 @@ def final_arguments(
 
 
 if __name__ == "__main__":
-    # Dateien laden (Pfade ggf. anpassen)
     base_file_path_printer = str(
         Path(__file__).parent / "default" / "TUM_C3DP_fdmprinter.def.json"
     )
@@ -179,7 +177,7 @@ if __name__ == "__main__":
         "roofing_layer_count": "1",
         "mesh_position_x": "412.5",
         "retraction_enable": "true",
-        "infill_pattern": "invalid_option",  # Test für Enum-Validierung
+        "infill_pattern": "invalid_option",
     }
 
     # Maschinen-Parameter für die Presets definieren

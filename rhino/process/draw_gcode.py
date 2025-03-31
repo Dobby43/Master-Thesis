@@ -1,5 +1,6 @@
 from pathlib import Path
 from matplotlib.colors import to_rgb
+
 import rhinoinside
 
 # Load Rhino.Inside
@@ -8,6 +9,7 @@ rhinoinside.load()
 import Rhino.Geometry as Rg
 import Rhino.DocObjects as Rdo
 import Rhino.FileIO as Rfi
+
 import System as Sys
 from System.Drawing import Color
 

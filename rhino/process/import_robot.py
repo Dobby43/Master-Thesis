@@ -5,22 +5,22 @@ import Rhino.DocObjects as Rdo
 
 
 def import_step_file_to_rhino_file(
-    step_filepath: Path,
+    file_path: Path,
     target_point: list[float],
     target_3dm_path: Path,
     target_layer_name="robot",
 ):
     """
     DESCRIPTION:
-    Imports a .3dm file (step_filepath) into an existing Rhino file (target_3dm_path),
+    Imports a .3dm file (file_path) into an existing Rhino file (target_3dm_path),
     moves the contents around the origin to the target_point position, and adds the specified layer to it.
 
-    :param step_filepath: Path to the .3dm file.
+    :param file_path: Path to the .3dm file.
     :param target_point: Position of Robotroot relative to printbed origin (make sure x-axis and  y-axis of printbed and robot are parallel)
     :param target_3dm_path: Path to the .3dm file.
     :param target_layer_name: layer in which the robot file is imported to
     """
-    step_path = Path(step_filepath)
+    step_path = Path(file_path)
     target_path = Path(target_3dm_path)
 
     # Load data from .3dm file

@@ -40,15 +40,20 @@ def plot_pump_curve(characteristic_curve: List[List[float]]):
     max_flow = int(np.ceil(curve[-1, 0]))
     max_voltage = int(np.ceil(curve[-1, 2]))
 
-    ax1.set_xticks(np.arange(0, max_rpm + 1, round(max_rpm / 5, -1)))
-    ax1.set_yticks(np.arange(0, max_flow + 1, round(max_flow / 5, -1)))
+    xtick_step = max(1, round(max_rpm / 5)) if max_rpm > 0 else 1
+    ytick_step = max(1, round(max_flow / 5)) if max_flow > 0 else 1
+
+    ax1.set_xticks(np.arange(0, max_rpm + xtick_step, xtick_step))
+    ax1.set_yticks(np.arange(0, max_flow + ytick_step, ytick_step))
 
     ax2 = ax1.twinx()
     color_voltage = "#e37222"
     ax2.set_ylabel("Voltage [V]", color=color_voltage, fontsize=fontsize)
     ax2.plot(rpm, voltage, "s--", color=color_voltage, markersize=3)
     ax2.tick_params(axis="y", labelcolor=color_voltage, labelsize=fontsize)
-    ax2.set_yticks(np.arange(0, max_voltage + 1, 5))
+
+    voltage_step = max(1, round(max_voltage / 5)) if max_voltage > 0 else 1
+    ax2.set_yticks(np.arange(0, max_voltage + voltage_step, voltage_step))
 
     fig.suptitle("Characteristic Curve", fontsize=fontsize + 1)
 
@@ -59,9 +64,9 @@ def plot_pump_curve(characteristic_curve: List[List[float]]):
 if __name__ == "__main__":
     example_curve = [
         [0, 0, 0],
-        [100, 100, 2],
-        [360, 300, 5],
-        [220, 200, 3],
+        [1, 100, 2],
+        [3, 300, 10],
+        [2, 200, 3],
     ]
     plot_pump_curve(example_curve)
     print("Plot saved under 'characteristic_curve.png'")

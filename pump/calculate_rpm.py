@@ -6,61 +6,70 @@ def get_rpm(
     points: list[dict],
     characteristic_curve: list[list[float]],
     vel_cp: float,
+    vel_tvl: float,
+    precision: int,
 ):
     """
     DESCRIPTION:
     Computes the required RPM and Voltage for a given pump characteristic curve based on input data.
     Also checks if the maximum flow rate of the pump is sufficient.
 
-    :param points: List of points with flow information, where flow is given in mm^3/s
+    :param points: List of points with flow information, where flow is given in mm^3/s (ideell berechnet)
     :param characteristic_curve: Pump characteristic curve [[QM (l/min), RPM, Voltage, ...], ...] with arbitrary additional parameters
     :param vel_cp: print velocity that should be reached in m/s
+    :param vel_tvl: travel velocity in m/s
+    :param precision: number of decimal places saved
 
     :return: List with [{RPM, Voltage, Vel_CP_Max}] where Vel_CP_Max is in m/s
     """
-    # Extracting and sorting values from the characteristic curve
+    # Extracting and sorting values from the characteristic curve by flow
     data = np.array(characteristic_curve)
-    sorted_data = data[np.argsort(data[:, 0])]
+    sorted_data = data[np.argsort(data[:, 1])]  # sort for RPM
     qm_values = sorted_data[:, 0]  # Flow values in l/min
-    parameter_values = sorted_data[:, 1:].T  # Extract remaining parameters dynamically
+    parameter_values = sorted_data[
+        :, 1:
+    ].T  # List of RPM and Voltage values [[RPM.sorted],[Voltage.sorted]]
 
-    # Define fill_value limits (low = 0, high = max(QM values))
-    fill_value_limits = (0, max(qm_values))
-
-    # Create interpolation functions for each parameter
-    interpolator = [
-        interp1d(
-            qm_values,
-            param,
+    # Create interpolation functions with clamping at boundary values
+    def clamped_interp(qm_vals, param_vals):
+        f = interp1d(
+            qm_vals,
+            param_vals,
             kind="linear",
-            fill_value=fill_value_limits,
             bounds_error=False,
+            fill_value=(param_vals[0], param_vals[-1]),
         )
-        for param in parameter_values
-    ]
+        return lambda x: f(
+            min(x, qm_vals[-1])
+        )  # Fixing so maximum flow is pump dependent
+
+    interpolators = [clamped_interp(qm_values, param) for param in parameter_values]
 
     max_possible_flow = max(qm_values)  # Maximum flow given for pump in l/min
-    print(f"[INFO] Maximum possible flow for Pump in l/min = {max_possible_flow}")
     results = []
 
     for point in points:
-        flow_lpm = point["Flow"] * 6e-5  # Convert flow from mm^3/s to l/min
-        interpolated_values = [
-            interpolator(flow_lpm) for interpolator in interpolator
-        ]  # Compute interpolated values
+        move = point["Move"]
+        flow_lpm = point["Flow"] * 6e-5  # Calculated flow in l/min (already ideal)
 
-        # Calculate maximum possible velocity dependent on pump
+        interpolated_values = [
+            f(flow_lpm) for f in interpolators
+        ]  # Compute clamped interpolated values
+
+        # Calculate maximum possible velocity dependent on pump (linearly)
         final_vel = (
             min(vel_cp, vel_cp * (max_possible_flow / flow_lpm))
-            if flow_lpm > max_possible_flow
+            if flow_lpm > max_possible_flow and flow_lpm > 0
             else vel_cp
         )
 
         results.append(
             {
-                "RPM": float(interpolated_values[0]),
-                "Voltage": float(interpolated_values[1]),
-                "Vel_CP_Max": final_vel,
+                "RPM": round(float(interpolated_values[0]), precision),
+                "Voltage": round(float(interpolated_values[1]), precision),
+                "Vel_CP_Max": (
+                    round(float(final_vel), precision) if move == "G1" else vel_tvl
+                ),
             }
         )
 
@@ -70,12 +79,11 @@ def get_rpm(
 if __name__ == "__main__":
     # Example input data
     char_curve = [
-        [7, 100, 1],
-        [40, 360, 10],
-        [20, 220, 7],  # Arbitrary number of characteristic points
+        [0, 0, 0],
+        [2, 100, 1],
+        [3, 220, 7],
+        [3.3, 360, 10],  # Sorted by flow ascending
     ]
-
-    char_curve.insert(0, [0, 0, 0])
 
     p = [
         {
@@ -88,19 +96,36 @@ if __name__ == "__main__":
             "Type": "wall_inner",
             "Layer_Height": 15.0,
             "Reachable": True,
-            "Linewidth": 25,
-            "Flow": 120000,
+            "Linewidth": 20,
+            "Flow": 1200000,
             "Line": 2,
             "Point": 2,
             "Point_Info": "1",
         },
+        {
+            "Move": "G0",
+            "X": 667.5,
+            "Y": 2230.0,
+            "Z": 30.0,
+            "E_Rel": 10287.023,
+            "Layer": 1,
+            "Type": "wall_inner",
+            "Layer_Height": 15.0,
+            "Reachable": True,
+            "Linewidth": 0,
+            "Flow": 0,
+            "Line": 2,
+            "Point": 2,
+            "Point_Info": "0",
+        },
     ]
 
-    veloci_p = 100.0  # Velocity in m/s
+    veloci_p = 10.0  # Velocity in m/s
+    veloci_t = 10.0
     pump_control = True
 
     # Compute RPM and Voltage
-    result = get_rpm(p, char_curve, veloci_p)
+    result = get_rpm(p, char_curve, veloci_p, veloci_t, 2)
 
     # Print results
     print("Interpolated values:", result)

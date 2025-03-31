@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Tuple, List
 
 
-def slice(
-    stl_file: str,
-    import_directory_stl: str,
+def slicer(
+    file_name_stl: str,
+    directory_stl: str,
     export_directory_gcode: str,
     export_file_gcode: str,
     cura_engine_path: str,
@@ -16,8 +16,8 @@ def slice(
     DESCRIPTION:
     Slices an STL file using CuraEngine and generates G-code.
 
-    :param stl_file: Name of the STL file to be sliced.
-    :param import_directory_stl: Directory containing the STL file.
+    :param file_name_stl: Name of the STL file to be sliced.
+    :param directory_stl: Directory containing the STL file.
     :param export_directory_gcode: Directory to save the generated G-code to.
     :param export_file_gcode: Name of the output G-code file [without extension (.gcode)]
     :param cura_engine_path: Path to the Cura Engine executable.
@@ -30,7 +30,7 @@ def slice(
         - str: Message with details of success or error.
     """
     # Validate STL input file
-    stl_path = Path(import_directory_stl) / stl_file
+    stl_path = Path(directory_stl) / file_name_stl
     if not stl_path.exists():
         return False, f"[ERROR] STL file not found at {stl_path}."
     if stl_path.suffix.lower() != ".stl":
