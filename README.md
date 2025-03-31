@@ -98,7 +98,7 @@ main.py
 │   ├── test_robot_math_operator.py   # Tests transformation logic from robot.mathmatical_operators
 │   └── __init__.py
 │
-├──user_input/                         # Unit tests for robot and kinematic logic
+├──user_input/          # Folder with all necessary configuration files for use
 │   ├── setup.json         # setup file to configure robot, pump, rhino and overwrite def.json input
 │   ├── printer.def.json   # arguments regarding printer used in cura
 │   ├── extruder.def.json  # arguments regarding extruder used in cura
