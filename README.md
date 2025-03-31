@@ -174,10 +174,10 @@ After a successfully finished execution you will find a folder named with _{outp
 This folder holds three files and an additional folder or four files depending on the user input.
 
 1. Example output (`.src` file not split)
-   ![example_output_non_split.png](images\output_folder_example.png)  
+   ![example_output_non_split.png](images/output_folder_example.png)  
 
 2. Example output (`.src` file split)
-   ![example_output_split.png](images\output_folder_split_example.png)
+   ![example_output_split.png](images/output_folder_split_example.png)
 
 # Trouble shooting
 In this section I will go through some of the most common mistakes regarding the use of this program.
