@@ -19,7 +19,14 @@ def load_robot():
         "c3": 1525,
         "c4": 290,
     }
-    robot_rotation_sign = {"A1": -1, "A2": 1, "A3": 1, "A4": -1, "A5": 1, "A6": -1}
+    robot_rotation_sign = {
+        "A1": False,
+        "A2": True,
+        "A3": True,
+        "A4": False,
+        "A5": True,
+        "A6": False,
+    }
     robot_rotation_limit = {
         "A1": [-185, 185],
         "A2": [-130, 20],

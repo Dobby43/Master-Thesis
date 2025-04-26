@@ -19,6 +19,8 @@ In its current state it is limited to using [Cura](https://ultimaker.com/de/), b
 
 [comment]:<> (Overview)
 # Overview
+This section gives an overview of the whole code structure. Each module houses a single or multiple functions, which are called via _c3dp_main.py_.
+
 ```text
 main.py
 │   # Entry point for the full code workflow.
@@ -112,15 +114,15 @@ This project depends on the following third-party tools:
 
 | Tool             | Purpose                                | Required Version / Notes                   |
 |------------------|----------------------------------------|--------------------------------------------|
-| **CuraEngine**   | Slicing STL files into G-Code          | Recommended: ≥ 5.8                         |
+| **CuraEngine**   | Slicing STL files into G-Code          | Version 5.8                                |
 | **Rhino 3D**     | Visualization and .3dm file generation | Version 8 or later                         |
 | **Microsoft Word** | For reading `.docx` reports            | Optional, for viewing of print report only |
 
-> ⚠️ Make sure that CuraEngine.exe is properly installed and the paths is configured correctly in `setup.json`.
+> ⚠️ Make sure that you use explicitly Version 5.8 and CuraEngine.exe is properly installed and the paths is configured correctly in `setup.json`.
 ### CuraEngine.exe
-To install the CuraEngine.exe download [Cura 5.8](https://ultimaker.com/de/software/ultimaker-cura/) or higher.
+To install the CuraEngine.exe download [Cura 5.8](https://github.com/Ultimaker/Cura/releases/) in Version 5.8 under **Assets**.
 Within the installed folder you will find a `.exe` file named _CuraEngine.exe_  
-Copy the link to this file (e.g.: _C:\Program Files\UltiMaker Cura 5.8.1\CuraEngine.exe_) into the `setup.json` 
+Copy the link to this file (e.g.: _C:\Program Files\UltiMaker Cura 5.8.0\CuraEngine.exe_) into the `setup.json` 
 file under Cura.cura_cmd_path as a value. 
 You find the `setup.json` file under _\user_input\setup.json_ in my repository.
 Your slicing engine is now set up for remote slicing.
@@ -170,24 +172,24 @@ To execute the main function you can use the following CMD command in the folder
 ```bash
 .venv\Scripts\python.exe c3dp_main.py
 ```
-After a successfully finished execution you will find a folder named with _{output_name}_hh_mm_ss_ in the specified _output_directory_ from `setup.json`.  
+After a successfully finished execution you will find a folder named with *{output_name}_hh_mm_ss* in the specified _output_directory_ from `setup.json`.  
 This folder holds three files and an additional folder or four files depending on the user input.
 
-1. Example output (`.src` file not split)
+1. Example output (`.src` file not split)  
    ![example_output_non_split.png](images/output_folder_example.png)  
 
-2. Example output (`.src` file split)
+2. Example output (`.src` file split)  
    ![example_output_split.png](images/output_folder_split_example.png)
 
 # Trouble shooting
 In this section I will go through some of the most common mistakes regarding the use of this program.
 In general three types of information output is given while running this code:
 
-| output    | meaning                                                                                                     | comment                                                                                           |
-|-----------|-------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| [INFO]    | Basic user information regarding progress or updates during the execution of the code                       | Can occur as well after crucial [ERROR] messages to inform about the source of [ERROR]            |
-| [WARNING] | Non crucial error messages; The program will finish as normal, although some restrictions have been applied | Can occure for example if `.stl` does not fit buildplate of printer                               |
-| [ERROR]   | Crucial Error suggesting wrong or invalid input                                                             | Can occure for example if start position of robot or any given point on printbed is not reachable |
+| output    | meaning                                                                                                     | comment                                                                                            |
+|-----------|-------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| [INFO]    | Basic user information regarding progress or updates during the execution of the code                       | Gives an upfate on the current status of the program                                               |
+| [WARNING] | Non crucial error messages; The program will finish as normal, although some restrictions have been applied | Can occur as well after crucial [ERROR] messages to inform about the source of [ERROR]             |
+| [ERROR]   | Crucial Error suggesting wrong or invalid input                                                             | Can occure for example if start position of robot or any given point on printbed is not reachable  |
 
 ## Common errors
 

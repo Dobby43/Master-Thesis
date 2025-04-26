@@ -41,9 +41,15 @@ def get_linewidth(
                 (previous_point_x - current_x) ** 2
                 + (previous_point_y - current_y) ** 2
             )
+            # Extract Flow value or use 100% as default
+            if current_type == "unknown":
+                flow_value = 100
+            else:
+                flow_value = flow[current_type]
+
             # Calculation of linewidth assuming a rectangular cross-section and round filament
             line_width = (np.pi / 4 * diam_fil**2 * e_val) / (
-                layer_h * flow[current_type] / 100 * length
+                layer_h * flow_value / 100 * length
             )
             line_widths.append(line_width)
             # Sum up individual volumes to find the total filament volume used

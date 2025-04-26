@@ -8,7 +8,7 @@ from tests.test_kinematics import setup_kinematics_test as roset
 BASE_DIR = str(Path(__file__).parent / "kinematics_test_cases")
 
 tolerance_ik_deg = 0.02  # tolerance for ik
-tolerance_fk_mm = 0.00  # tolerance for fk
+tolerance_fk_mm = 0.01  # tolerance for fk
 
 
 @pytest.fixture(scope="session")

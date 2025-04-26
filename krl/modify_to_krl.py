@@ -51,42 +51,42 @@ def krl_format(
 ) -> list[list[str]] | list[str]:
     """
     DESCRIPTION
-    Formatting given values from a list of dictionaries into strings matching krl format
+    Formatting given values from a list of dictionaries into strings matching KRL (.src) format.
 
-    :param gcode: list of necessary information on coordinates Nullframe orientation and flow (for external axis E1)
-    :param type_mapping: dictionary mapping written types to integers specified in setup.Robot.type_number.json
-    :param a: orientation of Nullframe around z-axis in robot convention
-    :param b: orientation of Nullframe around y-axis in robot convention
-    :param c: orientation of Nullframe around x-axis in robot convention
-    :param vel_tvl: travel velocity annotated in krl before each non-extrusion move
-    :param pump_control: specifies if the pump is controlled on the external axis via rpm or voltage
-    :param precision: specifies the amount of digits exported
-    :param axis_min: to determine the amount of space needed for each coordinate X,Y,Z such that the decimal placed match in columns
-    :param axis_max: to determine the amount of space needed for each coordinate X,Y,Z such that the decimal placed match in columns
-    :param timer: specifies which timer is used to track minimum layer time
-    :param mlt: minimum layer time in ms (robot waits till timer > mlt before starting new layer)
-    :param split_layers: specifies if .src file is split into multiple layers
-    :param project_name: project name with a maximum length of 25 characters in total
+    :param gcode: list of dictionaries containing G-code information (coordinates, nullframe orientation, flow rates for external axis E1).
+    :param type_mapping: dictionary mapping written movement types to integers as defined in setup.Robot.type_number.json.
+    :param a: orientation of the nullframe around the Z-axis in robot convention.
+    :param b: orientation of the nullframe around the Y-axis in robot convention.
+    :param c: orientation of the nullframe around the X-axis in robot convention.
+    :param vel_tvl: travel velocity (non-extrusion moves) annotated before travel commands.
+    :param pump_control: specifies if the pump is controlled via RPM (True) or Voltage (False) on the external axis E1.
+    :param precision: number of decimal places for all numerical values (coordinates, speeds, flow rates).
+    :param axis_min: minimum values for X, Y, Z axes to calculate field width for formatting.
+    :param axis_max: maximum values for X, Y, Z axes to calculate field width for formatting.
+    :param timer: index of the timer used to track the minimum layer time.
+    :param mlt: minimum layer time in milliseconds (robot waits until timer exceeds this value before starting next layer).
+    :param split_layers: specifies if the output should be split into separate .src files per layer (True) or kept as a single file (False).
+    :param project_name: project name used for output files (maximum 25 characters).
 
-    :return: list or nested list of .src lines depending on if file is split or not
+    :return: list of formatted .src lines or list of nested .src line blocks (one block per layer if split_layers is True).
     """
 
-    # Setup of initial values
+    # --- Initialization ---
     previous_layer = None
     previous_type = None
     position = -1
-
     krl_lines = []
     layer_blocks = []
     current_block = []
 
+    # Calculate maximum field widths for formatting
     max_lengths = {
         "X": calc_field_width(axis_min["x"], axis_max["x"], precision),
         "Y": calc_field_width(axis_min["y"], axis_max["y"], precision),
         "Z": calc_field_width(axis_min["z"], axis_max["z"], precision),
-        "Flow": calc_field_width(
-            min(entry["Flow"] for entry in gcode),
-            max(entry["Flow"] for entry in gcode),
+        "RPM": calc_field_width(
+            min(entry["RPM"] for entry in gcode),
+            max(entry["RPM"] for entry in gcode),
             precision,
         ),
         "Voltage": calc_field_width(
@@ -99,114 +99,121 @@ def krl_format(
         "C": calc_field_width(c, c, precision),
     }
 
-    for entry in gcode:
+    # --- Helper blocks ---
+
+    def start_layer(layer_idx):
+        return [
+            f"\nLAYER = {layer_idx}",
+            f"$TIMER[{timer}] = 0",
+            f"$TIMER_STOP[{timer}] = FALSE\n",
+        ]
+
+    def end_layer():
+        return [
+            f"\nWAIT FOR $TIMER[{timer}] > {mlt}",
+            f"$TIMER_STOP[{timer}] = TRUE\n",
+        ]
+
+    def set_path_type_and_velocity(type_number, velocity):
+        return [
+            f"\nPATH_TYPE = {type_number}",
+            f"$VEL.CP={velocity:.{precision}f}",
+        ]
+
+    def format_motion(position_string, is_first, is_last):
+        if is_first:
+            return f"PTP {{{position_string}}} C_PTP"
+        elif is_last:
+            return [
+                f"PTP {{{position_string}}} C_DIS",
+                f"\nWAIT FOR $TIMER[{timer}] > {mlt}",
+            ]
+        else:
+            return f"LIN {{{position_string}}} C_DIS"
+
+    # --- Main loop ---
+    for idx, entry in enumerate(gcode):
         current_layer = entry["Layer"]
         current_type = entry["Type"]
         current_velocity = entry["Vel_CP_Max"]
         type_number = type_mapping.get(current_type, 0)
-
-        # Saves all code lines of a layer into a temporary list to prepare for splitting of .src file
         line_buffer = []
 
-        # Layer und Timer Handling
-        if current_layer == 0 and previous_layer is None:
-            line_buffer.append(f"\nLAYER = {current_layer}")
-            previous_layer = current_layer
-        # Insert wait for mlt and stop as well as reset timer
-        elif current_layer != previous_layer:
-            (
-                line_buffer.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
-                if not split_layers
-                else ""
-            )
-            line_buffer.append(f"\n$TIMER_STOP[{timer}] = TRUE")
-            line_buffer.append(f"$TIMER[{timer}] = 0")
-            line_buffer.append(f"\nLAYER = {current_layer}")
-            line_buffer.append(f"$TIMER_STOP[{timer}] = FALSE\n")
+        # Handle layer change
+        if current_layer != previous_layer:
+            if previous_layer is not None:
+                if not split_layers:
+                    krl_lines.extend(end_layer())
+                else:
+                    current_block.extend(end_layer())
+                    current_block.append("END")
+                    layer_blocks.append(current_block)
+                    current_block = []
+
+            if split_layers and idx != 0:
+                current_block = [f"DEF {project_name}_{len(layer_blocks):03d} ()"]
+
+            line_buffer.extend(start_layer(current_layer))
             previous_layer = current_layer
 
-            # append "Wait for Timer" and "END" to current block for a layer change if split layers is active and current block has values
-            if split_layers and current_block:
-                current_block.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
-                current_block.append("END")
-                layer_blocks.append(current_block)
-                current_block = []
-
-        # Path Type & Velocity Handling
-        # translate current type to type_numer from setup.json and append velocity (vel_cp for print moves; vel_tvl for travel moves)
+        # Handle type change (path type and velocity)
         if current_type != previous_type:
-            line_buffer.append(f"\nPATH_TYPE = {type_number}")
             velocity = vel_tvl if current_type == "travel" else current_velocity
-            line_buffer.append(f"$VEL.CP={velocity:.{precision}f}")
+            line_buffer.extend(set_path_type_and_velocity(type_number, velocity))
             previous_type = current_type
 
+        # Format position
         x = format_value(entry["X"], max_lengths["X"])
         y = format_value(entry["Y"], max_lengths["Y"])
         z = format_value(entry["Z"], max_lengths["Z"])
 
-        # Set flow values depending on given Type
-        if current_type == "retract":  # Set E1 to -1
-            e1 = format_value(
-                -1, max_lengths["Flow"] if pump_control else max_lengths["Voltage"]
-            )
-        elif current_type == "protract":  # Set E1 to 0
-            e1 = format_value(
-                0, max_lengths["Flow"] if pump_control else max_lengths["Voltage"]
-            )
-        elif (
-            entry["Move"] == "G1"
-        ):  # Set E1 to "Flow" or "RPM" depending on pump control
-            e1 = format_value(
-                entry["Flow"] if pump_control else entry["Voltage"],
-                max_lengths["Flow"] if pump_control else max_lengths["Voltage"],
-            )
-        else:  # Set anything else to 0
-            e1 = format_value(
-                0, max_lengths["Flow"] if pump_control else max_lengths["Voltage"]
-            )
+        if current_type == "retract":
+            e1_value = -1
+        elif current_type == "protract":
+            e1_value = 0
+        elif entry["Move"] == "G1":
+            e1_value = entry["RPM"] if pump_control else entry["Voltage"]
+        else:
+            e1_value = -1
+
+        e1 = format_value(
+            e1_value,
+            max_lengths["RPM"] if pump_control else max_lengths["Voltage"],
+        )
 
         a_str = format_value(a, max_lengths["A"])
         b_str = format_value(b, max_lengths["B"])
         c_str = format_value(c, max_lengths["C"])
 
-        # Compose position string
         position_string = (
             f"X {x}, Y {y}, Z {z}, "
             f"A {a_str}, B {b_str}, C {c_str}, "
             f"E1 {e1}, E2 + 0, E3 + 0, E4 + 0"
         )
 
-        # keep track of position (lines)
         position += 1
+        move_command = format_motion(
+            position_string, position == 0, position == len(gcode) - 1
+        )
 
-        # First move as PTP
-        if position == 0:
-            line_buffer.append(f"PTP {{{position_string}}} C_PTP")
-        # Last move as C_DIS with mlt timer
-        elif position == len(gcode) - 1:
-            line_buffer.append(f"PTP {{{position_string}}} C_DIS")
-            line_buffer.append(f"\nWAIT FOR $TIMER[{timer}] > {mlt}")
-        # Everything else as C_DIS
+        if isinstance(move_command, list):
+            line_buffer.extend(move_command)
         else:
-            line_buffer.append(f"LIN {{{position_string}}} C_DIS")
+            line_buffer.append(move_command)
 
-        # Append only line_buffer to block if split layers
+        # Store lines
         if split_layers:
             current_block.extend(line_buffer)
-        # Append everything to krl_lines if not split_layers
         else:
             krl_lines.extend(line_buffer)
 
+    # Final handling for split layers
     if split_layers:
-        # Append END to block if last block
         if current_block:
+            current_block.append(f"\n$TIMER_STOP[{timer}] = TRUE")
             current_block.append("END")
             layer_blocks.append(current_block)
-        # Set filename in the first line of the block
-        return [
-            [f"DEF {project_name}_{i:03d} ()"] + block
-            for i, block in enumerate(layer_blocks)
-        ]
+        return layer_blocks
     else:
         return krl_lines
 

@@ -9,6 +9,7 @@ __version__ = "1.7"
 from pathlib import Path
 import numpy as np
 from datetime import datetime
+import shutil
 import time
 import os
 import sys
@@ -34,11 +35,6 @@ from gcode import min_max_values as gcmim
 from gcode import simplify_gcode as gcspf
 from gcode import fits_printbed as gcfit
 
-# KRL
-from krl import export_to_src as krexp
-from krl import start_code_python as krscp
-from krl import modify_to_krl as krmdf
-
 # ROBOT
 from robot.mathematical_operators import Transformation
 from robot.mathematical_operators import Rotation
@@ -48,6 +44,11 @@ from robot import kinematics as rokin
 from pump import calculate_linewidth as puliw
 from pump import calculate_flow as puflo
 from pump import calculate_rpm as purpm
+
+# KRL
+from krl import export_to_src as krexp
+from krl import start_code_python as krscp
+from krl import modify_to_krl as krmdf
 
 # RHINO
 from rhino.pre_process import create_rhino as crtrh
@@ -65,8 +66,13 @@ from report import write_report as rewrt
 
 # All upper case variables are taken from the setup.json file and are upper case to be clearly identified
 def main():
-    print(f"[INFO] Program initialized")
+    print(f"[INFO] Program initialized\n")
     start_time = time.time()
+
+    # ----------------SAFETY SWITCH----------------
+    # Define switch to ensure all points in a .src file are reachable and input is correct
+    # If scr == False no .src file is generated
+    src = True
 
     # ----------------GET SETUP PATH----------------
     setup_path = str(Path(__file__).parent / "user_input" / "setup.json")
@@ -84,9 +90,9 @@ def main():
         suval.validate_settings(user_settings=settings)
         print("[INFO] Loaded and validated setup.json successfully.\n")
     except ValueError as e:
-        print("\n[ERROR] Invalid input in setup.json:")
+        print("\n[ERROR] Invalid input in setup.json\n")
         print(e)
-        exit(1)
+        sys.exit(1)
 
     # ----------------EXTRACT DIRECTORY INFORMATION----------------
     # Access "Directory" section in settings imported from setup.json
@@ -102,7 +108,7 @@ def main():
 
     if not os.path.isfile(os.path.join(INPUT_DIRECTORY_STL, INPUT_FILE_STL)):
         print(
-            f"[ERROR] Input .stl file {INPUT_FILE_STL} inside input directory does not exist"
+            f"[ERROR] Input .stl file {INPUT_FILE_STL} inside input directory does not exist\n"
         )
         sys.exit(1)
 
@@ -149,15 +155,28 @@ def main():
     ROBOT_3DM_FILE = robot_settings["3dm_file"]["value"]
     ROBOT_MIN_LAYER_TIME = robot_settings["min_layer_time"]["value"]
 
-    # Replacing placeholders in robot.start_code and robot.end_code
-    ROBOT_START_CODE_JSON = [
+    # Switch to filter for input error
+    input_error = False
+
+    # Replacing placeholders in robot.start_code
+    start_code_results = [
         surpl.replace_placeholders(text=line, settings=settings, precision=precision)
         for line in robot_settings["start_code"]["value"]
     ]
-    ROBOT_END_CODE_JSON = [
+    ROBOT_START_CODE_JSON = [res[0] for res in start_code_results]
+    success_flags_start = [res[1] for res in start_code_results]
+
+    # Replacing placeholders in robot.end_code
+    end_code_results = [
         surpl.replace_placeholders(text=line, settings=settings, precision=precision)
         for line in robot_settings["end_code"]["value"]
     ]
+    ROBOT_END_CODE_JSON = [res[0] for res in end_code_results]
+    success_flags_end = [res[1] for res in end_code_results]
+
+    # Evaluate final success
+    src = all(success_flags_start + success_flags_end)
+    input_error = not src
 
     # ----------------PUMP CONFIGURATION----------------
     # Access "Pump" section in settings imported from setup.json
@@ -172,13 +191,14 @@ def main():
     # Ensure first values are 0
     PUMP_CHARACTERISTIC_CURVE.insert(0, [0, 0, 0])
 
-    print(f"[INFO] Pump Setting Retraction enabled: {PUMP_RETRACT}")
+    print(f"[INFO] Pump Setting Retraction enabled: {PUMP_RETRACT}\n")
 
     # ----------------CURA CONFIGURATION----------------
     # Access "Cura" section in settings imported from setup.json
     cura_settings = settings["Cura"]
 
     CURA_CMD_PATH = cura_settings["cura_cmd_path"]["value"]
+
     CURA_PRINTER_CONFIG_FILE_PATH = cura_settings["cura_printer_config_file_path"][
         "value"
     ]
@@ -186,12 +206,22 @@ def main():
     # Program gets aborted if CuraEngine filepath or printer_config input file doesn't exist
     if not os.path.isfile(CURA_CMD_PATH):
         print(f"[ERROR] CuraEngine-Path {CURA_CMD_PATH} not found")
+        if os.path.isdir(output_folder):
+            shutil.rmtree(output_folder)
+            print(
+                f"[INFO] Output folder {output_folder} has been removed due to error."
+            )
         sys.exit(1)
 
     if not os.path.isfile(CURA_PRINTER_CONFIG_FILE_PATH):
         print(
             f"[ERROR] Configuration file {CURA_PRINTER_CONFIG_FILE_PATH} for printer not found"
         )
+        if os.path.isdir(output_folder):
+            shutil.rmtree(output_folder)
+            print(
+                f"[INFO] Output folder {output_folder} has been removed due to error."
+            )
         sys.exit(1)
 
     CURA_ARGUMENTS = cura_settings["cura_arguments"]["value"]
@@ -218,7 +248,9 @@ def main():
     RHINO_LINE_WIDTH = rhino_settings["line_width"]["value"]
 
     # ----------------SLICING OF .STL FILE----------------
-    print(f"[INFO] Trying to slice {INPUT_FILE_STL} with given Slicer {SLICER.upper()}")
+    print(
+        f"[INFO] Trying to slice {INPUT_FILE_STL} with given Slicer {SLICER.upper()}\n"
+    )
     if SLICER == "cura":
         # Calculate scaling Matrix
         scale = cusca.compute_scaling_and_rotation_matrix(scaling_input=CURA_SCALING)
@@ -263,7 +295,7 @@ def main():
         )
 
         # Slice STL with updated user arguments
-        print(f"[INFO] Starting to slice {INPUT_FILE_STL}")
+        print(f"[INFO] Starting to slice {INPUT_FILE_STL}\n")
         success, message = cusli.slicer(
             directory_stl=INPUT_DIRECTORY_STL,
             file_name_stl=INPUT_FILE_STL,
@@ -286,18 +318,11 @@ def main():
         print(f"[ERROR] {SLICER.upper()} not supported; Choose valid Slicer")
         sys.exit(1)
 
-    # ----------------SAFETY SWITCH----------------
-    # Define switch to ensure all points in a .src file are reachable
-    # If scr == False no .src file is generated
-    src = True
-
     # ----------------G-CODE IMPORT AND EVALUATION----------------
     # Read the G-Code lines
     gcode_lines = gcget.get_gcode_lines(
         directory=OUTPUT_DIRECTORY_GCODE, file_name=OUTPUT_FILE_GCODE
     )
-    for line in gcode_lines:
-        print(line)
 
     # Check if object was sliced
     marker = re.compile(r"G[1]\s+.*[XYZ][-+]?\d+", re.IGNORECASE)
@@ -311,6 +336,7 @@ def main():
 
     # Gets min X, Y and Z values
     min_values = gcmim.get_min_values(gcode=gcode_lines)
+
     # Gets max X, Y and Z values
     max_values = gcmim.get_max_values(gcode=gcode_lines)
 
@@ -371,7 +397,7 @@ def main():
     r_robotroot_tool = r_robotroot_base @ r_base_tool
 
     # INITIALIZE ROBOT CLASS
-    print(f"[INFO] Initialising class for {ROBOT_ID}")
+    print(f"[INFO] Initialising class for {ROBOT_ID}\n")
     robot = rokin.RobotOPW(
         robot_id=ROBOT_ID,
         robot_geometry=ROBOT_GEOMETRY,
@@ -401,10 +427,11 @@ def main():
         )
         print("[WARNING] No .src file will be created")
         print(
-            f"[WARNING] Rhino file created with alternative end point [{start_pos_base[0,3]}, {start_pos_base[1,3]}, {start_pos_base[2,3]}]"
+            f"[WARNING] Rhino file created with alternative end point ({start_pos_base[0,3]}, {start_pos_base[1,3]}, {start_pos_base[2,3]})\n"
         )
 
     else:
+        print(f"[INFO] Start position {ROBOT_START_POSITION} is valid\n")
         start_pos_base = t_base_robotroot @ start_pos_robotroot
 
     # End position
@@ -420,10 +447,10 @@ def main():
         print(f"[ERROR] End position {ROBOT_END_POSITION} is not within Robot reach")
         print("[WARNING] No .src file will be created")
         print(
-            f"[WARNING] Rhino file created with alternative end point [{end_pos_base[0,3]}, {end_pos_base[1,3]}, {end_pos_base[2,3]}] "
+            f"[WARNING] Rhino file created with alternative end point ({end_pos_base[0,3]}, {end_pos_base[1,3]}, {end_pos_base[2,3]})\n] "
         )
     else:
-        print(f"[INFO] End position {ROBOT_END_POSITION} is valid")
+        print(f"[INFO] End position {ROBOT_END_POSITION} is valid\n")
         end_pos_base = t_base_robotroot @ end_pos_robotroot
 
     robot_start_point = {
@@ -450,7 +477,7 @@ def main():
     }
 
     # ----------------ROBOT SIMULATION----------------
-    print(f"[INFO] Checking robot kinematics for each Point of given G-Code")
+    print(f"[INFO] Checking robot kinematics for each Point of given G-Code\n")
     status = []
     for index, line in enumerate(gcode_necessary):
         # Transform point in BASE to point in ROBOTROOT
@@ -479,7 +506,7 @@ def main():
             line.update({"Reachable": True})
 
     if all(entry.get("Reachable") is True for entry in gcode_necessary):
-        print("[INFO] All points from G-Code are reachable")
+        print("[INFO] All points from G-Code are reachable\n")
 
     # Insert start and end point into the list
     gcode_necessary.insert(0, robot_start_point)
@@ -510,11 +537,14 @@ def main():
     for gcd, cmd in zip(gcode_necessary, pump_command):
         gcd.update(cmd)
 
+    # for line in gcode_necessary:
+    #     print(line)
+
     # ----------------KRL FORMATING OF G-CODE----------------
     if src is True:
         print("[INFO] compiling .src file")
         # Set Start and End Code parts from Python values
-        length_name = 25 if ROBOT_SPLIT_SRC == False else 21
+        length_name = 24 if ROBOT_SPLIT_SRC == False else 20
         filename_formatted = OUTPUT_NAME.replace(" ", "_")[:length_name]
         robot_start_code_py = krscp.set_start_code_python(layers=layer_max)
         robot_end_code_py = []
@@ -566,8 +596,10 @@ def main():
             print("[WARNING] .src file not generated due unreachable point")
         if not location:
             print(
-                "[WARNING] .src file not generated due to invalid location or of object or object not fitting on printbed"
+                "[WARNING] .src file not generated due to invalid location of object or object not fitting on printbed"
             )
+        if input_error:
+            print("[WARNING] .src file not generated due invalid input in setup.json")
 
     # ---------------- REPORT ----------------
     # Plot of the G-Code and Printbed
@@ -619,6 +651,7 @@ def main():
         "base_coordinates": ROBOT_BASE,
         "print_speed": round(ROBOT_VEL_CP, precision),
         "travel_speed": round(ROBOT_VEL_TVL, precision),
+        "min_layer_time": round(ROBOT_MIN_LAYER_TIME * 1e-3, precision),
         "protract": ROBOT_TYPE_NUMBER["protract"],
         "retract": ROBOT_TYPE_NUMBER["retract"],
         "travel": ROBOT_TYPE_NUMBER["travel"],

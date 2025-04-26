@@ -74,9 +74,6 @@ def split_and_export_to_src(
     :param file_name: name of the output file (used for the folder and the main file name)
     """
 
-    individual_start_line = ""
-    individual_end_line = "END"
-
     # Create subdirectory
     folder_name = f"{file_name}_SRC"
     folder_path = os.path.join(output_path, folder_name)

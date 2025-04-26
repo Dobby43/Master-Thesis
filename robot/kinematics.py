@@ -62,7 +62,10 @@ class RobotOPW:
             [robot_rotation_offset[f"A{i+1}"] for i in range(self.num_axis)]
         )
         self.sign = np.array(
-            [robot_rotation_sign[f"A{i+1}"] for i in range(self.num_axis)]
+            [
+                1 if robot_rotation_sign[f"A{i + 1}"] == 1 else -1
+                for i in range(self.num_axis)
+            ]
         )
         self.lim = robot_rotation_limit
 

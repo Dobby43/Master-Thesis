@@ -24,29 +24,38 @@ def format_value(value: Any, precision: int = 2) -> str:
     return str(value)
 
 
-def replace_placeholders(text: str, settings: dict, precision: int = 2) -> str:
+import re
+
+
+def replace_placeholders(
+    text: str, settings: dict, precision: int = 2
+) -> tuple[str, bool]:
     """
     DESCRIPTION:
-    Replaces all ?key? placeholders in the given text with values ?key? from settings ["settings"]["Robot"][key]["value"].
-    Returns the replaced text as a string.
+    Replaces all ?key? placeholders in the given text with values from settings["Robot"][key]["value"].
+    Returns the replaced text and a success flag.
 
-    :param text: The text with the placeholders (Robot.start_code, Robot.end_code)
+    :param text: The text with the placeholders (e.g. Robot.start_code, Robot.end_code)
     :param settings: The settings dictionary (with all available placeholders)
-    :param precision: The number of decimal places to show for the replaced key
+    :param precision: Number of decimal places to use when formatting values
 
-    :return: The replaced text as a string
+    :return: A tuple of (replaced text, success flag)
     """
     robot_values = settings.get("Robot", {})
     pattern = re.compile(r"\?([a-z0-9_]+)\?")
+    all_keys_found = True
 
     def replacer(match: re.Match) -> str:
+        nonlocal all_keys_found
         key = match.group(1)
         entry = robot_values.get(key)
         if entry is not None:
             return format_value(entry["value"], precision)
         else:
-            print(f"[ERROR] Key {key} inside robot start or end code not found")
-            print(f"[WARNING] Key {key} not replaced; Check start code")
-            return f"?{key}?"  # Unknown key stays visible
+            print(f"[ERROR] Key ?{key}? inside robot start or end code not found")
+            print(f"[WARNING] Key ?{key}? not replaced")
+            all_keys_found = False
+            return f"?{key}?"
 
-    return pattern.sub(replacer, text)
+    replaced_text = pattern.sub(replacer, text)
+    return replaced_text, all_keys_found

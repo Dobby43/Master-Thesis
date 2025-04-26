@@ -14,7 +14,7 @@
         "has_machine_quality": false,
         "preferred_material": "generic_pla",
         "preferred_quality_type": "normal",
-        "machine_extruder_trains": { "0": "KUKA_fdmextruder" },
+        "machine_extruder_trains": { "0": "extruder" },
         "supports_usb_connection": false,
         "supports_network_connection": false
     },
