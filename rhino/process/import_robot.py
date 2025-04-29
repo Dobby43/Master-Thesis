@@ -51,7 +51,7 @@ def import_step_file_to_rhino_file(
             attr.LayerIndex = target_layer_index
 
             if isinstance(geom, Rg.Point):
-                rhino_file.Objects.AddPoint(geom, attr)
+                rhino_file.Objects.AddPoint(geom.Location, attr)
             elif isinstance(geom, Rg.Curve):
                 rhino_file.Objects.AddCurve(geom, attr)
             elif isinstance(geom, Rg.Line):
@@ -63,11 +63,11 @@ def import_step_file_to_rhino_file(
             else:
                 print(f"[WARNING] Geometry type {type(geom)} not supported")
                 print(
-                    "[INFO] Make sure robot.3dm file only consists of Points, Curves, Lines, Brep, Mesh"
+                    "[INFO] Make sure robot.3dm file only consists of Points, Curves, Lines, Brep, Mesh\n"
                 )
 
     # Save file
     rhino_file.Write(str(target_3dm_path), 8)
     print(
-        f"[INFO] Robot from '{file_path}' imported in '{target_3dm_path}' onto layer '{target_layer_name}' at position {tp}."
+        f"[INFO] Robot from '{file_path}' imported in '{target_3dm_path}' onto layer '{target_layer_name}' at position {tp}.\n"
     )

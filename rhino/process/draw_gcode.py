@@ -25,7 +25,7 @@ def color_name_to_rgb(color_name: str) -> tuple:
     if color_name.startswith("#") and len(color_name) in {7, 9}:  # #RRGGBB or #RRGGBBAA
         return tuple(int(c * 255) for c in to_rgb(color_name))
     else:
-        print(f"[ERROR] Invalid HEX color: {color_name}. Defaulting to black.")
+        print(f"[ERROR] Invalid HEX color: {color_name}. Defaulting to black.\n")
         return 0, 0, 0
 
 
@@ -70,7 +70,7 @@ def create_geometry(
 
     # Save the updated file
     rhino_file.Write(str(filepath), 8)
-    print(f"[INFO] Updated Rhino file saved to {filepath}.")
+    print(f"[INFO] Updated Rhino file saved to {filepath}.\n")
     return True
 
 
@@ -93,7 +93,7 @@ def get_layer_index(rhino_file: Rfi.File3dm, layer_id: str, line_id: str) -> int
         None,
     )
     if not toolpath_layer:
-        print("[ERROR] 'toolpath'-Layer nicht gefunden.")
+        print("[ERROR] 'toolpath'-Layer not found.\n")
         return None
 
     # 2. Get Layer e.g. '0003'
@@ -106,7 +106,7 @@ def get_layer_index(rhino_file: Rfi.File3dm, layer_id: str, line_id: str) -> int
         None,
     )
     if not layer_obj:
-        print(f"[ERROR] Layer '{layer_id}' unter 'toolpath' nicht gefunden.")
+        print(f"[ERROR] Layer '{layer_id}' under 'toolpath' wasn't found.\n")
         return None
 
     # 3. Get Line-Layer e.g. '0127'
@@ -119,7 +119,7 @@ def get_layer_index(rhino_file: Rfi.File3dm, layer_id: str, line_id: str) -> int
         None,
     )
     if not line_layer:
-        print(f"[ERROR] Line '{line_id}' unter '{layer_id}' nicht gefunden.")
+        print(f"[ERROR] Line '{line_id}' under '{layer_id}' wasn't found.\n")
         return None
 
     return line_layer.Index
@@ -203,7 +203,7 @@ def create_lines(
         line_id = f"{p1['Line']:04d}"
         layer_index = get_layer_index(rhino_file, layer_id, line_id)
         if layer_index is None:
-            print(f"[WARNING] Layer {layer_id}/{line_id}  not found; Skipping line")
+            print(f"[WARNING] Layer {layer_id}/{line_id}  not found; Skipping line\n")
             continue
 
         # Object attributes
@@ -223,7 +223,7 @@ def create_lines(
         attr.SetUserString("Velocity [m/s]", str(round(p1["Vel_CP_Max"], precision)))
 
         # Set linetype
-        color_hex = line_color_dict.get(visual_type, "#FFFFFF")
+        color_hex = line_color_dict.get(visual_type, "#9B4468D")
         linetype_name = linetype_dict.get(visual_type, "Continuous")
 
         # PRINT VIEW
@@ -257,7 +257,7 @@ def create_lines(
             attr.LinetypeIndex = linetype_index
         else:
             print(
-                f"[WARNING] Linientyp '{linetype_name}' not found, using 'Continuous' as default"
+                f"[WARNING] Linientyp '{linetype_name}' not found, using 'Continuous' as default\n"
             )
 
         rhino_file.Objects.AddLine(line, attr)
@@ -296,14 +296,20 @@ def create_points(
         line_id = f"{point_data['Line']:04d}"
         point_id = f"{point_data['Point']:04d}"
         point_info = point_data["Point_Info"]
+        reachable = point_data["Reachable"]
         x, y, z = point_data["X"], point_data["Y"], point_data["Z"]
 
         # Create geometry
         point = Rg.Point3d(x, y, z)
 
         # Set color
-        color_hex = point_color.get(point_info, "#000000")
-        color_rgb = Color.FromArgb(*color_name_to_rgb(color_hex))
+        color_hex = point_color.get(point_info, "#9B468D")
+
+        # For unreachable points display color is set to be black
+        if reachable:
+            color_rgb = Color.FromArgb(*color_name_to_rgb(color_hex))
+        else:
+            color_rgb = Color.FromArgb(*color_name_to_rgb("#000000"))
 
         # Get layer index of current point
         layer_index = get_layer_index(rhino_file, layer_id, line_id)

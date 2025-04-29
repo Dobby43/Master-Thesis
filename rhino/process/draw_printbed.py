@@ -23,7 +23,7 @@ def add_print_bed(
     # Load the existing Rhino file
     rhino_file = File3dm.Read(str(file_path))
     if rhino_file is None:
-        print(f"[ERROR] Could not open the Rhino file at {file_path}")
+        print(f"[ERROR] Could not open the Rhino file at {file_path}\n")
         return False
 
     # Determine the layer to add the print bed to
@@ -32,7 +32,7 @@ def add_print_bed(
     # Find the specified layer in the rhino file
     layer = next((l for l in rhino_file.Layers if l.Name == layer_name), None)
     if layer is None:
-        print(f"[ERROR] Layer '{layer_name}' not found in the file.")
+        print(f"[ERROR] Layer '{layer_name}' not found in the file.\n")
         return False
 
     # Create the printbed geometry as a 3D rectangle
@@ -53,9 +53,9 @@ def add_print_bed(
 
     # Add the geometry to the Rhino file
     rhino_file.Objects.AddExtrusion(extrusion, attributes)
-    print(f"[INFO] Added print bed to layer '{layer_name}'.")
+    print(f"[INFO] Added print bed to layer '{layer_name}'\n")
 
     # Save the updated file
     rhino_file.Write(str(file_path), 8)
-    print(f"[INFO]Updated Rhino file saved to {file_path}.")
+    print(f"[INFO] Updated Rhino file saved to {file_path}\n")
     return True

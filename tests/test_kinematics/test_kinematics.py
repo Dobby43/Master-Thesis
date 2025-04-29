@@ -1,6 +1,8 @@
 import pytest
 import os
 from pathlib import Path
+
+from robot.mathematical_operators import Rotation
 from tests.test_kinematics import setup_kinematics_test as roset
 
 
@@ -8,14 +10,17 @@ from tests.test_kinematics import setup_kinematics_test as roset
 BASE_DIR = str(Path(__file__).parent / "kinematics_test_cases")
 
 tolerance_ik_deg = 0.02  # tolerance for ik
-tolerance_fk_mm = 0.01  # tolerance for fk
+tolerance_fk_mm = 0.01  # positional tolerance for fk
+tolerance_fk_deg = 0.01  # rotational tolerance for fk
 
 
 @pytest.fixture(scope="session")
 def robot():
     """
     DESCRIPTION:
-    Fixture for initialisation of robot class (done once for all tests in this session)
+    Fixture for initializing the robot class. Runs once for the entire test session.
+
+    :return: instance of the loaded robot class
     """
     return roset.load_robot()
 
@@ -25,18 +30,26 @@ def robot():
         os.path.join(BASE_DIR, f) for f in os.listdir(BASE_DIR) if f.endswith(".json")
     ]
 )
-def test_data(request):
+def test_data(request) -> dict:
     """
     DESCRIPTION:
-    Loads a single test case
+    Loads a single test case from the provided request parameter.
+
+    :param request: fixture parameter containing the path to the JSON file
+    :return: dictionary containing the loaded test case data
     """
     return roset.load_json_file(request.param)
 
 
-def test_forward_kinematics(robot, test_data):
+def test_forward_kinematics(robot, test_data: dict) -> None:
     """
     DESCRIPTION:
-    tests, if the forward kinematics function is working and calculates the expected position
+    Tests if the forward kinematics function of the robot correctly calculates the expected position and orientation.
+
+    :param robot: instance of the robot class used for kinematic calculations
+    :param test_data: dictionary containing the joint angles and the expected position and orientation from the test case
+
+    :return: None
     """
 
     # Extracts the joint angles from .json
@@ -51,6 +64,10 @@ def test_forward_kinematics(robot, test_data):
     expected_y = test_data["Y"]
     expected_z = test_data["Z"]
 
+    expected_a = test_data["A"]
+    expected_b = test_data["B"]
+    expected_c = test_data["C"]
+
     # Calculating the forward kinematik for robot setup
     fk_matrix, reachable = robot.forward_kinematics(joint_angles)  # unpacks tuple
 
@@ -62,26 +79,44 @@ def test_forward_kinematics(robot, test_data):
 
     # Extracting calculated position
     calculated_position = fk_matrix[:3, 3]
+    calculated_orientation = fk_matrix[:3, :3]
 
-    # Comparrison between calculated and expected position
+    calculated_angles = Rotation.to_euler_angles(calculated_orientation)
+
+    print(
+        f"solution calculated: X: {calculated_position[0]}, Y: {calculated_position[1]}, Z: {calculated_position[2]}, A: {calculated_angles[0]}, B: {calculated_angles[1]}, C: {calculated_angles[2]}"
+    )
+    # Comparison between calculated and expected position
     diff_x = abs(calculated_position[0] - expected_x)
     diff_y = abs(calculated_position[1] - expected_y)
     diff_z = abs(calculated_position[2] - expected_z)
+
+    diff_a = (abs(calculated_angles[0] - expected_a) + 180) % 360 - 180
+    diff_b = (abs(calculated_angles[1] - expected_b) + 180) % 360 - 180
+    diff_c = (abs(calculated_angles[2] - expected_c) + 180) % 360 - 180
 
     # Check if difference is within tolerance
     assert diff_x < tolerance_fk_mm, f"X-Fehler zu groß: {diff_x} mm"
     assert diff_y < tolerance_fk_mm, f"Y-Fehler zu groß: {diff_y} mm"
     assert diff_z < tolerance_fk_mm, f"Z-Fehler zu groß: {diff_z} mm"
+    assert diff_a < tolerance_fk_deg, f"A-Fehler zu groß: {diff_a} deg"
+    assert diff_b < tolerance_fk_deg, f"B-Fehler zu groß: {diff_b} deg"
+    assert diff_c < tolerance_fk_deg, f"C-Fehler zu groß: {diff_c} deg"
 
     print(
-        f"Forward Kinematics Test successfully! | ΔX: {diff_x:.3f} mm, ΔY: {diff_y:.3f} mm, ΔZ: {diff_z:.3f} mm"
+        f"Forward Kinematics Test successfully! | ΔX: {diff_x:.3f} mm, ΔY: {diff_y:.3f} mm, ΔZ: {diff_z:.3f} mm, ΔA: {diff_a:.3f} deg, ΔB: {diff_x:.3f} deg, ΔC: {diff_x:.3f} deg"
     )
 
 
-def test_inverse_kinematics(robot, test_data):
+def test_inverse_kinematics(robot, test_data: dict) -> None:
     """
     DESCRIPTION:
-    Checks if the calculated solution has a line matching with the expected solutions from .json
+    Checks if the calculated inverse kinematics solutions match the expected solutions defined in the test case.
+
+    :param robot: instance of the robot class used for inverse kinematic calculations
+    :param test_data: dictionary containing the forward kinematic matrix and expected inverse kinematic solutions
+
+    :return: None
     """
 
     # Load homogeneous transformation matrix from json

@@ -42,7 +42,7 @@ def build_report(output_path: str, text_data: dict):
                         run.add_picture(images_dict["table3"], width=Inches(6.0 / 2.54))
 
     doc.save(output_path)
-    print(f"[INFO] Report saved under {output_path}")
+    print(f"\n[INFO] Report saved under {output_path}\n")
 
 
 # Testfall

@@ -52,7 +52,12 @@ def load_robot():
 
 def load_json_file(file_path: json) -> dict:
     """
-    loads a json file and returns it as a dictionary
+    DESCRIPTION:
+    Loads a JSON file from the given file path and returns its content as a dictionary.
+
+    :param file_path: path to the JSON file to be loaded
+
+    :return: dictionary containing the data parsed from the JSON file
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"[ERROR] File not found in {file_path}")
@@ -67,7 +72,12 @@ def load_json_file(file_path: json) -> dict:
 def extract_ik_solutions(data: dict) -> list[dict]:
     """
     DESCRIPTION:
-    Extracts solution for inverse kinematic (saved under key "J") from dictionary
+    Extracts inverse kinematic solutions (stored under key "J") from a given dictionary.
+    Returns a list of dictionaries, one for each solution.
+
+    :param data: dictionary containing the inverse kinematic data with keys "J" and "n"
+
+    :return: list of dictionaries containing joint angle solutions for each configuration
     """
     if "J" not in data or not isinstance(data["J"], list) or len(data["J"]) == 0:
         print(f"[ERROR] file has no solutions for inverse kinematics")
@@ -96,9 +106,14 @@ def extract_ik_solutions(data: dict) -> list[dict]:
     return ik_solutions
 
 
-def extract_fk_matrix(data):
+def extract_fk_matrix(data: dict) -> np.array:
     """
     DESCRIPTION:
-    Extracts solution for forward kinematic (saved under key "F") from dictionary
+    Extracts the forward kinematic transformation matrix (stored under key "F") from a given dictionary.
+
+    :param data: dictionary containing the forward kinematic data under the key "F"
+
+    :return: NumPy array representing the forward kinematic transformation matrix
     """
+
     return np.array(data["F"])

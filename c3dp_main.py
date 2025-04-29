@@ -69,11 +69,6 @@ def main():
     print(f"[INFO] Program initialized\n")
     start_time = time.time()
 
-    # ----------------SAFETY SWITCH----------------
-    # Define switch to ensure all points in a .src file are reachable and input is correct
-    # If scr == False no .src file is generated
-    src = True
-
     # ----------------GET SETUP PATH----------------
     setup_path = str(Path(__file__).parent / "user_input" / "setup.json")
 
@@ -155,9 +150,6 @@ def main():
     ROBOT_3DM_FILE = robot_settings["3dm_file"]["value"]
     ROBOT_MIN_LAYER_TIME = robot_settings["min_layer_time"]["value"]
 
-    # Switch to filter for input error
-    input_error = False
-
     # Replacing placeholders in robot.start_code
     start_code_results = [
         surpl.replace_placeholders(text=line, settings=settings, precision=precision)
@@ -174,8 +166,11 @@ def main():
     ROBOT_END_CODE_JSON = [res[0] for res in end_code_results]
     success_flags_end = [res[1] for res in end_code_results]
 
-    # Evaluate final success
+    # ----------------SAFETY SWITCH----------------
+    # Define switch to ensure all points in a .src file are reachable and input is correct
+    # If scr == False no .src file is generated
     src = all(success_flags_start + success_flags_end)
+    # ro identify reason for no .src file
     input_error = not src
 
     # ----------------PUMP CONFIGURATION----------------
@@ -476,9 +471,13 @@ def main():
         "Reachable": end_pos_status,
     }
 
-    # ----------------ROBOT SIMULATION----------------
-    print(f"[INFO] Checking robot kinematics for each Point of given G-Code\n")
+    print(f"[INFO] Checking robot kinematics for each point of the given G-Code\n")
     status = []
+    total_points = len(gcode_necessary)
+
+    # Initialisierter Status (zeigt Fortschritt in 10%-Schritten an)
+    last_printed_progress = -10  # Starte bei -10 %, damit 0 % gleich angezeigt wird
+
     for index, line in enumerate(gcode_necessary):
         # Transform point in BASE to point in ROBOTROOT
         point_base = [
@@ -488,6 +487,7 @@ def main():
             1,
         ]
         point_robotroot = Transformation.invert(t_base_robotroot) @ point_base
+
         # Set up homogeneous transformation Matrix
         point_hom = np.eye(4)
         point_hom[:3, :3] = r_robotroot_tool
@@ -500,10 +500,18 @@ def main():
             reachable = False
             line.update({"Reachable": False})
             print(
-                f"[ERROR] Point ({line["X"]}, {line['Y']}, {line['Z']}) on printbed is not reachable"
+                f"[ERROR] Point ({line['X']:.2f}, {line['Y']:.2f}, {line['Z']:.2f}) is not reachable"
             )
         else:
             line.update({"Reachable": True})
+
+        # Calculate Progress
+        progress = int((index + 1) / total_points * 100)
+
+        # Display progress every 10%
+        if progress // 10 > last_printed_progress // 10:
+            print(f"Progress: {progress}%")
+            last_printed_progress = progress
 
     if all(entry.get("Reachable") is True for entry in gcode_necessary):
         print("[INFO] All points from G-Code are reachable\n")
@@ -537,12 +545,9 @@ def main():
     for gcd, cmd in zip(gcode_necessary, pump_command):
         gcd.update(cmd)
 
-    # for line in gcode_necessary:
-    #     print(line)
-
     # ----------------KRL FORMATING OF G-CODE----------------
     if src is True:
-        print("[INFO] compiling .src file")
+        print("[INFO] compiling .src file\n")
         # Set Start and End Code parts from Python values
         length_name = 24 if ROBOT_SPLIT_SRC == False else 20
         filename_formatted = OUTPUT_NAME.replace(" ", "_")[:length_name]
@@ -593,13 +598,13 @@ def main():
             )
     else:
         if not reachable:
-            print("[WARNING] .src file not generated due unreachable point")
+            print("[WARNING] .src file not generated due unreachable point}\n")
         if not location:
             print(
-                "[WARNING] .src file not generated due to invalid location of object or object not fitting on printbed"
+                "[WARNING] .src file not generated due to invalid location of object or object not fitting on printbed\n"
             )
         if input_error:
-            print("[WARNING] .src file not generated due invalid input in setup.json")
+            print("[WARNING] .src file not generated due invalid input in setup.json\n")
 
     # ---------------- REPORT ----------------
     # Plot of the G-Code and Printbed
@@ -720,7 +725,9 @@ def main():
         print(
             f"[ERROR] .3dm file for Robot does not exist under given filepath {ROBOT_3DM_FILE} or has the wrong format"
         )
-        print("[WARNING] Skipping robot.3dm_file import from setup.json to Rhino file")
+        print(
+            "[WARNING] Skipping robot.3dm_file import from setup.json to Rhino file\n"
+        )
 
     # Generate printbed in Rhino
     printbed = rhdrp.add_print_bed(

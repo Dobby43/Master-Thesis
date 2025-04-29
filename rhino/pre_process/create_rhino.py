@@ -46,7 +46,7 @@ def initialize_rhino_file(
     # Save the Rhino file
     output_path = Path(directory) / f"{filename}"
     rhino_file.Write(str(output_path), 8)  # version of Rhino
-    print(f"[INFO] Rhino file saved to {output_path}")
+    print(f"\n[INFO] Rhino file saved to {output_path}\n")
     return output_path
 
 
@@ -102,7 +102,7 @@ def create_layer_structure(
         parent_layer.Name = parent_name
         parent_layer.Color = Sd.Color.FromArgb(*info["color"])
         rhino_file.Layers.Add(parent_layer)
-        print(f"[INFO] Parent Layer '{parent_name}' created")
+        print(f"[INFO] Parent Layer '{parent_name}' created\n")
 
         # find Parent Layer Objekt
         parent_layer_obj = next(
@@ -114,7 +114,7 @@ def create_layer_structure(
             None,
         )
         if not parent_layer_obj:
-            print(f"[ERROR] Parent Layer '{parent_name}' could not be found.")
+            print(f"[ERROR] Parent Layer '{parent_name}' wasn't found.\n")
             continue
 
         parent_layer_id = parent_layer_obj.Id
@@ -140,7 +140,7 @@ def create_layer_structure(
                 )
                 if not sublayer_obj:
                     print(
-                        f"[ERROR] Sublayer '{layer_name}' under '{parent_name}' could not be found"
+                        f"[ERROR] Sublayer '{layer_name}' under '{parent_name}' wasn't found\n"
                     )
                     continue
 

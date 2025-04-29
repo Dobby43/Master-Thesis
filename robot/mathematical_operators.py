@@ -82,7 +82,7 @@ class Rotation:
     def to_euler_angles(matrix: np.ndarray, order: str = "ZYX") -> np.ndarray:
         """
         DESCRIPTION:
-        Extracts Euler angles from a rotation matrix.
+        Extracts Euler angles [rad] from a rotation matrix.
 
         :param matrix: 4x4 homogeneous transformation matrix
         :param order: rotation order (only XYZ, ZYX, ZYZ possible)

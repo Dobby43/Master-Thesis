@@ -274,7 +274,7 @@
                 "value": {
                     "layer_height_0": "15",
                     "layer_height": "15",
-                    "infill_line_distance": "5",
+                    "infill_sparse_density": "5",
                     "roofing_layer_count": "0",
                     "mesh_position_x": "0",
                     "min_wall_line_width": "25",

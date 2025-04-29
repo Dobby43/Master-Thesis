@@ -28,9 +28,15 @@ def def_preset_arguments(
         "machine_depth": bed_size["Y"],  # match "bed_size" from Robot.setup.json
         "machine_height": bed_size["Z"],  # match "bed_size" from Robot.setup.json
         "machine_show_variants": False,  # allows only one variant of machine
-        "material_guid": "",  #
+        "machine_start_gcode": "",  # no custom G-Code possible for start sequence
+        "machine_end_gcode": "",  # no custom G-Code possible for end sequence
+        "machine_center_is_zero": False,  # to fix origin to print bed corner matching $BASE
+        "machine_extruder_start_code": "",  # no custom G-Code possible for extruder start
+        "machine_extruder_end_code": "",  # no custom G-Code possible for extruder stop
+        "machine_g_code_flavor": "RepRap (Marlin/Sprinter)",  # Fixed to Marlin as specified
+        "material_guid": "",
         "material_type": "",  # no material specified
-        "material_brand": "",  #
+        "material_brand": "",
         "machine_shape": "rectangular",  # circular shape not compatible with Rhino implementation and Report
         "machine_extruder_count": 1,  # no dual extruder possible
         "extruders_enabled_count": 0,
