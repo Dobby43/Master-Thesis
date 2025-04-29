@@ -112,10 +112,10 @@ main.py
 
 This project depends on the following third-party tools:
 
-| Tool             | Purpose                                | Required Version / Notes                   |
-|------------------|----------------------------------------|--------------------------------------------|
-| **CuraEngine**   | Slicing STL files into G-Code          | Version 5.8                                |
-| **Rhino 3D**     | Visualization and .3dm file generation | Version 8 or later                         |
+| Tool             | Purpose                                | Required Version / Notes          |
+|------------------|----------------------------------------|-----------------------------------|
+| **CuraEngine**   | Slicing STL files into G-Code          | Version 5.8                       |
+| **Rhino 3D**     | Visualization and .3dm file generation | Version 8                         |
 | **Microsoft Word** | For reading `.docx` reports            | Optional, for viewing of print report only |
 
 > ⚠️ Make sure that you use explicitly Version 5.8 and CuraEngine.exe is properly installed and the paths is configured correctly in `setup.json`.
@@ -128,8 +128,7 @@ You find the `setup.json` file under _\user_input\setup.json_ in my repository.
 Your slicing engine is now set up for remote slicing.
 
 ### Rhinoceros 3D
-To execute the code and visualize the sliced G-Code as well as the printbed and Robot [Rhinoceros 8](https://www.rhino3d.com/download/) 
-or higher is required.  
+To execute the code and visualize the sliced G-Code as well as the printbed and Robot [Rhinoceros 8](https://www.rhino3d.com/download/) is required.  
 It might be possible to open the generated `.3dm` files with an older version, although this has not been tested.
 
 ### Microsoft Word
