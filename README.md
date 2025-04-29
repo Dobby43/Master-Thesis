@@ -160,11 +160,11 @@ To run this project locally, follow these steps:
 The program is structured such, that the user input is only given and edited via `.json` files which all lie under \user_input. 
 To fully customize the code to your needs three essential `.json` files need to be edited:
 
-| filename            | Purpose                                                               | Notes                                                              |
-|---------------------|-----------------------------------------------------------------------|--------------------------------------------------------------------|
-| `setup.json`        | Custom input beyond Polymer slicer specific data                      | Input overwrites the input of the other two `.json` files          |
-| `printer.def.json`  | Base Input data for Cura (considers only the deepest nested arguments) | <br/>To access parent arguments use Cura.cura_arguments in `setup.json` |
-| `extruder.def.json` | Base Input data on extruder for Cura (considers only the deepest nested arguments)| To access parent arguments use Cura.cura_arguments in `setup.json` |
+| filename            | Purpose                                                                            | Notes                                                               |
+|---------------------|------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| `setup.json`        | Custom input beyond Polymer slicer specific data                                   | Input overwrites the input of the other two `.json` files           |
+| `printer.def.json`  | Base Input data for Cura (considers only the deepest nested arguments)             | <br/>To overwrite arguments use Cura.cura_arguments in `setup.json` |
+| `extruder.def.json` | Base Input data on extruder for Cura (considers only the deepest nested arguments) | To overwrite arguments use Cura.cura_arguments in `setup.json`      |
 
 If every path is specified correctly in `setup.json` you can execute the main function.   
 To execute the main function you can use the following CMD command in the folder that you saved the repository to:
