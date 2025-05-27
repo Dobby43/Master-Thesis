@@ -50,14 +50,14 @@ def simplify_gcode(
 
     """
 
-    # Step 1: Determine extrusion mode (M82/M83)
-    absolute_mode = not any("M83" in line for line in gcode[:300])
-
-    # Step 2: Define regex patterns
+    # Step 1: Define regex patterns
     type_pattern = r"(?i)[;$]?TYPE[:\s]*(.+)"
     gcode_pattern = r"(G[01])?(?:\s*F[\d\.]+)?(?:\s*X\s*([-?\d\.]+))?(?:\s*Y\s*([-?\d\.]+))?(?:\s*Z\s*([-?\d\.]+))?(?:\s*E\s*([-?\d\.]+))?"
     feedrate_pattern = r"(G[01])\s*F[\d\.]+$"
     g92_pattern = r"G92\s+E0"  # Matches "G92 E0"
+
+    # Step 2: Determine extrusion mode (M82/M83)
+    absolute_mode = not any("M83" in line for line in gcode[:300])
 
     # Step 3: Initialize state variables
     current_x, current_y, current_z = x_min, y_min, z_min

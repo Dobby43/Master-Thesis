@@ -2,9 +2,9 @@
 This file contains the basis for all adjacent functions
 """
 
-__author__ = "<DAVID SCHEIDT>"
+__author__ = "<David Scheidt>"
 __email__ = "<<david.scheidt@tum.de>>"
-__version__ = "1.7"
+__version__ = "2.0"
 
 from pathlib import Path
 import numpy as np
@@ -635,8 +635,10 @@ def main():
 
     text_data = {
         "filename": INPUT_FILE_STL,
-        "weight": round(volume * 1e-7 * 21, precision),
-        "volume": round(volume * 1e-6, precision),
+        "weight": round(
+            volume * 1e-7 * 21, precision
+        ),  # in kg -> mm^3*1e-9 = m^3; 1 kg/m^3 = 1/100 kN/m^3
+        "volume": round(volume * 1e-6, precision),  # in Liter
         "measurements": [
             round(measurement_x, precision),
             round(measurement_y, precision),

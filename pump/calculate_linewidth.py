@@ -52,7 +52,7 @@ def get_linewidth(
                 layer_h * flow_value / 100 * length
             )
             line_widths.append(line_width)
-            # Sum up individual volumes to find the total filament volume used
+            # Sum up individual volumes to find the total filament volume used in [mm^3]
             volume += length * line_width * layer_h
         else:
             line_widths.append(0)

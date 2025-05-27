@@ -1,6 +1,6 @@
 {
     "name": "Slicing and Printing Configuration",
-    "version": 1,
+    "version": 2.0,
     "type": "configuration",
     "author": "David Scheidt",
     "settings": {
@@ -8,22 +8,22 @@
             "description": "Defines the input and output directories and filenames for the slicing and printing process.",
             "input_directory": {
                 "description": "Base directory for input STL files",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Dateien_Beispiele\\STL",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Schreiben\\Präsentation",
                 "type": "str"
             },
             "input_name": {
                 "description": "Name of the input STL file (without data type)",
-                "value": "Slicer Test v3",
+                "value": "TUM_Logo",
                 "type": "str"
             },
             "output_directory": {
                 "description": "Base directory for storing output files (will be created if not already available)",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Slicing_Data\\V1.7",
+                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Schreiben\\Präsentation",
                 "type": "str"
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
-                "value": "Test Object (scaled 8000x)",
+                "value": "TUM_Logo",
                 "type": "str"
             }
         },
@@ -226,7 +226,7 @@
         "Pump": {
             "description": "Gives necessary information on Pump capability and technical data",
             "retract": {
-                "description": "States if pump is capable of retraction; This will include retract moves from generated G-Code",
+                "description": "States if pump is capable of retraction; If set to true, this will include retract moves from generated G-Code",
                 "value": true,
                 "type": "bool"
             },
@@ -282,7 +282,7 @@
             },
             "cura_scaling": {
                 "description": "Sets scaling (s) and rotation (r) values for X,Y and Z axis in [%] and [deg] relativ to printbed origin",
-                "value": {"sX": 8000, "sY": 8000, "sZ": 8000, "rX": 0, "rY": 0, "rZ": 0},
+                "value": {"sX": 100, "sY": 100, "sZ": 100, "rX": 0, "rY": 0, "rZ": 90},
                 "type": "dict[str,float]"
             },
             "cura_line_types_dict": {

@@ -6,7 +6,9 @@ TUM School of Engineering and Design
 Technical University Munich
 
 **Author:** David Scheidt  
-**Year:** 2025
+**Year:** 2025  
+**Version** 2.0
+
 
 [comment]:<> (Description)
 # Description
@@ -212,4 +214,4 @@ In general three types of information output is given while running this code:
 | [ERROR] Point (X,Y,Z) out of reachable domain of robot                                      | Object is not within reach of robot                                                                                  | Rearrange object on build-plate                                                                                   |
 | [ERROR] All possible joint angles for point (X,Y,Z) exceed min/max joint angles             | Object is within reach, but all joint configurations violate joint limits                                            | Rearrange object on build-plate                                                                                   |
 | [ERROR] Key inside robot start or end code not found                                        | The given key in start_code or end_code has no match inside `setup.Robot.json`                                       | Check if matching key exists                                                                                      |
-
+| Program does not execute even though Slicing command is valid an executed                   | Ultimaker Cura opend via the Desktop                                                                                 | Terminate Program, close Ultimaker Cura, restart Program                                                          | 
