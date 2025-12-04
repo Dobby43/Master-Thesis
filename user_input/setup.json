@@ -23,7 +23,7 @@
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
-                "value": "Test_Mo",
+                "value": "Test_M",
                 "type": "str"
             }
         },
