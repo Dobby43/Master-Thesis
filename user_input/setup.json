@@ -8,22 +8,22 @@
             "description": "Defines the input and output directories and filenames for the slicing and printing process.",
             "input_directory": {
                 "description": "Base directory for input STL files",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Schreiben\\Präsentation",
+                "value": "C:\\Users\\ge25pat\\OneDrive - TUM\\PHD\\3DCP\\3d_files",
                 "type": "str"
             },
             "input_name": {
                 "description": "Name of the input STL file (without data type)",
-                "value": "TUM_Logo",
+                "value": "Test_Mo",
                 "type": "str"
             },
             "output_directory": {
                 "description": "Base directory for storing output files (will be created if not already available)",
-                "value": "C:\\Users\\daves\\OneDrive\\Bauingenieurwesen\\Masterarbeit\\Schreiben\\Präsentation",
+                "value": "C:\\Users\\ge25pat\\OneDrive - TUM\\PHD\\3DCP\\3d_files",
                 "type": "str"
             },
             "output_name": {
                 "description": "Name of the output folder and files as well as .src top line",
-                "value": "TUM_Logo",
+                "value": "Test_Mo",
                 "type": "str"
             }
         },
